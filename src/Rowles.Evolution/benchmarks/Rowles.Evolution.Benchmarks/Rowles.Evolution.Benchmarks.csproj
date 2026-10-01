@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Rowles.Evolution/Rowles.Evolution.csproj" />
+    <ProjectReference Include="../../src/Rowles.Morphogenesis.Evolution/Rowles.Morphogenesis.Evolution.csproj" />
+  </ItemGroup>
+</Project>
