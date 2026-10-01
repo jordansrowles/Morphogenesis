@@ -12,6 +12,7 @@ public sealed class GridMapElites
     public const int CheckpointSchemaVersion = 1;
     private readonly GridMapElitesConfiguration configuration;
     private readonly GridArchive archive;
+    private readonly IReadOnlyGridArchive archiveView;
     private readonly EvolutionRandom random;
     private readonly IsoLineVariation variation;
     private NumericCandidate[]? pending;
@@ -27,6 +28,7 @@ public sealed class GridMapElites
     {
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         archive = new GridArchive(configuration.Archive);
+        archiveView = new ReadOnlyArchiveView(archive);
         variation = configuration.Variation;
         random = new EvolutionRandom(seed);
     }
@@ -49,7 +51,7 @@ public sealed class GridMapElites
         }
     }
 
-    public GridArchive Archive => archive;
+    public IReadOnlyGridArchive Archive => archiveView;
     public long Iteration => iteration;
     public long EvaluationsPerformed => evaluations;
     public bool HasOutstandingBatch => pending is not null;
@@ -203,6 +205,14 @@ public sealed class GridMapElites
             !double.IsFinite(checkpoint.RandomState.Gaussian))
             throw new ArgumentException("Checkpoint counters or arrays are invalid.", nameof(checkpoint));
 
+        foreach (NumericBoundsDto? solutionBounds in checkpoint.SolutionBounds)
+        {
+            if (solutionBounds is null || !double.IsFinite(solutionBounds.Lower) ||
+                !double.IsFinite(solutionBounds.Upper) || solutionBounds.Upper <= solutionBounds.Lower ||
+                !double.IsFinite(solutionBounds.Upper - solutionBounds.Lower))
+                throw new ArgumentException("Checkpoint solution bounds must be non-null, finite, increasing and have a finite width.", nameof(checkpoint));
+        }
+
         if (checkpoint.DescriptorLowerBounds.Length == 0 ||
             checkpoint.DescriptorLowerBounds.Length != checkpoint.DescriptorUpperBounds.Length ||
             checkpoint.DescriptorLowerBounds.Length != checkpoint.BinCounts.Length)
@@ -254,9 +264,8 @@ public sealed class GridMapElites
             for (int dimension = 0; dimension < elite.Solution.Length; dimension++)
             {
                 double value = elite.Solution[dimension];
-                NumericBoundsDto bounds = checkpoint.SolutionBounds[dimension];
-                if (!double.IsFinite(bounds.Lower) || !double.IsFinite(bounds.Upper) || bounds.Upper <= bounds.Lower ||
-                    !double.IsFinite(value) || value < bounds.Lower || value > bounds.Upper)
+                NumericBoundsDto bounds = checkpoint.SolutionBounds[dimension]!;
+                if (!double.IsFinite(value) || value < bounds.Lower || value > bounds.Upper)
                     throw new ArgumentException($"Checkpoint elite solution value {dimension} is non-finite or outside its closed bounds.", nameof(checkpoint));
             }
 
@@ -270,5 +279,14 @@ public sealed class GridMapElites
                 throw new ArgumentException("Checkpoint elite descriptors are invalid.", nameof(checkpoint), exception);
             }
         }
+    }
+
+    private sealed class ReadOnlyArchiveView(GridArchive archive) : IReadOnlyGridArchive
+    {
+        public GridArchiveConfiguration Configuration => archive.Configuration;
+        public int Occupancy => archive.Occupancy;
+        public double Coverage => archive.Coverage;
+        public IEnumerable<GridElite> OccupiedElites => archive.OccupiedElites;
+        public GridElite? GetAt(int cellIndex) => archive.GetAt(cellIndex);
     }
 }

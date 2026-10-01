@@ -69,6 +69,20 @@ public sealed class GridMapElitesCheckpointTests
 
     public static IEnumerable<object[]> CorruptCheckpointCases()
     {
+        yield return ["empty solution bounds", (Action<JsonObject>)(checkpoint => checkpoint["SolutionBounds"] = new JsonArray())];
+        yield return ["non-finite solution lower bound", (Action<JsonObject>)(checkpoint => SolutionBound(checkpoint, 0)["Lower"] = "NaN")];
+        yield return ["non-finite solution upper bound", (Action<JsonObject>)(checkpoint => SolutionBound(checkpoint, 0)["Upper"] = "Infinity")];
+        yield return ["solution bounds with equal endpoints", (Action<JsonObject>)(checkpoint => SolutionBound(checkpoint, 0)["Upper"] = SolutionBound(checkpoint, 0)["Lower"]!.DeepClone())];
+        yield return ["solution bounds with descending endpoints", (Action<JsonObject>)(checkpoint =>
+        {
+            SolutionBound(checkpoint, 0)["Lower"] = 2.0;
+            SolutionBound(checkpoint, 0)["Upper"] = 1.0;
+        })];
+        yield return ["solution bounds with overflowing width", (Action<JsonObject>)(checkpoint =>
+        {
+            SolutionBound(checkpoint, 0)["Lower"] = -double.MaxValue;
+            SolutionBound(checkpoint, 0)["Upper"] = double.MaxValue;
+        })];
         yield return ["wrong solution length", (Action<JsonObject>)(checkpoint => Elite(checkpoint, 0)["Solution"] = new JsonArray(0.0))];
         yield return ["NaN solution", (Action<JsonObject>)(checkpoint => Elite(checkpoint, 0)["Solution"]!.AsArray()[0] = "NaN")];
         yield return ["positive infinity solution", (Action<JsonObject>)(checkpoint => Elite(checkpoint, 0)["Solution"]!.AsArray()[0] = "Infinity")];
@@ -116,6 +130,18 @@ public sealed class GridMapElitesCheckpointTests
         yield return ["unsupported schema", (Action<JsonObject>)(checkpoint => checkpoint["SchemaVersion"] = 99)];
     }
 
+    [Fact]
+    public void RestoreRejectsNullSolutionBoundWithValidationException()
+    {
+        JsonObject checkpoint = JsonNode.Parse(CreatePopulatedCheckpoint())!.AsObject();
+        checkpoint["SolutionBounds"]!.AsArray()[0] = null;
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            GridMapElites.Restore(checkpoint.ToJsonString()));
+
+        Assert.Contains("solution bounds", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static GridMapElites Create(ulong seed) => new(new GridMapElitesConfiguration(
         [new NumericBounds(-1, 1), new NumericBounds(-1, 1)],
         new GridArchiveConfiguration([-1, -1], [1, 1], [16, 16], ObjectiveDirection.Maximise, 0)), seed);
@@ -140,4 +166,7 @@ public sealed class GridMapElitesCheckpointTests
 
     private static JsonObject Elite(JsonObject checkpoint, int index) =>
         checkpoint["Elites"]!.AsArray()[index]!.AsObject();
+
+    private static JsonObject SolutionBound(JsonObject checkpoint, int index) =>
+        checkpoint["SolutionBounds"]!.AsArray()[index]!.AsObject();
 }
