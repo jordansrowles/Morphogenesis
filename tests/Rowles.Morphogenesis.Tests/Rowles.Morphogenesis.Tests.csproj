@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Rowles.Morphogenesis.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Rowles.Morphogenesis/Rowles.Morphogenesis.csproj" />
+    <ProjectReference Include="../../src/Rowles.Morphogenesis.Reference/Rowles.Morphogenesis.Reference.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../Rowles.Morphogenesis.Reference.Tests/Fixtures/G10.golden.json" Link="Fixtures/G10.golden.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/canonical/*.json" Link="experiments/canonical/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/results/*.json" Link="experiments/results/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/results/README.md" Link="experiments/results/README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

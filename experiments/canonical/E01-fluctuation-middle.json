@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "experimentId": "E01-fluctuation-middle-v1",
+  "name": "E01 - Fluctuation sweep, middle amplitude",
+  "gridWidth": 32,
+  "gridHeight": 32,
+  "boundaryMode": "periodic",
+  "copyNeighbourhood": "vonNeumann",
+  "contactCouplingNeighbourhood": "moore",
+  "perimeterNeighbourhood": "moore",
+  "connectivityAdjacency": "vonNeumann",
+  "kernel": "canonicalSerial",
+  "baseSeed": 20260929,
+  "mcsCount": 40,
+  "initialiser": {
+    "kind": "packedAggregate",
+    "cellCount": 16,
+    "approximateTargetCellArea": 16,
+    "typeAId": 1,
+    "typeBId": 2,
+    "typeAProportion": 0.5
+  },
+  "cellTypes": [
+    {
+      "typeId": 0,
+      "name": "Medium"
+    },
+    {
+      "typeId": 1,
+      "name": "A"
+    },
+    {
+      "typeId": 2,
+      "name": "B"
+    }
+  ],
+  "contactEnergies": [
+    [
+      0,
+      10,
+      10
+    ],
+    [
+      10,
+      2,
+      2
+    ],
+    [
+      10,
+      2,
+      2
+    ]
+  ],
+  "mechanics": {
+    "targetArea": 16.0,
+    "areaStiffness": 1.0,
+    "targetPerimeter": 44.0,
+    "perimeterStiffness": 0.1
+  },
+  "fluctuationAmplitude": 8,
+  "measurements": {
+    "everyMcs": 5,
+    "includeMcsZero": true,
+    "interfaceNeighbourhood": "moore",
+    "snapshotEveryMcs": 0,
+    "validateInvariantsEveryMcs": 10
+  },
+  "replicateCount": 8
+}

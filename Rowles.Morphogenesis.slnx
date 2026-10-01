@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/Rowles.Morphogenesis/Rowles.Morphogenesis.csproj" />
+  <Project Path="src/Rowles.Morphogenesis.Reference/Rowles.Morphogenesis.Reference.csproj" />
+  <Project Path="tests/Rowles.Morphogenesis.Tests/Rowles.Morphogenesis.Tests.csproj" />
+  <Project Path="tests/Rowles.Morphogenesis.Reference.Tests/Rowles.Morphogenesis.Reference.Tests.csproj" />
+  <Project Path="tools/Rowles.Morphogenesis.Experiments/Rowles.Morphogenesis.Experiments.csproj" />
+</Solution>

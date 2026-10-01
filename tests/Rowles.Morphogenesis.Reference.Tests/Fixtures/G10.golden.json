@@ -1,0 +1,1229 @@
+{
+  "name": "G10 frozen multi-step trajectory",
+  "randomAlgorithm": "xoshiro256** with SplitMix64",
+  "seed": "0x000000000000051A",
+  "fluctuationAmplitude": 10,
+  "randomDrawOrder": [
+    "target-site index",
+    "copy-neighbour index",
+    "acceptance value only for positive DeltaH"
+  ],
+  "steps": 40,
+  "initialRows": [
+    ".....",
+    ".AA..",
+    ".AB..",
+    "..B..",
+    "....."
+  ],
+  "cells": [
+    {
+      "cellId": 1,
+      "cellTypeId": 1,
+      "targetArea": 3,
+      "areaStiffness": 1.25,
+      "targetPerimeter": 10,
+      "perimeterStiffness": 0.08
+    },
+    {
+      "cellId": 3,
+      "cellTypeId": 2,
+      "targetArea": 2,
+      "areaStiffness": 0.85,
+      "targetPerimeter": 8,
+      "perimeterStiffness": 0.06
+    }
+  ],
+  "contactEnergies": [
+    [
+      0,
+      2,
+      3
+    ],
+    [
+      2,
+      1.5,
+      2.25
+    ],
+    [
+      3,
+      2.25,
+      1
+    ]
+  ],
+  "attempts": [
+    {
+      "index": 0,
+      "target": {
+        "x": 0,
+        "y": 0
+      },
+      "source": {
+        "x": 4,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..B..",
+        "....."
+      ]
+    },
+    {
+      "index": 1,
+      "target": {
+        "x": 3,
+        "y": 1
+      },
+      "source": {
+        "x": 2,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 3,
+      "status": "Accepted",
+      "deltaH": {
+        "contact": 12,
+        "area": 0.85,
+        "perimeter": 3.84,
+        "total": 16.689999999999998
+      },
+      "acceptanceProbability": 0.1884354068593007,
+      "acceptanceRandomValue": 0.09208377348033026,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 2,
+      "target": {
+        "x": 3,
+        "y": 4
+      },
+      "source": {
+        "x": 3,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 3,
+      "target": {
+        "x": 0,
+        "y": 1
+      },
+      "source": {
+        "x": 1,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 4,
+      "target": {
+        "x": 4,
+        "y": 3
+      },
+      "source": {
+        "x": 4,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 5,
+      "target": {
+        "x": 4,
+        "y": 3
+      },
+      "source": {
+        "x": 3,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 6,
+      "target": {
+        "x": 3,
+        "y": 4
+      },
+      "source": {
+        "x": 3,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 7,
+      "target": {
+        "x": 0,
+        "y": 3
+      },
+      "source": {
+        "x": 0,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 8,
+      "target": {
+        "x": 4,
+        "y": 2
+      },
+      "source": {
+        "x": 4,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 9,
+      "target": {
+        "x": 4,
+        "y": 4
+      },
+      "source": {
+        "x": 4,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 10,
+      "target": {
+        "x": 4,
+        "y": 3
+      },
+      "source": {
+        "x": 4,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 11,
+      "target": {
+        "x": 0,
+        "y": 3
+      },
+      "source": {
+        "x": 1,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 8,
+        "area": 1.25,
+        "perimeter": 6.4,
+        "total": 15.65
+      },
+      "acceptanceProbability": 0.20908801317328293,
+      "acceptanceRandomValue": 0.676511279210474,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 12,
+      "target": {
+        "x": 2,
+        "y": 0
+      },
+      "source": {
+        "x": 2,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 3,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 12,
+        "area": 2.55,
+        "perimeter": 5.76,
+        "total": 20.310000000000002
+      },
+      "acceptanceProbability": 0.13120425127322136,
+      "acceptanceRandomValue": 0.6986697090865192,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 13,
+      "target": {
+        "x": 0,
+        "y": 2
+      },
+      "source": {
+        "x": 1,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 8,
+        "area": 1.25,
+        "perimeter": 6.4,
+        "total": 15.65
+      },
+      "acceptanceProbability": 0.20908801317328293,
+      "acceptanceRandomValue": 0.5832158180714121,
+      "rowsAfter": [
+        ".....",
+        ".AA..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 14,
+      "target": {
+        "x": 2,
+        "y": 3
+      },
+      "source": {
+        "x": 2,
+        "y": 2
+      },
+      "oldCellId": 1,
+      "newCellId": 3,
+      "status": "Accepted",
+      "deltaH": {
+        "contact": 7.25,
+        "area": 3.8,
+        "perimeter": 5.52,
+        "total": 16.57
+      },
+      "acceptanceProbability": 0.19071025352350304,
+      "acceptanceRandomValue": 0.045211744885973904,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 15,
+      "target": {
+        "x": 1,
+        "y": 1
+      },
+      "source": {
+        "x": 1,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 6.5,
+        "area": -1.25,
+        "perimeter": 6.72,
+        "total": 11.969999999999999
+      },
+      "acceptanceProbability": 0.30209915127828346,
+      "acceptanceRandomValue": 0.9189382411654939,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 16,
+      "target": {
+        "x": 4,
+        "y": 4
+      },
+      "source": {
+        "x": 4,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 17,
+      "target": {
+        "x": 4,
+        "y": 0
+      },
+      "source": {
+        "x": 4,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 18,
+      "target": {
+        "x": 0,
+        "y": 3
+      },
+      "source": {
+        "x": 1,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 8,
+        "area": -1.25,
+        "perimeter": 3.84,
+        "total": 10.59
+      },
+      "acceptanceProbability": 0.34680243942604977,
+      "acceptanceRandomValue": 0.5964686828725347,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 19,
+      "target": {
+        "x": 1,
+        "y": 4
+      },
+      "source": {
+        "x": 1,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 9.25,
+        "area": -1.25,
+        "perimeter": 6.72,
+        "total": 14.719999999999999
+      },
+      "acceptanceProbability": 0.22946609376090668,
+      "acceptanceRandomValue": 0.7643465747429533,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 20,
+      "target": {
+        "x": 1,
+        "y": 2
+      },
+      "source": {
+        "x": 1,
+        "y": 3
+      },
+      "oldCellId": 1,
+      "newCellId": 1,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 21,
+      "target": {
+        "x": 1,
+        "y": 1
+      },
+      "source": {
+        "x": 1,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 6.5,
+        "area": -1.25,
+        "perimeter": 6.72,
+        "total": 11.969999999999999
+      },
+      "acceptanceProbability": 0.30209915127828346,
+      "acceptanceRandomValue": 0.5215753533429169,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 22,
+      "target": {
+        "x": 0,
+        "y": 2
+      },
+      "source": {
+        "x": 1,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 1,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 8,
+        "area": -1.25,
+        "perimeter": 3.84,
+        "total": 10.59
+      },
+      "acceptanceProbability": 0.34680243942604977,
+      "acceptanceRandomValue": 0.9758847949699916,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 23,
+      "target": {
+        "x": 2,
+        "y": 0
+      },
+      "source": {
+        "x": 2,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 3,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 12,
+        "area": 4.25,
+        "perimeter": 8.64,
+        "total": 24.89
+      },
+      "acceptanceProbability": 0.08299291801055293,
+      "acceptanceRandomValue": 0.10781745703331724,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 24,
+      "target": {
+        "x": 4,
+        "y": 0
+      },
+      "source": {
+        "x": 3,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 25,
+      "target": {
+        "x": 1,
+        "y": 3
+      },
+      "source": {
+        "x": 1,
+        "y": 2
+      },
+      "oldCellId": 1,
+      "newCellId": 1,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 26,
+      "target": {
+        "x": 4,
+        "y": 4
+      },
+      "source": {
+        "x": 3,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 27,
+      "target": {
+        "x": 2,
+        "y": 4
+      },
+      "source": {
+        "x": 3,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 28,
+      "target": {
+        "x": 1,
+        "y": 3
+      },
+      "source": {
+        "x": 2,
+        "y": 3
+      },
+      "oldCellId": 1,
+      "newCellId": 3,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 2.75,
+        "area": 8,
+        "perimeter": 7.680000000000001,
+        "total": 18.43
+      },
+      "acceptanceProbability": 0.1583416877928747,
+      "acceptanceRandomValue": 0.8982801992795295,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 29,
+      "target": {
+        "x": 0,
+        "y": 4
+      },
+      "source": {
+        "x": 0,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 30,
+      "target": {
+        "x": 1,
+        "y": 3
+      },
+      "source": {
+        "x": 2,
+        "y": 3
+      },
+      "oldCellId": 1,
+      "newCellId": 3,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 2.75,
+        "area": 8,
+        "perimeter": 7.680000000000001,
+        "total": 18.43
+      },
+      "acceptanceProbability": 0.1583416877928747,
+      "acceptanceRandomValue": 0.9829044245681778,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 31,
+      "target": {
+        "x": 4,
+        "y": 0
+      },
+      "source": {
+        "x": 4,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 32,
+      "target": {
+        "x": 1,
+        "y": 4
+      },
+      "source": {
+        "x": 0,
+        "y": 4
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 33,
+      "target": {
+        "x": 3,
+        "y": 4
+      },
+      "source": {
+        "x": 3,
+        "y": 3
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 34,
+      "target": {
+        "x": 1,
+        "y": 2
+      },
+      "source": {
+        "x": 1,
+        "y": 3
+      },
+      "oldCellId": 1,
+      "newCellId": 1,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".AB..",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 35,
+      "target": {
+        "x": 3,
+        "y": 2
+      },
+      "source": {
+        "x": 3,
+        "y": 1
+      },
+      "oldCellId": 0,
+      "newCellId": 3,
+      "status": "Accepted",
+      "deltaH": {
+        "contact": 0,
+        "area": 4.25,
+        "perimeter": 0,
+        "total": 4.25
+      },
+      "acceptanceProbability": 0.6537697851298473,
+      "acceptanceRandomValue": 0.6431724695707696,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".ABB.",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 36,
+      "target": {
+        "x": 3,
+        "y": 0
+      },
+      "source": {
+        "x": 4,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".ABB.",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 37,
+      "target": {
+        "x": 4,
+        "y": 2
+      },
+      "source": {
+        "x": 0,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".ABB.",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 38,
+      "target": {
+        "x": 3,
+        "y": 3
+      },
+      "source": {
+        "x": 3,
+        "y": 2
+      },
+      "oldCellId": 0,
+      "newCellId": 3,
+      "status": "Rejected",
+      "deltaH": {
+        "contact": 6,
+        "area": 5.95,
+        "perimeter": 4.08,
+        "total": 16.03
+      },
+      "acceptanceProbability": 0.20129173606714904,
+      "acceptanceRandomValue": 0.4391768298865425,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".ABB.",
+        "..BB.",
+        "....."
+      ]
+    },
+    {
+      "index": 39,
+      "target": {
+        "x": 2,
+        "y": 0
+      },
+      "source": {
+        "x": 1,
+        "y": 0
+      },
+      "oldCellId": 0,
+      "newCellId": 0,
+      "status": "NoOp",
+      "deltaH": {
+        "contact": 0,
+        "area": 0,
+        "perimeter": 0,
+        "total": 0
+      },
+      "acceptanceProbability": null,
+      "acceptanceRandomValue": null,
+      "rowsAfter": [
+        ".....",
+        ".AB..",
+        ".ABB.",
+        "..BB.",
+        "....."
+      ]
+    }
+  ],
+  "finalRows": [
+    ".....",
+    ".AB..",
+    ".ABB.",
+    "..BB.",
+    "....."
+  ],
+  "finalHamiltonian": {
+    "contact": 86.25,
+    "area": 8.899999999999999,
+    "perimeter": 16.64,
+    "total": 111.79
+  }
+}

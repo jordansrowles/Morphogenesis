@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Rowles.Morphogenesis.Reference</RootNamespace>
+    <AssemblyName>Rowles.Morphogenesis.Reference</AssemblyName>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+</Project>

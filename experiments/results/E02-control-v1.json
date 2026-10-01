@@ -1,0 +1,6611 @@
+{
+  "manifest": {
+    "schemaVersion": 1,
+    "experimentId": "E02-control-v1",
+    "name": "E02 - Classical sorting control",
+    "gridWidth": 32,
+    "gridHeight": 32,
+    "boundaryMode": "periodic",
+    "copyNeighbourhood": "vonNeumann",
+    "contactCouplingNeighbourhood": "moore",
+    "perimeterNeighbourhood": "moore",
+    "connectivityAdjacency": "vonNeumann",
+    "kernel": "canonicalSerial",
+    "baseSeed": 20260929,
+    "mcsCount": 80,
+    "initialiser": {
+      "kind": "packedAggregate",
+      "cellCount": 16,
+      "approximateTargetCellArea": 16,
+      "typeAId": 1,
+      "typeBId": 2,
+      "typeAProportion": 0.5
+    },
+    "cellTypes": [
+      {
+        "typeId": 0,
+        "name": "Medium"
+      },
+      {
+        "typeId": 1,
+        "name": "A"
+      },
+      {
+        "typeId": 2,
+        "name": "B"
+      }
+    ],
+    "contactEnergies": [
+      [
+        0,
+        10,
+        10
+      ],
+      [
+        10,
+        2,
+        2
+      ],
+      [
+        10,
+        2,
+        2
+      ]
+    ],
+    "mechanics": {
+      "targetArea": 16,
+      "areaStiffness": 1,
+      "targetPerimeter": 44,
+      "perimeterStiffness": 0.1
+    },
+    "fluctuationAmplitude": 12,
+    "measurements": {
+      "everyMcs": 10,
+      "includeMcsZero": true,
+      "interfaceNeighbourhood": "moore",
+      "snapshotEveryMcs": 0,
+      "validateInvariantsEveryMcs": 10
+    },
+    "replicateCount": 16
+  },
+  "metadata": {
+    "softwareVersion": "1.0.0.0",
+    "softwareCommit": "6c771be947fbefac3ede7dff5a8ff9d38faf7774",
+    "runtimeVersion": "10.0.3",
+    "sdkVersion": "10.0.103",
+    "operatingSystem": "Debian GNU/Linux 13 (trixie)",
+    "architecture": "X64",
+    "kernelId": "canonical-serial-v1",
+    "sourceTreeState": "clean"
+  },
+  "random": {
+    "algorithm": "xoshiro256** with SplitMix64",
+    "seedDerivationScheme": "splitmix64-domain-v1"
+  },
+  "replicateSeeds": [
+    15267974642435657023,
+    3239407024170548425,
+    6207888555675935795,
+    5343431526590614606,
+    9705518060883425430,
+    1936088202981723013,
+    3842174079154639961,
+    834967504038104287,
+    403377707549332599,
+    13373361724678078678,
+    12274315271238340758,
+    15910028833661729277,
+    10184681558246390782,
+    7387050279123122092,
+    14942041207446750542,
+    6765155472627912580
+  ],
+  "replicates": [
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0001",
+      "replicateIndex": 0,
+      "seed": 15267974642435657023,
+      "initialisationSeed": 9675761032794072788,
+      "dynamicsSeed": 12341966911850518118,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 158,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.6124031007751938,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 55
+              },
+              {
+                "typeId": 2,
+                "count": 45
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 155,
+            "totalCellCellInterfaceCount": 289,
+            "heterotypicInterfaceFraction": 0.5363321799307958,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 66
+              },
+              {
+                "typeId": 2,
+                "count": 68
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 15.375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 48.125,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 161,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.5494880546075085,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 76
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.4375,
+            "minimumCellArea": 12,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 49.125,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 161,
+            "totalCellCellInterfaceCount": 281,
+            "heterotypicInterfaceFraction": 0.5729537366548043,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 57
+              },
+              {
+                "typeId": 2,
+                "count": 63
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.4375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 140,
+            "totalCellCellInterfaceCount": 279,
+            "heterotypicInterfaceFraction": 0.5017921146953405,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 77
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.75,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.75,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 155,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.5201342281879194,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 65
+              },
+              {
+                "typeId": 2,
+                "count": 78
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 140,
+            "totalCellCellInterfaceCount": 283,
+            "heterotypicInterfaceFraction": 0.49469964664310956,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 67
+              },
+              {
+                "typeId": 2,
+                "count": 76
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 8,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.875,
+            "minimumCellPerimeter": 30,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 141,
+            "totalCellCellInterfaceCount": 275,
+            "heterotypicInterfaceFraction": 0.5127272727272727,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 47
+              },
+              {
+                "typeId": 2,
+                "count": 87
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.3125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44.75,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 137,
+            "totalCellCellInterfaceCount": 274,
+            "heterotypicInterfaceFraction": 0.5,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 61
+              },
+              {
+                "typeId": 2,
+                "count": 76
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 8,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44.875,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 137,
+        "totalCellCellInterfaceCount": 274,
+        "heterotypicInterfaceFraction": 0.5,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 61
+          },
+          {
+            "typeId": 2,
+            "count": 76
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.9375,
+        "minimumCellArea": 8,
+        "maximumCellArea": 16,
+        "meanCellPerimeter": 44.875,
+        "minimumCellPerimeter": 32,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 5
+          },
+          {
+            "typeId": 2,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3870,
+      "rejectedAttemptCount": 3926,
+      "noOpAttemptCount": 74124,
+      "connectivityFallbackCount": 799,
+      "elapsedMilliseconds": 99.7153,
+      "allocatedBytes": 1032416,
+      "measurementMilliseconds": 17.5839
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0002",
+      "replicateIndex": 1,
+      "seed": 3239407024170548425,
+      "initialisationSeed": 1423931837138143082,
+      "dynamicsSeed": 13872639396067398325,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 177,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.686046511627907,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 46
+              },
+              {
+                "typeId": 2,
+                "count": 35
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 184,
+            "totalCellCellInterfaceCount": 285,
+            "heterotypicInterfaceFraction": 0.6456140350877193,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 61
+              },
+              {
+                "typeId": 2,
+                "count": 40
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.5625,
+            "minimumCellArea": 12,
+            "maximumCellArea": 21,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 181,
+            "totalCellCellInterfaceCount": 283,
+            "heterotypicInterfaceFraction": 0.6395759717314488,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 66
+              },
+              {
+                "typeId": 2,
+                "count": 36
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.625,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 193,
+            "totalCellCellInterfaceCount": 289,
+            "heterotypicInterfaceFraction": 0.6678200692041523,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 57
+              },
+              {
+                "typeId": 2,
+                "count": 39
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.5625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 47,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 184,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.6279863481228669,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 59
+              },
+              {
+                "typeId": 2,
+                "count": 50
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.3125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.625,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 172,
+            "totalCellCellInterfaceCount": 288,
+            "heterotypicInterfaceFraction": 0.5972222222222222,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 59
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 8,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 172,
+            "totalCellCellInterfaceCount": 273,
+            "heterotypicInterfaceFraction": 0.63003663003663,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 57
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 44.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 170,
+            "totalCellCellInterfaceCount": 276,
+            "heterotypicInterfaceFraction": 0.6159420289855072,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 53
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.4375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 50,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 173,
+            "totalCellCellInterfaceCount": 276,
+            "heterotypicInterfaceFraction": 0.6268115942028986,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 49
+              },
+              {
+                "typeId": 2,
+                "count": 54
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.1875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 173,
+        "totalCellCellInterfaceCount": 276,
+        "heterotypicInterfaceFraction": 0.6268115942028986,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 49
+          },
+          {
+            "typeId": 2,
+            "count": 54
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.1875,
+        "minimumCellArea": 9,
+        "maximumCellArea": 16,
+        "meanCellPerimeter": 45,
+        "minimumCellPerimeter": 38,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 5
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3712,
+      "rejectedAttemptCount": 3976,
+      "noOpAttemptCount": 74232,
+      "connectivityFallbackCount": 891,
+      "elapsedMilliseconds": 55.0716,
+      "allocatedBytes": 1024944,
+      "measurementMilliseconds": 6.9398
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0003",
+      "replicateIndex": 2,
+      "seed": 6207888555675935795,
+      "initialisationSeed": 15752636069123159023,
+      "dynamicsSeed": 11564373661395922057,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 140,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5426356589147286,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 65
+              },
+              {
+                "typeId": 2,
+                "count": 53
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 160,
+            "totalCellCellInterfaceCount": 294,
+            "heterotypicInterfaceFraction": 0.54421768707483,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 78
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.125,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 48.75,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 157,
+            "totalCellCellInterfaceCount": 292,
+            "heterotypicInterfaceFraction": 0.5376712328767124,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 85
+              },
+              {
+                "typeId": 2,
+                "count": 50
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.625,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 157,
+            "totalCellCellInterfaceCount": 301,
+            "heterotypicInterfaceFraction": 0.521594684385382,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 87
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.3125,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 49,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 172,
+            "totalCellCellInterfaceCount": 281,
+            "heterotypicInterfaceFraction": 0.6120996441281139,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 58
+              },
+              {
+                "typeId": 2,
+                "count": 51
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.8125,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.75,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 137,
+            "totalCellCellInterfaceCount": 285,
+            "heterotypicInterfaceFraction": 0.4807017543859649,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 83
+              },
+              {
+                "typeId": 2,
+                "count": 65
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.1875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 141,
+            "totalCellCellInterfaceCount": 274,
+            "heterotypicInterfaceFraction": 0.5145985401459854,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 77
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.8125,
+            "minimumCellArea": 10,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 44.625,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 167,
+            "totalCellCellInterfaceCount": 292,
+            "heterotypicInterfaceFraction": 0.571917808219178,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 63
+              },
+              {
+                "typeId": 2,
+                "count": 62
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.0625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 131,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.447098976109215,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 96
+              },
+              {
+                "typeId": 2,
+                "count": 66
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.3125,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 131,
+        "totalCellCellInterfaceCount": 293,
+        "heterotypicInterfaceFraction": 0.447098976109215,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 96
+          },
+          {
+            "typeId": 2,
+            "count": 66
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.3125,
+        "minimumCellArea": 10,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 47.375,
+        "minimumCellPerimeter": 42,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 4
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3876,
+      "rejectedAttemptCount": 3946,
+      "noOpAttemptCount": 74098,
+      "connectivityFallbackCount": 790,
+      "elapsedMilliseconds": 49.7966,
+      "allocatedBytes": 1041224,
+      "measurementMilliseconds": 1.6178
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0004",
+      "replicateIndex": 3,
+      "seed": 5343431526590614606,
+      "initialisationSeed": 1406554235712514776,
+      "dynamicsSeed": 3912245160575091436,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 131,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5077519379844961,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 52
+              },
+              {
+                "typeId": 2,
+                "count": 75
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 154,
+            "totalCellCellInterfaceCount": 311,
+            "heterotypicInterfaceFraction": 0.49517684887459806,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 66
+              },
+              {
+                "typeId": 2,
+                "count": 91
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.9375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 49.75,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 64,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 130,
+            "totalCellCellInterfaceCount": 279,
+            "heterotypicInterfaceFraction": 0.4659498207885305,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 68
+              },
+              {
+                "typeId": 2,
+                "count": 81
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 138,
+            "totalCellCellInterfaceCount": 283,
+            "heterotypicInterfaceFraction": 0.4876325088339223,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 61
+              },
+              {
+                "typeId": 2,
+                "count": 84
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 148,
+            "totalCellCellInterfaceCount": 281,
+            "heterotypicInterfaceFraction": 0.5266903914590747,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 49
+              },
+              {
+                "typeId": 2,
+                "count": 84
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 146,
+            "totalCellCellInterfaceCount": 294,
+            "heterotypicInterfaceFraction": 0.4965986394557823,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 86
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.0625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.25,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 159,
+            "totalCellCellInterfaceCount": 273,
+            "heterotypicInterfaceFraction": 0.5824175824175825,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 40
+              },
+              {
+                "typeId": 2,
+                "count": 74
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.625,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 159,
+            "totalCellCellInterfaceCount": 271,
+            "heterotypicInterfaceFraction": 0.5867158671586716,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 41
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.75,
+            "minimumCellArea": 7,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.25,
+            "minimumCellPerimeter": 30,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 144,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.4948453608247423,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 64
+              },
+              {
+                "typeId": 2,
+                "count": 83
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.1875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 144,
+        "totalCellCellInterfaceCount": 291,
+        "heterotypicInterfaceFraction": 0.4948453608247423,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 64
+          },
+          {
+            "typeId": 2,
+            "count": 83
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.1875,
+        "minimumCellArea": 10,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 47.125,
+        "minimumCellPerimeter": 36,
+        "maximumCellPerimeter": 58,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 2,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3719,
+      "rejectedAttemptCount": 3831,
+      "noOpAttemptCount": 74370,
+      "connectivityFallbackCount": 851,
+      "elapsedMilliseconds": 54.7034,
+      "allocatedBytes": 982408,
+      "measurementMilliseconds": 1.6459
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0005",
+      "replicateIndex": 4,
+      "seed": 9705518060883425430,
+      "initialisationSeed": 1367973888897597411,
+      "dynamicsSeed": 15714314688728225582,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 130,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5038759689922481,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 64
+              },
+              {
+                "typeId": 2,
+                "count": 64
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 162,
+            "totalCellCellInterfaceCount": 310,
+            "heterotypicInterfaceFraction": 0.5225806451612903,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 81
+              },
+              {
+                "typeId": 2,
+                "count": 67
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 15.0625,
+            "minimumCellArea": 12,
+            "maximumCellArea": 21,
+            "meanCellPerimeter": 50,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 157,
+            "totalCellCellInterfaceCount": 278,
+            "heterotypicInterfaceFraction": 0.564748201438849,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 70
+              },
+              {
+                "typeId": 2,
+                "count": 51
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.25,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 45.875,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 162,
+            "totalCellCellInterfaceCount": 303,
+            "heterotypicInterfaceFraction": 0.5346534653465347,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 81
+              },
+              {
+                "typeId": 2,
+                "count": 60
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 48.25,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 171,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.5738255033557047,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 75
+              },
+              {
+                "typeId": 2,
+                "count": 52
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.5625,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 48.25,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 143,
+            "totalCellCellInterfaceCount": 305,
+            "heterotypicInterfaceFraction": 0.46885245901639344,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 91
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 48.75,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 160,
+            "totalCellCellInterfaceCount": 284,
+            "heterotypicInterfaceFraction": 0.5633802816901409,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 67
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.125,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 50,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 148,
+            "totalCellCellInterfaceCount": 290,
+            "heterotypicInterfaceFraction": 0.5103448275862069,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 65
+              },
+              {
+                "typeId": 2,
+                "count": 77
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.1875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 176,
+            "totalCellCellInterfaceCount": 302,
+            "heterotypicInterfaceFraction": 0.5827814569536424,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 63
+              },
+              {
+                "typeId": 2,
+                "count": 63
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.4375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 48.375,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 176,
+        "totalCellCellInterfaceCount": 302,
+        "heterotypicInterfaceFraction": 0.5827814569536424,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 63
+          },
+          {
+            "typeId": 2,
+            "count": 63
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.4375,
+        "minimumCellArea": 11,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 48.375,
+        "minimumCellPerimeter": 42,
+        "maximumCellPerimeter": 60,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 5
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3882,
+      "rejectedAttemptCount": 4072,
+      "noOpAttemptCount": 73966,
+      "connectivityFallbackCount": 930,
+      "elapsedMilliseconds": 52.5715,
+      "allocatedBytes": 1029072,
+      "measurementMilliseconds": 1.5939
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0006",
+      "replicateIndex": 5,
+      "seed": 1936088202981723013,
+      "initialisationSeed": 18239957083966385551,
+      "dynamicsSeed": 10309905480786746766,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 98,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.3798449612403101,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 86
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 101,
+            "totalCellCellInterfaceCount": 295,
+            "heterotypicInterfaceFraction": 0.3423728813559322,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 92
+              },
+              {
+                "typeId": 2,
+                "count": 102
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 48.375,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 107,
+            "totalCellCellInterfaceCount": 307,
+            "heterotypicInterfaceFraction": 0.3485342019543974,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 92
+              },
+              {
+                "typeId": 2,
+                "count": 108
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 49.75,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 125,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.42662116040955633,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 85
+              },
+              {
+                "typeId": 2,
+                "count": 83
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.5625,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 48,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 105,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.36082474226804123,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 90
+              },
+              {
+                "typeId": 2,
+                "count": 96
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 101,
+            "totalCellCellInterfaceCount": 294,
+            "heterotypicInterfaceFraction": 0.3435374149659864,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 98
+              },
+              {
+                "typeId": 2,
+                "count": 95
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.25,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 92,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.31399317406143346,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 97
+              },
+              {
+                "typeId": 2,
+                "count": 104
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.3125,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 105,
+            "totalCellCellInterfaceCount": 297,
+            "heterotypicInterfaceFraction": 0.35353535353535354,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 104
+              },
+              {
+                "typeId": 2,
+                "count": 88
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 48,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 112,
+            "totalCellCellInterfaceCount": 313,
+            "heterotypicInterfaceFraction": 0.35782747603833864,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 100
+              },
+              {
+                "typeId": 2,
+                "count": 101
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14,
+            "minimumCellArea": 12,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 49.875,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 112,
+        "totalCellCellInterfaceCount": 313,
+        "heterotypicInterfaceFraction": 0.35782747603833864,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 100
+          },
+          {
+            "typeId": 2,
+            "count": 101
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 14,
+        "minimumCellArea": 12,
+        "maximumCellArea": 19,
+        "meanCellPerimeter": 49.875,
+        "minimumCellPerimeter": 40,
+        "maximumCellPerimeter": 60,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3858,
+      "rejectedAttemptCount": 4136,
+      "noOpAttemptCount": 73926,
+      "connectivityFallbackCount": 1006,
+      "elapsedMilliseconds": 48.6348,
+      "allocatedBytes": 1053936,
+      "measurementMilliseconds": 1.6304
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0007",
+      "replicateIndex": 6,
+      "seed": 3842174079154639961,
+      "initialisationSeed": 16062094560677522100,
+      "dynamicsSeed": 1645699622131335451,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 138,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5348837209302325,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 77
+              },
+              {
+                "typeId": 2,
+                "count": 43
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 130,
+            "totalCellCellInterfaceCount": 302,
+            "heterotypicInterfaceFraction": 0.4304635761589404,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 105
+              },
+              {
+                "typeId": 2,
+                "count": 67
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.625,
+            "minimumCellArea": 11,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 49.875,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 3
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 144,
+            "totalCellCellInterfaceCount": 282,
+            "heterotypicInterfaceFraction": 0.5106382978723404,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 89
+              },
+              {
+                "typeId": 2,
+                "count": 49
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 3
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 161,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.540268456375839,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 80
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.125,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 48.5,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 62,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 173,
+            "totalCellCellInterfaceCount": 287,
+            "heterotypicInterfaceFraction": 0.6027874564459931,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 68
+              },
+              {
+                "typeId": 2,
+                "count": 46
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.0625,
+            "minimumCellArea": 10,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 152,
+            "totalCellCellInterfaceCount": 287,
+            "heterotypicInterfaceFraction": 0.5296167247386759,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 84
+              },
+              {
+                "typeId": 2,
+                "count": 51
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 212,
+            "totalCellCellInterfaceCount": 302,
+            "heterotypicInterfaceFraction": 0.7019867549668874,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 54
+              },
+              {
+                "typeId": 2,
+                "count": 36
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.1875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 48.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 174,
+            "totalCellCellInterfaceCount": 289,
+            "heterotypicInterfaceFraction": 0.6020761245674741,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 71
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 178,
+            "totalCellCellInterfaceCount": 275,
+            "heterotypicInterfaceFraction": 0.6472727272727272,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 59
+              },
+              {
+                "typeId": 2,
+                "count": 38
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.6875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.375,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 178,
+        "totalCellCellInterfaceCount": 275,
+        "heterotypicInterfaceFraction": 0.6472727272727272,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 59
+          },
+          {
+            "typeId": 2,
+            "count": 38
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.6875,
+        "minimumCellArea": 9,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 45.375,
+        "minimumCellPerimeter": 32,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3857,
+      "rejectedAttemptCount": 4023,
+      "noOpAttemptCount": 74040,
+      "connectivityFallbackCount": 890,
+      "elapsedMilliseconds": 47.4496,
+      "allocatedBytes": 1026016,
+      "measurementMilliseconds": 1.5762
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0008",
+      "replicateIndex": 7,
+      "seed": 834967504038104287,
+      "initialisationSeed": 2986858356474044404,
+      "dynamicsSeed": 560549049059042136,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 169,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.6550387596899225,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 44
+              },
+              {
+                "typeId": 2,
+                "count": 45
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 206,
+            "totalCellCellInterfaceCount": 305,
+            "heterotypicInterfaceFraction": 0.6754098360655738,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 46
+              },
+              {
+                "typeId": 2,
+                "count": 53
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.75,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 49.375,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 182,
+            "totalCellCellInterfaceCount": 284,
+            "heterotypicInterfaceFraction": 0.6408450704225352,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 35
+              },
+              {
+                "typeId": 2,
+                "count": 67
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 158,
+            "totalCellCellInterfaceCount": 295,
+            "heterotypicInterfaceFraction": 0.535593220338983,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 66
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 169,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.5767918088737202,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 52
+              },
+              {
+                "typeId": 2,
+                "count": 72
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 8,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 168,
+            "totalCellCellInterfaceCount": 299,
+            "heterotypicInterfaceFraction": 0.5618729096989966,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 78
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.625,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 155,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.5290102389078498,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 67
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.25,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 139,
+            "totalCellCellInterfaceCount": 288,
+            "heterotypicInterfaceFraction": 0.4826388888888889,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 72
+              },
+              {
+                "typeId": 2,
+                "count": 77
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 46,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 141,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.4845360824742268,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 77
+              },
+              {
+                "typeId": 2,
+                "count": 73
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5625,
+            "minimumCellArea": 7,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.75,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 141,
+        "totalCellCellInterfaceCount": 291,
+        "heterotypicInterfaceFraction": 0.4845360824742268,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 77
+          },
+          {
+            "typeId": 2,
+            "count": 73
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.5625,
+        "minimumCellArea": 7,
+        "maximumCellArea": 16,
+        "meanCellPerimeter": 46.75,
+        "minimumCellPerimeter": 32,
+        "maximumCellPerimeter": 56,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          },
+          {
+            "typeId": 2,
+            "domainCount": 2,
+            "largestDomainCellCount": 5
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3745,
+      "rejectedAttemptCount": 3991,
+      "noOpAttemptCount": 74184,
+      "connectivityFallbackCount": 890,
+      "elapsedMilliseconds": 48.0973,
+      "allocatedBytes": 1033928,
+      "measurementMilliseconds": 1.6219
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0009",
+      "replicateIndex": 8,
+      "seed": 403377707549332599,
+      "initialisationSeed": 11183715703750931130,
+      "dynamicsSeed": 6042267048585269761,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 141,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5465116279069767,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 64
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 176,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.5906040268456376,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 61
+              },
+              {
+                "typeId": 2,
+                "count": 61
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.9375,
+            "minimumCellArea": 12,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 48.75,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 163,
+            "totalCellCellInterfaceCount": 294,
+            "heterotypicInterfaceFraction": 0.5544217687074829,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 69
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 48,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 143,
+            "totalCellCellInterfaceCount": 285,
+            "heterotypicInterfaceFraction": 0.5017543859649123,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 80
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.75,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 173,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.590443686006826,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 58
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.75,
+            "minimumCellArea": 12,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.25,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 158,
+            "totalCellCellInterfaceCount": 285,
+            "heterotypicInterfaceFraction": 0.5543859649122806,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 67
+              },
+              {
+                "typeId": 2,
+                "count": 60
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.25,
+            "minimumCellArea": 11,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.5,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 149,
+            "totalCellCellInterfaceCount": 296,
+            "heterotypicInterfaceFraction": 0.5033783783783784,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 76
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.4375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 47.5,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 150,
+            "totalCellCellInterfaceCount": 273,
+            "heterotypicInterfaceFraction": 0.5494505494505495,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 70
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.1875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44.125,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 183,
+            "totalCellCellInterfaceCount": 269,
+            "heterotypicInterfaceFraction": 0.6802973977695167,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 35
+              },
+              {
+                "typeId": 2,
+                "count": 51
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.25,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 183,
+        "totalCellCellInterfaceCount": 269,
+        "heterotypicInterfaceFraction": 0.6802973977695167,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 35
+          },
+          {
+            "typeId": 2,
+            "count": 51
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.5,
+        "minimumCellArea": 9,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 44.25,
+        "minimumCellPerimeter": 32,
+        "maximumCellPerimeter": 54,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3773,
+      "rejectedAttemptCount": 3899,
+      "noOpAttemptCount": 74248,
+      "connectivityFallbackCount": 788,
+      "elapsedMilliseconds": 50.597,
+      "allocatedBytes": 1037136,
+      "measurementMilliseconds": 1.7419
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0010",
+      "replicateIndex": 9,
+      "seed": 13373361724678078678,
+      "initialisationSeed": 10113006167673148475,
+      "dynamicsSeed": 12432908949570722281,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 119,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.46124031007751937,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 87
+              },
+              {
+                "typeId": 2,
+                "count": 52
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 170,
+            "totalCellCellInterfaceCount": 290,
+            "heterotypicInterfaceFraction": 0.5862068965517241,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 76
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.5,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 161,
+            "totalCellCellInterfaceCount": 294,
+            "heterotypicInterfaceFraction": 0.5476190476190477,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 75
+              },
+              {
+                "typeId": 2,
+                "count": 58
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 147,
+            "totalCellCellInterfaceCount": 274,
+            "heterotypicInterfaceFraction": 0.5364963503649635,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 72
+              },
+              {
+                "typeId": 2,
+                "count": 55
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5625,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 50,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 140,
+            "totalCellCellInterfaceCount": 281,
+            "heterotypicInterfaceFraction": 0.498220640569395,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 85
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 45.625,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 151,
+            "totalCellCellInterfaceCount": 280,
+            "heterotypicInterfaceFraction": 0.5392857142857143,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 55
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.25,
+            "minimumCellArea": 8,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45.25,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 126,
+            "totalCellCellInterfaceCount": 287,
+            "heterotypicInterfaceFraction": 0.43902439024390244,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 81
+              },
+              {
+                "typeId": 2,
+                "count": 80
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.3125,
+            "minimumCellArea": 8,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 62,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 113,
+            "totalCellCellInterfaceCount": 264,
+            "heterotypicInterfaceFraction": 0.42803030303030304,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 79
+              },
+              {
+                "typeId": 2,
+                "count": 72
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.1875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 43.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 50,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 127,
+            "totalCellCellInterfaceCount": 282,
+            "heterotypicInterfaceFraction": 0.450354609929078,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 82
+              },
+              {
+                "typeId": 2,
+                "count": 73
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.8125,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 45.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 127,
+        "totalCellCellInterfaceCount": 282,
+        "heterotypicInterfaceFraction": 0.450354609929078,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 82
+          },
+          {
+            "typeId": 2,
+            "count": 73
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.8125,
+        "minimumCellArea": 11,
+        "maximumCellArea": 18,
+        "meanCellPerimeter": 45.875,
+        "minimumCellPerimeter": 38,
+        "maximumCellPerimeter": 58,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3739,
+      "rejectedAttemptCount": 3805,
+      "noOpAttemptCount": 74376,
+      "connectivityFallbackCount": 858,
+      "elapsedMilliseconds": 22.5839,
+      "allocatedBytes": 1035576,
+      "measurementMilliseconds": 2.3652
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0011",
+      "replicateIndex": 10,
+      "seed": 12274315271238340758,
+      "initialisationSeed": 1100172855482392579,
+      "dynamicsSeed": 6255348592372833773,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 176,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.6821705426356589,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 35
+              },
+              {
+                "typeId": 2,
+                "count": 47
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 175,
+            "totalCellCellInterfaceCount": 292,
+            "heterotypicInterfaceFraction": 0.5993150684931506,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 58
+              },
+              {
+                "typeId": 2,
+                "count": 59
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 12,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 48.625,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 173,
+            "totalCellCellInterfaceCount": 296,
+            "heterotypicInterfaceFraction": 0.5844594594594594,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 60
+              },
+              {
+                "typeId": 2,
+                "count": 63
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.3125,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 48.625,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 170,
+            "totalCellCellInterfaceCount": 280,
+            "heterotypicInterfaceFraction": 0.6071428571428571,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 62
+              },
+              {
+                "typeId": 2,
+                "count": 48
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 218,
+            "totalCellCellInterfaceCount": 310,
+            "heterotypicInterfaceFraction": 0.7032258064516129,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 48
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 49.5,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 64,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 219,
+            "totalCellCellInterfaceCount": 303,
+            "heterotypicInterfaceFraction": 0.7227722772277227,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 39
+              },
+              {
+                "typeId": 2,
+                "count": 45
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.1875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 49,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 5
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 198,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.6804123711340206,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 49
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5625,
+            "minimumCellArea": 6,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 30,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 3
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 202,
+            "totalCellCellInterfaceCount": 276,
+            "heterotypicInterfaceFraction": 0.7318840579710145,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 26
+              },
+              {
+                "typeId": 2,
+                "count": 48
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.5,
+            "minimumCellArea": 8,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.125,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 222,
+            "totalCellCellInterfaceCount": 280,
+            "heterotypicInterfaceFraction": 0.7928571428571428,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 23
+              },
+              {
+                "typeId": 2,
+                "count": 35
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.0625,
+            "minimumCellArea": 7,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 45.25,
+            "minimumCellPerimeter": 32,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 222,
+        "totalCellCellInterfaceCount": 280,
+        "heterotypicInterfaceFraction": 0.7928571428571428,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 23
+          },
+          {
+            "typeId": 2,
+            "count": 35
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 12.0625,
+        "minimumCellArea": 7,
+        "maximumCellArea": 15,
+        "meanCellPerimeter": 45.25,
+        "minimumCellPerimeter": 32,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3725,
+      "rejectedAttemptCount": 4047,
+      "noOpAttemptCount": 74148,
+      "connectivityFallbackCount": 862,
+      "elapsedMilliseconds": 17.0231,
+      "allocatedBytes": 1020632,
+      "measurementMilliseconds": 1.0303
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0012",
+      "replicateIndex": 11,
+      "seed": 15910028833661729277,
+      "initialisationSeed": 14667340710723225050,
+      "dynamicsSeed": 1691209485699226521,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 108,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.4186046511627907,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 75
+              },
+              {
+                "typeId": 2,
+                "count": 75
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 138,
+            "totalCellCellInterfaceCount": 297,
+            "heterotypicInterfaceFraction": 0.46464646464646464,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 83
+              },
+              {
+                "typeId": 2,
+                "count": 76
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 15.25,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 49.125,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 120,
+            "totalCellCellInterfaceCount": 297,
+            "heterotypicInterfaceFraction": 0.40404040404040403,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 98
+              },
+              {
+                "typeId": 2,
+                "count": 79
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.6875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 48.375,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 128,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.43986254295532645,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 81
+              },
+              {
+                "typeId": 2,
+                "count": 82
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 8,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 132,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.45051194539249145,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 78
+              },
+              {
+                "typeId": 2,
+                "count": 83
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.25,
+            "minimumCellArea": 11,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 97,
+            "totalCellCellInterfaceCount": 277,
+            "heterotypicInterfaceFraction": 0.35018050541516244,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 104
+              },
+              {
+                "typeId": 2,
+                "count": 76
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45.25,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 117,
+            "totalCellCellInterfaceCount": 285,
+            "heterotypicInterfaceFraction": 0.4105263157894737,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 104
+              },
+              {
+                "typeId": 2,
+                "count": 64
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.75,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 45.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 150,
+            "totalCellCellInterfaceCount": 291,
+            "heterotypicInterfaceFraction": 0.5154639175257731,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 94
+              },
+              {
+                "typeId": 2,
+                "count": 47
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.625,
+            "minimumCellArea": 8,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 46.25,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 138,
+            "totalCellCellInterfaceCount": 289,
+            "heterotypicInterfaceFraction": 0.47750865051903113,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 76
+              },
+              {
+                "typeId": 2,
+                "count": 75
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.25,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 138,
+        "totalCellCellInterfaceCount": 289,
+        "heterotypicInterfaceFraction": 0.47750865051903113,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 76
+          },
+          {
+            "typeId": 2,
+            "count": 75
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13,
+        "minimumCellArea": 10,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 47.25,
+        "minimumCellPerimeter": 34,
+        "maximumCellPerimeter": 56,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          },
+          {
+            "typeId": 2,
+            "domainCount": 2,
+            "largestDomainCellCount": 7
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3717,
+      "rejectedAttemptCount": 3961,
+      "noOpAttemptCount": 74242,
+      "connectivityFallbackCount": 850,
+      "elapsedMilliseconds": 16.7255,
+      "allocatedBytes": 1039552,
+      "measurementMilliseconds": 1.0753
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0013",
+      "replicateIndex": 12,
+      "seed": 10184681558246390782,
+      "initialisationSeed": 17392944185908992897,
+      "dynamicsSeed": 8279961916513982137,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 99,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.38372093023255816,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 85
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 124,
+            "totalCellCellInterfaceCount": 302,
+            "heterotypicInterfaceFraction": 0.4105960264900662,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 84
+              },
+              {
+                "typeId": 2,
+                "count": 94
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 15.1875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 49.625,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 133,
+            "totalCellCellInterfaceCount": 296,
+            "heterotypicInterfaceFraction": 0.44932432432432434,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 78
+              },
+              {
+                "typeId": 2,
+                "count": 85
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.5625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 48.375,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 127,
+            "totalCellCellInterfaceCount": 275,
+            "heterotypicInterfaceFraction": 0.4618181818181818,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 74
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.875,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 141,
+            "totalCellCellInterfaceCount": 290,
+            "heterotypicInterfaceFraction": 0.4862068965517241,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 78
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.4375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 178,
+            "totalCellCellInterfaceCount": 314,
+            "heterotypicInterfaceFraction": 0.5668789808917197,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 82
+              },
+              {
+                "typeId": 2,
+                "count": 54
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.625,
+            "minimumCellArea": 8,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 50.125,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 62,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 133,
+            "totalCellCellInterfaceCount": 272,
+            "heterotypicInterfaceFraction": 0.4889705882352941,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 78
+              },
+              {
+                "typeId": 2,
+                "count": 61
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.25,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 5
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 127,
+            "totalCellCellInterfaceCount": 279,
+            "heterotypicInterfaceFraction": 0.4551971326164875,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 81
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.25,
+            "minimumCellArea": 9,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 46.125,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 110,
+            "totalCellCellInterfaceCount": 297,
+            "heterotypicInterfaceFraction": 0.37037037037037035,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 95
+              },
+              {
+                "typeId": 2,
+                "count": 92
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 110,
+        "totalCellCellInterfaceCount": 297,
+        "heterotypicInterfaceFraction": 0.37037037037037035,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 95
+          },
+          {
+            "typeId": 2,
+            "count": 92
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13,
+        "minimumCellArea": 9,
+        "maximumCellArea": 18,
+        "meanCellPerimeter": 47.375,
+        "minimumCellPerimeter": 38,
+        "maximumCellPerimeter": 60,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3853,
+      "rejectedAttemptCount": 3914,
+      "noOpAttemptCount": 74153,
+      "connectivityFallbackCount": 824,
+      "elapsedMilliseconds": 16.8823,
+      "allocatedBytes": 1039528,
+      "measurementMilliseconds": 1.0837
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0014",
+      "replicateIndex": 13,
+      "seed": 7387050279123122092,
+      "initialisationSeed": 6419339103750764996,
+      "dynamicsSeed": 5727108232159248018,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 133,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5155038759689923,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 51
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 155,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.5201342281879194,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 82
+              },
+              {
+                "typeId": 2,
+                "count": 61
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.75,
+            "minimumCellArea": 11,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 48.875,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 62,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 172,
+            "totalCellCellInterfaceCount": 308,
+            "heterotypicInterfaceFraction": 0.5584415584415584,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 84
+              },
+              {
+                "typeId": 2,
+                "count": 52
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.9375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 50.5,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 62,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 126,
+            "totalCellCellInterfaceCount": 280,
+            "heterotypicInterfaceFraction": 0.45,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 94
+              },
+              {
+                "typeId": 2,
+                "count": 60
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.6875,
+            "minimumCellArea": 9,
+            "maximumCellArea": 15,
+            "meanCellPerimeter": 45.375,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 132,
+            "totalCellCellInterfaceCount": 281,
+            "heterotypicInterfaceFraction": 0.4697508896797153,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 93
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.1875,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45.625,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 127,
+            "totalCellCellInterfaceCount": 274,
+            "heterotypicInterfaceFraction": 0.4635036496350365,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 90
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.375,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 125,
+            "totalCellCellInterfaceCount": 279,
+            "heterotypicInterfaceFraction": 0.44802867383512546,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 83
+              },
+              {
+                "typeId": 2,
+                "count": 71
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.625,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 121,
+            "totalCellCellInterfaceCount": 274,
+            "heterotypicInterfaceFraction": 0.4416058394160584,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 97
+              },
+              {
+                "typeId": 2,
+                "count": 56
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.4375,
+            "minimumCellArea": 8,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 44.75,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 113,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.3856655290102389,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 98
+              },
+              {
+                "typeId": 2,
+                "count": 82
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.375,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 113,
+        "totalCellCellInterfaceCount": 293,
+        "heterotypicInterfaceFraction": 0.3856655290102389,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 98
+          },
+          {
+            "typeId": 2,
+            "count": 82
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.375,
+        "minimumCellArea": 9,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 47.375,
+        "minimumCellPerimeter": 40,
+        "maximumCellPerimeter": 60,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 4
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3778,
+      "rejectedAttemptCount": 3987,
+      "noOpAttemptCount": 74155,
+      "connectivityFallbackCount": 958,
+      "elapsedMilliseconds": 17.4816,
+      "allocatedBytes": 1033208,
+      "measurementMilliseconds": 1.0997
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0015",
+      "replicateIndex": 14,
+      "seed": 14942041207446750542,
+      "initialisationSeed": 14422550052847689428,
+      "dynamicsSeed": 14558436363986970973,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 149,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.5775193798449613,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 54
+              },
+              {
+                "typeId": 2,
+                "count": 55
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 178,
+            "totalCellCellInterfaceCount": 287,
+            "heterotypicInterfaceFraction": 0.6202090592334495,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 52
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 47.5,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 158,
+            "totalCellCellInterfaceCount": 278,
+            "heterotypicInterfaceFraction": 0.5683453237410072,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 55
+              },
+              {
+                "typeId": 2,
+                "count": 65
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.75,
+            "minimumCellArea": 12,
+            "maximumCellArea": 20,
+            "meanCellPerimeter": 46.75,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 151,
+            "totalCellCellInterfaceCount": 298,
+            "heterotypicInterfaceFraction": 0.5067114093959731,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 58
+              },
+              {
+                "typeId": 2,
+                "count": 89
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.9375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 48.75,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 142,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.48464163822525597,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 61
+              },
+              {
+                "typeId": 2,
+                "count": 90
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 157,
+            "totalCellCellInterfaceCount": 272,
+            "heterotypicInterfaceFraction": 0.5772058823529411,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 62
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.3125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 45.125,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 172,
+            "totalCellCellInterfaceCount": 293,
+            "heterotypicInterfaceFraction": 0.5870307167235495,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 53
+              },
+              {
+                "typeId": 2,
+                "count": 68
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.375,
+            "minimumCellArea": 11,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 47.125,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 163,
+            "totalCellCellInterfaceCount": 287,
+            "heterotypicInterfaceFraction": 0.5679442508710801,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 46
+              },
+              {
+                "typeId": 2,
+                "count": 78
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.75,
+            "minimumCellArea": 10,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.375,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 146,
+            "totalCellCellInterfaceCount": 278,
+            "heterotypicInterfaceFraction": 0.5251798561151079,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 64
+              },
+              {
+                "typeId": 2,
+                "count": 68
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 45.375,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 146,
+        "totalCellCellInterfaceCount": 278,
+        "heterotypicInterfaceFraction": 0.5251798561151079,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 64
+          },
+          {
+            "typeId": 2,
+            "count": 68
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13.125,
+        "minimumCellArea": 9,
+        "maximumCellArea": 18,
+        "meanCellPerimeter": 45.375,
+        "minimumCellPerimeter": 36,
+        "maximumCellPerimeter": 54,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 2,
+            "largestDomainCellCount": 6
+          },
+          {
+            "typeId": 2,
+            "domainCount": 3,
+            "largestDomainCellCount": 4
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3759,
+      "rejectedAttemptCount": 4013,
+      "noOpAttemptCount": 74148,
+      "connectivityFallbackCount": 921,
+      "elapsedMilliseconds": 16.872,
+      "allocatedBytes": 1028840,
+      "measurementMilliseconds": 1.0584
+    },
+    {
+      "experimentId": "E02-control-v1",
+      "replicateId": "E02-control-v1-r0016",
+      "replicateIndex": 15,
+      "seed": 6765155472627912580,
+      "initialisationSeed": 1863109837238074189,
+      "dynamicsSeed": 7841953690545534999,
+      "status": 0,
+      "failure": null,
+      "samples": [
+        {
+          "mcs": 0,
+          "metrics": {
+            "heterotypicInterfaceCount": 159,
+            "totalCellCellInterfaceCount": 258,
+            "heterotypicInterfaceFraction": 0.6162790697674418,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 55
+              },
+              {
+                "typeId": 2,
+                "count": 44
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 16,
+            "minimumCellArea": 16,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 44,
+            "minimumCellPerimeter": 44,
+            "maximumCellPerimeter": 44,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 10,
+          "metrics": {
+            "heterotypicInterfaceCount": 166,
+            "totalCellCellInterfaceCount": 300,
+            "heterotypicInterfaceFraction": 0.5533333333333333,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 76
+              },
+              {
+                "typeId": 2,
+                "count": 58
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 14.6875,
+            "minimumCellArea": 11,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 48.875,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 4,
+                "largestDomainCellCount": 4
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 20,
+          "metrics": {
+            "heterotypicInterfaceCount": 177,
+            "totalCellCellInterfaceCount": 283,
+            "heterotypicInterfaceFraction": 0.6254416961130742,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 59
+              },
+              {
+                "typeId": 2,
+                "count": 47
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.9375,
+            "minimumCellArea": 9,
+            "maximumCellArea": 19,
+            "meanCellPerimeter": 46.75,
+            "minimumCellPerimeter": 42,
+            "maximumCellPerimeter": 64,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 30,
+          "metrics": {
+            "heterotypicInterfaceCount": 173,
+            "totalCellCellInterfaceCount": 286,
+            "heterotypicInterfaceFraction": 0.6048951048951049,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 56
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.625,
+            "minimumCellArea": 10,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.625,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 56,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 40,
+          "metrics": {
+            "heterotypicInterfaceCount": 170,
+            "totalCellCellInterfaceCount": 304,
+            "heterotypicInterfaceFraction": 0.5592105263157895,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 73
+              },
+              {
+                "typeId": 2,
+                "count": 61
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.5625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 48.5,
+            "minimumCellPerimeter": 40,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 3,
+                "largestDomainCellCount": 6
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 50,
+          "metrics": {
+            "heterotypicInterfaceCount": 175,
+            "totalCellCellInterfaceCount": 284,
+            "heterotypicInterfaceFraction": 0.6161971830985915,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 63
+              },
+              {
+                "typeId": 2,
+                "count": 46
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.0625,
+            "minimumCellArea": 9,
+            "maximumCellArea": 16,
+            "meanCellPerimeter": 46.625,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 54,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 60,
+          "metrics": {
+            "heterotypicInterfaceCount": 157,
+            "totalCellCellInterfaceCount": 288,
+            "heterotypicInterfaceFraction": 0.5451388888888888,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 74
+              },
+              {
+                "typeId": 2,
+                "count": 57
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13.125,
+            "minimumCellArea": 9,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 46.875,
+            "minimumCellPerimeter": 34,
+            "maximumCellPerimeter": 60,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 2,
+                "largestDomainCellCount": 6
+              },
+              {
+                "typeId": 2,
+                "domainCount": 2,
+                "largestDomainCellCount": 7
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 70,
+          "metrics": {
+            "heterotypicInterfaceCount": 171,
+            "totalCellCellInterfaceCount": 283,
+            "heterotypicInterfaceFraction": 0.6042402826855123,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 57
+              },
+              {
+                "typeId": 2,
+                "count": 55
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 12.9375,
+            "minimumCellArea": 8,
+            "maximumCellArea": 18,
+            "meanCellPerimeter": 46.125,
+            "minimumCellPerimeter": 36,
+            "maximumCellPerimeter": 58,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 3
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        },
+        {
+          "mcs": 80,
+          "metrics": {
+            "heterotypicInterfaceCount": 166,
+            "totalCellCellInterfaceCount": 282,
+            "heterotypicInterfaceFraction": 0.5886524822695035,
+            "homotypicInterfacesByType": [
+              {
+                "typeId": 1,
+                "count": 58
+              },
+              {
+                "typeId": 2,
+                "count": 58
+              }
+            ],
+            "typeACellCount": 8,
+            "typeBCellCount": 8,
+            "meanCellArea": 13,
+            "minimumCellArea": 10,
+            "maximumCellArea": 17,
+            "meanCellPerimeter": 45.5,
+            "minimumCellPerimeter": 38,
+            "maximumCellPerimeter": 52,
+            "domainsByType": [
+              {
+                "typeId": 1,
+                "domainCount": 3,
+                "largestDomainCellCount": 3
+              },
+              {
+                "typeId": 2,
+                "domainCount": 1,
+                "largestDomainCellCount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "finalMeasurements": {
+        "heterotypicInterfaceCount": 166,
+        "totalCellCellInterfaceCount": 282,
+        "heterotypicInterfaceFraction": 0.5886524822695035,
+        "homotypicInterfacesByType": [
+          {
+            "typeId": 1,
+            "count": 58
+          },
+          {
+            "typeId": 2,
+            "count": 58
+          }
+        ],
+        "typeACellCount": 8,
+        "typeBCellCount": 8,
+        "meanCellArea": 13,
+        "minimumCellArea": 10,
+        "maximumCellArea": 17,
+        "meanCellPerimeter": 45.5,
+        "minimumCellPerimeter": 38,
+        "maximumCellPerimeter": 52,
+        "domainsByType": [
+          {
+            "typeId": 1,
+            "domainCount": 3,
+            "largestDomainCellCount": 3
+          },
+          {
+            "typeId": 2,
+            "domainCount": 1,
+            "largestDomainCellCount": 8
+          }
+        ]
+      },
+      "snapshots": [],
+      "attemptCount": 81920,
+      "acceptedAttemptCount": 3756,
+      "rejectedAttemptCount": 4019,
+      "noOpAttemptCount": 74145,
+      "connectivityFallbackCount": 807,
+      "elapsedMilliseconds": 13.7256,
+      "allocatedBytes": 1031496,
+      "measurementMilliseconds": 1.032
+    }
+  ],
+  "summary": {
+    "attemptedReplicates": 16,
+    "successfulReplicates": 16,
+    "failedReplicates": 0,
+    "failurePolicy": "Metric statistics use successful replicates with a final measurement; attempted, successful, and failed counts remain explicit.",
+    "finalMetricStatistics": {
+      "heterotypic-interface-fraction": {
+        "count": 16,
+        "mean": 0.5257537320447363,
+        "median": 0.49742268041237114,
+        "sampleStandardDeviation": 0.12024997906624872,
+        "minimum": 0.35782747603833864,
+        "maximum": 0.7928571428571428
+      },
+      "heterotypic-interface-count": {
+        "count": 16,
+        "mean": 149.8125,
+        "median": 142.5,
+        "sampleStandardDeviation": 30.839841655451693,
+        "minimum": 110,
+        "maximum": 222
+      },
+      "total-cell-cell-interface-count": {
+        "count": 16,
+        "mean": 286.5625,
+        "median": 285.5,
+        "sampleStandardDeviation": 11.673152958819651,
+        "minimum": 269,
+        "maximum": 313
+      },
+      "total-homotypic-interface-count": {
+        "count": 16,
+        "mean": 136.75,
+        "median": 142,
+        "sampleStandardDeviation": 38.33449273608995,
+        "minimum": 58,
+        "maximum": 201
+      },
+      "accepted-attempt-fraction": {
+        "count": 16,
+        "mean": 0.04624862670898438,
+        "median": 0.0459716796875,
+        "sampleStandardDeviation": 0.0007921691615272531,
+        "minimum": 0.0453125,
+        "maximum": 0.0473876953125
+      },
+      "accepted-attempt-count": {
+        "count": 16,
+        "mean": 3788.6875,
+        "median": 3766,
+        "sampleStandardDeviation": 64.89449771231251,
+        "minimum": 3712,
+        "maximum": 3882
+      },
+      "rejected-attempt-count": {
+        "count": 16,
+        "mean": 3971.625,
+        "median": 3981.5,
+        "sampleStandardDeviation": 85.23995541997895,
+        "minimum": 3805,
+        "maximum": 4136
+      },
+      "noop-attempt-count": {
+        "count": 16,
+        "mean": 74159.6875,
+        "median": 74150.5,
+        "sampleStandardDeviation": 122.06594870533442,
+        "minimum": 73926,
+        "maximum": 74376
+      },
+      "type-a-cell-count": {
+        "count": 16,
+        "mean": 8,
+        "median": 8,
+        "sampleStandardDeviation": 0,
+        "minimum": 8,
+        "maximum": 8
+      },
+      "type-b-cell-count": {
+        "count": 16,
+        "mean": 8,
+        "median": 8,
+        "sampleStandardDeviation": 0,
+        "minimum": 8,
+        "maximum": 8
+      },
+      "mean-cell-area": {
+        "count": 16,
+        "mean": 13.01171875,
+        "median": 13,
+        "sampleStandardDeviation": 0.5304374914084286,
+        "minimum": 12.0625,
+        "maximum": 14
+      },
+      "mean-cell-perimeter": {
+        "count": 16,
+        "mean": 46.4375,
+        "median": 46.3125,
+        "sampleStandardDeviation": 1.496523749672331,
+        "minimum": 44.25,
+        "maximum": 49.875
+      },
+      "homotypic-interface-count.type-1": {
+        "count": 16,
+        "mean": 68.75,
+        "median": 64,
+        "sampleStandardDeviation": 22.40684419249321,
+        "minimum": 23,
+        "maximum": 100
+      },
+      "type-domain-count.type-1": {
+        "count": 16,
+        "mean": 2.1875,
+        "median": 2,
+        "sampleStandardDeviation": 0.8341662504161466,
+        "minimum": 1,
+        "maximum": 3
+      },
+      "homotypic-interface-count.type-2": {
+        "count": 16,
+        "mean": 68,
+        "median": 70.5,
+        "sampleStandardDeviation": 17.9851790835306,
+        "minimum": 35,
+        "maximum": 101
+      },
+      "type-domain-count.type-2": {
+        "count": 16,
+        "mean": 2,
+        "median": 2,
+        "sampleStandardDeviation": 0.8944271909999159,
+        "minimum": 1,
+        "maximum": 3
+      }
+    }
+  },
+  "elapsedMilliseconds": 630.7729,
+  "allocatedBytes": 16514512
+}

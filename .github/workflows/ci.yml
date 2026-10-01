@@ -1,0 +1,52 @@
+name: Serial CPM CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  serial-cpm:
+    name: Build and test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.103
+
+      - name: Restore
+        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true
+
+      - name: Build
+        run: dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release
+
+      - name: Run complete solution suites
+        run: dotnet test Rowles.Morphogenesis.slnx --no-build --no-restore --configuration Release --filter "Category!=Scientific" --verbosity minimal
+
+  scientific-regression:
+    name: Scientific regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.103
+
+      - name: Restore
+        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true
+
+      - name: Build
+        run: dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release
+
+      - name: Run reduced multi-seed sorting and population-perturbation check
+        run: dotnet test tests/Rowles.Morphogenesis.Tests/Rowles.Morphogenesis.Tests.csproj --no-build --no-restore --configuration Release --filter "Category=Scientific" --verbosity minimal
