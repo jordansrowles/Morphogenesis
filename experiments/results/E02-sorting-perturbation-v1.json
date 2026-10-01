@@ -70,7 +70,7 @@
   },
   "metadata": {
     "softwareVersion": "1.0.0.0",
-    "softwareCommit": "6c771be947fbefac3ede7dff5a8ff9d38faf7774",
+    "softwareCommit": "4a9c2c6befd7e9510a6c679103614007ccc1b78d",
     "runtimeVersion": "10.0.3",
     "sdkVersion": "10.0.103",
     "operatingSystem": "Debian GNU/Linux 13 (trixie)",
@@ -495,9 +495,9 @@
       "rejectedAttemptCount": 5120,
       "noOpAttemptCount": 94279,
       "connectivityFallbackCount": 1012,
-      "elapsedMilliseconds": 93.7193,
-      "allocatedBytes": 1609520,
-      "measurementMilliseconds": 13.4244
+      "elapsedMilliseconds": 92.9639,
+      "allocatedBytes": 1608344,
+      "measurementMilliseconds": 13.3668
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -893,9 +893,9 @@
       "rejectedAttemptCount": 4933,
       "noOpAttemptCount": 94471,
       "connectivityFallbackCount": 1003,
-      "elapsedMilliseconds": 69.6999,
-      "allocatedBytes": 1604040,
-      "measurementMilliseconds": 7.4131
+      "elapsedMilliseconds": 69.7901,
+      "allocatedBytes": 1605208,
+      "measurementMilliseconds": 7.688
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -1291,9 +1291,9 @@
       "rejectedAttemptCount": 5062,
       "noOpAttemptCount": 94379,
       "connectivityFallbackCount": 1172,
-      "elapsedMilliseconds": 60.4896,
-      "allocatedBytes": 1552288,
-      "measurementMilliseconds": 2.0612
+      "elapsedMilliseconds": 60.2547,
+      "allocatedBytes": 1545672,
+      "measurementMilliseconds": 2.0694
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -1689,9 +1689,9 @@
       "rejectedAttemptCount": 5184,
       "noOpAttemptCount": 94145,
       "connectivityFallbackCount": 980,
-      "elapsedMilliseconds": 63.8647,
-      "allocatedBytes": 1624640,
-      "measurementMilliseconds": 2.0092
+      "elapsedMilliseconds": 63.4905,
+      "allocatedBytes": 1624608,
+      "measurementMilliseconds": 2.0738
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -2087,9 +2087,9 @@
       "rejectedAttemptCount": 5093,
       "noOpAttemptCount": 94060,
       "connectivityFallbackCount": 1080,
-      "elapsedMilliseconds": 39.7154,
-      "allocatedBytes": 1611312,
-      "measurementMilliseconds": 1.7247
+      "elapsedMilliseconds": 40.3692,
+      "allocatedBytes": 1611280,
+      "measurementMilliseconds": 1.7905
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -2485,9 +2485,9 @@
       "rejectedAttemptCount": 4988,
       "noOpAttemptCount": 94557,
       "connectivityFallbackCount": 1121,
-      "elapsedMilliseconds": 22.1988,
-      "allocatedBytes": 1609880,
-      "measurementMilliseconds": 1.3534
+      "elapsedMilliseconds": 18.2032,
+      "allocatedBytes": 1596952,
+      "measurementMilliseconds": 1.3266
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -2883,9 +2883,9 @@
       "rejectedAttemptCount": 5432,
       "noOpAttemptCount": 94218,
       "connectivityFallbackCount": 1114,
-      "elapsedMilliseconds": 19.1226,
-      "allocatedBytes": 1605040,
-      "measurementMilliseconds": 1.1833
+      "elapsedMilliseconds": 15.8454,
+      "allocatedBytes": 1617904,
+      "measurementMilliseconds": 1.2208
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -3281,9 +3281,9 @@
       "rejectedAttemptCount": 5130,
       "noOpAttemptCount": 94305,
       "connectivityFallbackCount": 1081,
-      "elapsedMilliseconds": 20.6157,
-      "allocatedBytes": 1622064,
-      "measurementMilliseconds": 1.2451
+      "elapsedMilliseconds": 15.82,
+      "allocatedBytes": 1622032,
+      "measurementMilliseconds": 1.2153
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -3679,9 +3679,9 @@
       "rejectedAttemptCount": 4769,
       "noOpAttemptCount": 94653,
       "connectivityFallbackCount": 944,
-      "elapsedMilliseconds": 19.5222,
-      "allocatedBytes": 1605896,
-      "measurementMilliseconds": 1.6537
+      "elapsedMilliseconds": 15.8434,
+      "allocatedBytes": 1605864,
+      "measurementMilliseconds": 1.6091
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -4077,9 +4077,9 @@
       "rejectedAttemptCount": 5042,
       "noOpAttemptCount": 94439,
       "connectivityFallbackCount": 1057,
-      "elapsedMilliseconds": 23.3152,
-      "allocatedBytes": 1609704,
-      "measurementMilliseconds": 1.1857
+      "elapsedMilliseconds": 20.1394,
+      "allocatedBytes": 1609672,
+      "measurementMilliseconds": 1.2119
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -4475,9 +4475,9 @@
       "rejectedAttemptCount": 5298,
       "noOpAttemptCount": 94258,
       "connectivityFallbackCount": 1118,
-      "elapsedMilliseconds": 19.2125,
-      "allocatedBytes": 1607112,
-      "measurementMilliseconds": 1.2012
+      "elapsedMilliseconds": 15.4823,
+      "allocatedBytes": 1607080,
+      "measurementMilliseconds": 1.1932
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -4873,9 +4873,9 @@
       "rejectedAttemptCount": 4971,
       "noOpAttemptCount": 94318,
       "connectivityFallbackCount": 1062,
-      "elapsedMilliseconds": 19.2747,
-      "allocatedBytes": 1606848,
-      "measurementMilliseconds": 1.1696
+      "elapsedMilliseconds": 15.9218,
+      "allocatedBytes": 1606816,
+      "measurementMilliseconds": 1.1896
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -5271,9 +5271,9 @@
       "rejectedAttemptCount": 4937,
       "noOpAttemptCount": 94376,
       "connectivityFallbackCount": 1161,
-      "elapsedMilliseconds": 18.9863,
-      "allocatedBytes": 1610384,
-      "measurementMilliseconds": 1.175
+      "elapsedMilliseconds": 15.4266,
+      "allocatedBytes": 1610352,
+      "measurementMilliseconds": 1.1606
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -5669,9 +5669,9 @@
       "rejectedAttemptCount": 4889,
       "noOpAttemptCount": 94400,
       "connectivityFallbackCount": 1048,
-      "elapsedMilliseconds": 19.0242,
-      "allocatedBytes": 1598672,
-      "measurementMilliseconds": 1.1683
+      "elapsedMilliseconds": 15.6808,
+      "allocatedBytes": 1598640,
+      "measurementMilliseconds": 1.2265
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -6067,9 +6067,9 @@
       "rejectedAttemptCount": 5049,
       "noOpAttemptCount": 94468,
       "connectivityFallbackCount": 1146,
-      "elapsedMilliseconds": 18.2916,
-      "allocatedBytes": 1606136,
-      "measurementMilliseconds": 1.1503
+      "elapsedMilliseconds": 15.2304,
+      "allocatedBytes": 1606104,
+      "measurementMilliseconds": 1.1495
     },
     {
       "experimentId": "E02-sorting-perturbation-v1",
@@ -6465,9 +6465,9 @@
       "rejectedAttemptCount": 5179,
       "noOpAttemptCount": 94248,
       "connectivityFallbackCount": 1149,
-      "elapsedMilliseconds": 20.6762,
-      "allocatedBytes": 1610040,
-      "measurementMilliseconds": 6.0021
+      "elapsedMilliseconds": 15.7956,
+      "allocatedBytes": 1610008,
+      "measurementMilliseconds": 1.1785
     }
   ],
   "summary": {
@@ -6606,6 +6606,6 @@
       }
     }
   },
-  "elapsedMilliseconds": 549.5615,
-  "allocatedBytes": 25709976
+  "elapsedMilliseconds": 508.2533,
+  "allocatedBytes": 25702936
 }

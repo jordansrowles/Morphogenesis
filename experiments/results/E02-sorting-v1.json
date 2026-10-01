@@ -70,7 +70,7 @@
   },
   "metadata": {
     "softwareVersion": "1.0.0.0",
-    "softwareCommit": "6c771be947fbefac3ede7dff5a8ff9d38faf7774",
+    "softwareCommit": "4a9c2c6befd7e9510a6c679103614007ccc1b78d",
     "runtimeVersion": "10.0.3",
     "sdkVersion": "10.0.103",
     "operatingSystem": "Debian GNU/Linux 13 (trixie)",
@@ -495,9 +495,9 @@
       "rejectedAttemptCount": 4041,
       "noOpAttemptCount": 74513,
       "connectivityFallbackCount": 882,
-      "elapsedMilliseconds": 81.1878,
-      "allocatedBytes": 1041088,
-      "measurementMilliseconds": 13.3559
+      "elapsedMilliseconds": 101.2925,
+      "allocatedBytes": 1041320,
+      "measurementMilliseconds": 18.4937
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -893,9 +893,9 @@
       "rejectedAttemptCount": 4075,
       "noOpAttemptCount": 74459,
       "connectivityFallbackCount": 878,
-      "elapsedMilliseconds": 53.5874,
+      "elapsedMilliseconds": 52.9475,
       "allocatedBytes": 1037160,
-      "measurementMilliseconds": 7.0041
+      "measurementMilliseconds": 7.0282
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -1291,9 +1291,9 @@
       "rejectedAttemptCount": 4139,
       "noOpAttemptCount": 74398,
       "connectivityFallbackCount": 860,
-      "elapsedMilliseconds": 48.0632,
-      "allocatedBytes": 1049488,
-      "measurementMilliseconds": 1.6757
+      "elapsedMilliseconds": 47.8149,
+      "allocatedBytes": 1045360,
+      "measurementMilliseconds": 1.6307
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -1689,9 +1689,9 @@
       "rejectedAttemptCount": 3925,
       "noOpAttemptCount": 74595,
       "connectivityFallbackCount": 851,
-      "elapsedMilliseconds": 56.1321,
-      "allocatedBytes": 998560,
-      "measurementMilliseconds": 1.8911
+      "elapsedMilliseconds": 56.0642,
+      "allocatedBytes": 1008104,
+      "measurementMilliseconds": 1.6732
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -2087,9 +2087,9 @@
       "rejectedAttemptCount": 4012,
       "noOpAttemptCount": 74414,
       "connectivityFallbackCount": 919,
-      "elapsedMilliseconds": 45.0956,
-      "allocatedBytes": 1051280,
-      "measurementMilliseconds": 1.6161
+      "elapsedMilliseconds": 45.7779,
+      "allocatedBytes": 1045560,
+      "measurementMilliseconds": 1.5967
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -2485,9 +2485,9 @@
       "rejectedAttemptCount": 4068,
       "noOpAttemptCount": 74374,
       "connectivityFallbackCount": 878,
-      "elapsedMilliseconds": 45.5891,
-      "allocatedBytes": 1054304,
-      "measurementMilliseconds": 1.6018
+      "elapsedMilliseconds": 46.5916,
+      "allocatedBytes": 1054272,
+      "measurementMilliseconds": 1.6421
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -2883,9 +2883,9 @@
       "rejectedAttemptCount": 4004,
       "noOpAttemptCount": 74432,
       "connectivityFallbackCount": 913,
-      "elapsedMilliseconds": 44.8672,
-      "allocatedBytes": 1049464,
-      "measurementMilliseconds": 1.5883
+      "elapsedMilliseconds": 45.7507,
+      "allocatedBytes": 1049432,
+      "measurementMilliseconds": 1.6023
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -3281,9 +3281,9 @@
       "rejectedAttemptCount": 3984,
       "noOpAttemptCount": 74451,
       "connectivityFallbackCount": 831,
-      "elapsedMilliseconds": 44.9659,
-      "allocatedBytes": 1041104,
-      "measurementMilliseconds": 1.6099
+      "elapsedMilliseconds": 46.6289,
+      "allocatedBytes": 1041072,
+      "measurementMilliseconds": 1.6869
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -3679,9 +3679,9 @@
       "rejectedAttemptCount": 3962,
       "noOpAttemptCount": 74512,
       "connectivityFallbackCount": 879,
-      "elapsedMilliseconds": 45.9393,
+      "elapsedMilliseconds": 49.2947,
       "allocatedBytes": 1045384,
-      "measurementMilliseconds": 1.6503
+      "measurementMilliseconds": 1.8027
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -4077,9 +4077,9 @@
       "rejectedAttemptCount": 3956,
       "noOpAttemptCount": 74443,
       "connectivityFallbackCount": 886,
-      "elapsedMilliseconds": 51.023,
-      "allocatedBytes": 1048072,
-      "measurementMilliseconds": 1.5911
+      "elapsedMilliseconds": 32.5061,
+      "allocatedBytes": 1048008,
+      "measurementMilliseconds": 1.1708
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -4475,9 +4475,9 @@
       "rejectedAttemptCount": 4040,
       "noOpAttemptCount": 74369,
       "connectivityFallbackCount": 801,
-      "elapsedMilliseconds": 44.1674,
-      "allocatedBytes": 1047624,
-      "measurementMilliseconds": 1.5621
+      "elapsedMilliseconds": 25.7992,
+      "allocatedBytes": 1047592,
+      "measurementMilliseconds": 1.0928
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -4873,9 +4873,9 @@
       "rejectedAttemptCount": 4149,
       "noOpAttemptCount": 74258,
       "connectivityFallbackCount": 855,
-      "elapsedMilliseconds": 48.2508,
-      "allocatedBytes": 1044808,
-      "measurementMilliseconds": 1.807
+      "elapsedMilliseconds": 26.342,
+      "allocatedBytes": 1044776,
+      "measurementMilliseconds": 1.1544
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -5271,9 +5271,9 @@
       "rejectedAttemptCount": 4027,
       "noOpAttemptCount": 74275,
       "connectivityFallbackCount": 831,
-      "elapsedMilliseconds": 42.6152,
-      "allocatedBytes": 1051184,
-      "measurementMilliseconds": 6.4492
+      "elapsedMilliseconds": 25.9503,
+      "allocatedBytes": 1051152,
+      "measurementMilliseconds": 1.1555
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -5669,9 +5669,9 @@
       "rejectedAttemptCount": 4081,
       "noOpAttemptCount": 74529,
       "connectivityFallbackCount": 887,
-      "elapsedMilliseconds": 19.3604,
-      "allocatedBytes": 1040856,
-      "measurementMilliseconds": 6.1326
+      "elapsedMilliseconds": 15.9795,
+      "allocatedBytes": 1040824,
+      "measurementMilliseconds": 1.1794
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -6067,9 +6067,9 @@
       "rejectedAttemptCount": 3995,
       "noOpAttemptCount": 74587,
       "connectivityFallbackCount": 812,
-      "elapsedMilliseconds": 13.0565,
-      "allocatedBytes": 1052128,
-      "measurementMilliseconds": 0.8238
+      "elapsedMilliseconds": 16.3183,
+      "allocatedBytes": 1052096,
+      "measurementMilliseconds": 5.7875
     },
     {
       "experimentId": "E02-sorting-v1",
@@ -6465,9 +6465,9 @@
       "rejectedAttemptCount": 3939,
       "noOpAttemptCount": 74635,
       "connectivityFallbackCount": 783,
-      "elapsedMilliseconds": 17.5002,
-      "allocatedBytes": 1037208,
-      "measurementMilliseconds": 0.824
+      "elapsedMilliseconds": 21.1528,
+      "allocatedBytes": 1037176,
+      "measurementMilliseconds": 6.1329
     }
   ],
   "summary": {
@@ -6606,6 +6606,6 @@
       }
     }
   },
-  "elapsedMilliseconds": 703.2991,
-  "allocatedBytes": 16689712
+  "elapsedMilliseconds": 659.6024,
+  "allocatedBytes": 16689288
 }

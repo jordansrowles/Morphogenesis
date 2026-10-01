@@ -4,7 +4,7 @@ The eight adjacent result files contain the resolved manifests, deterministic se
 
 ## Source and run environment
 
-- Source commit: `6c771be947fbefac3ede7dff5a8ff9d38faf7774`; source tree state: `clean`.
+- Source commit: `4a9c2c6befd7e9510a6c679103614007ccc1b78d`; source tree state: `clean`.
 - .NET SDK: `10.0.103`; .NET runtime: `10.0.3`; production assembly: `1.0.0.0`.
 - Host: Debian GNU/Linux 13 (trixie), Linux X64.
 - Execution: `canonical-serial-v1`; replicate execution is sequential.
@@ -76,22 +76,22 @@ These are single sequential archive runs on the host listed above. They are obse
 
 | Ensemble | Grid | Replicates × MCS | Wall time | Attempts/s | MCS/s | Measurement time | Allocated bytes | Bytes/attempt | Connectivity fallbacks |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| E02 control | 32×32 | 16 × 80 | 630.77 ms | 2,077,959 | 2,029 | 44.70 ms | 16,514,512 | 12.60 | 13,915 |
-| E02 sorting | 32×32 | 16 × 80 | 703.30 ms | 1,863,674 | 1,820 | 51.18 ms | 16,689,712 | 12.73 | 13,746 |
-| E02 control perturbation | 36×36 | 16 × 80 | 731.94 ms | 2,266,422 | 1,749 | 45.43 ms | 25,463,192 | 15.35 | 17,837 |
-| E02 sorting perturbation | 36×36 | 16 × 80 | 549.56 ms | 3,018,552 | 2,329 | 45.12 ms | 25,709,976 | 15.50 | 17,248 |
+| E02 control | 32×32 | 16 × 80 | 655.94 ms | 1,998,226 | 1,951 | 53.15 ms | 16,510,920 | 12.60 | 13,915 |
+| E02 sorting | 32×32 | 16 × 80 | 659.60 ms | 1,987,136 | 1,941 | 54.83 ms | 16,689,288 | 12.73 | 13,746 |
+| E02 control perturbation | 36×36 | 16 × 80 | 727.60 ms | 2,279,921 | 1,759 | 48.59 ms | 25,467,000 | 15.35 | 17,837 |
+| E02 sorting perturbation | 36×36 | 16 × 80 | 508.25 ms | 3,263,884 | 2,518 | 40.67 ms | 25,702,936 | 15.49 | 17,248 |
 
 ## Validation and interpretation limits
 
 The five-project Release build completed with zero warnings and zero errors using `dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release --disable-build-servers -m:1 -p:MSBuildEnableWorkloadResolver=false`.
 
-Linux validation passed:
+Local Linux validation passed:
 
-- Ordinary solution tests: 172 passed (85 reference and 87 production).
+- Ordinary solution tests: 173 passed (85 reference and 88 production).
 - Scientific regression: 2 passed.
-- Canonical archive tests: 2 passed.
-- Complete solution suite: 174 passed, zero failed, zero skipped (85 reference and 89 production).
+- Canonical archive tests: 2 passed, including validation of all eight result files.
+- Complete solution suite: 175 passed, zero failed, zero skipped (85 reference and 90 production).
 
-The final local source revision has not yet been validated by a hosted workflow. Windows tests remain to run in CI. The archives record their clean source revision; adding the result files and this run record changes the repository afterward, as expected.
+The hosted workflow checks the complete solution on `ubuntu-latest` and `windows-latest`, and runs the reduced scientific regression on `ubuntu-latest`. Check the archive evidence commit's GitHub Actions status for those hosted results. Each result file records the same clean source revision; adding the result files and this run record changes the repository afterward, as expected.
 
 One MCS is an update unit, not physical time. Fluctuation amplitude is not physical temperature. Contact energies are model parameters, not measured molecular adhesion forces. The E02 conclusion is limited to these manifests, seeds, mechanics and measurement definitions. Artistoo's unpublished deployed revision, full interactive parameter set and replicate samples prevent a direct numeric comparison.

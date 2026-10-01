@@ -70,7 +70,7 @@
   },
   "metadata": {
     "softwareVersion": "1.0.0.0",
-    "softwareCommit": "6c771be947fbefac3ede7dff5a8ff9d38faf7774",
+    "softwareCommit": "4a9c2c6befd7e9510a6c679103614007ccc1b78d",
     "runtimeVersion": "10.0.3",
     "sdkVersion": "10.0.103",
     "operatingSystem": "Debian GNU/Linux 13 (trixie)",
@@ -2681,9 +2681,9 @@
       "rejectedAttemptCount": 189,
       "noOpAttemptCount": 15698,
       "connectivityFallbackCount": 2,
-      "elapsedMilliseconds": 55.1331,
-      "allocatedBytes": 71960,
-      "measurementMilliseconds": 16.6094
+      "elapsedMilliseconds": 46.9692,
+      "allocatedBytes": 68776,
+      "measurementMilliseconds": 14.8891
     }
   ],
   "summary": {
@@ -2822,6 +2822,6 @@
       }
     }
   },
-  "elapsedMilliseconds": 57.6001,
-  "allocatedBytes": 71960
+  "elapsedMilliseconds": 48.8095,
+  "allocatedBytes": 68776
 }
