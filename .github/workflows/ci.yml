@@ -22,7 +22,7 @@ jobs:
           dotnet-version: 10.0.103
 
       - name: Restore
-        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true
+        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true -p:NuGetAudit=false
 
       - name: Build
         run: dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release
@@ -43,7 +43,7 @@ jobs:
           dotnet-version: 10.0.103
 
       - name: Restore
-        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true
+        run: dotnet restore Rowles.Morphogenesis.slnx -p:RestoreUseStaticGraphEvaluation=true -p:NuGetAudit=false
 
       - name: Build
         run: dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release

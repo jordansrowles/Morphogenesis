@@ -1,3 +1,5 @@
+using Rowles.StrictMaths;
+
 namespace Rowles.Evolution.Random;
 
 /// <summary>xoshiro256** with owned state and a checkpointable Box-Muller spare.</summary>
@@ -19,7 +21,7 @@ public sealed class EvolutionRandom
         s0 = state.S0; s1 = state.S1; s2 = state.S2; s3 = state.S3;
         hasGaussian = state.HasGaussian;
         gaussian = state.Gaussian;
-        if ((s0 | s1 | s2 | s3) == 0 || (hasGaussian && !double.IsFinite(gaussian)))
+        if ((s0 | s1 | s2 | s3) == 0 || !double.IsFinite(gaussian))
             throw new ArgumentException("Random checkpoint state is invalid.", nameof(state));
     }
 
@@ -56,11 +58,12 @@ public sealed class EvolutionRandom
         double u1;
         do { u1 = NextDouble(); } while (u1 <= 0);
         double u2 = NextDouble();
-        double radius = Math.Sqrt(-2 * Math.Log(u1));
+        double radius = StrictMath.Sqrt(-2 * StrictMath.Log(u1));
         double angle = 2 * Math.PI * u2;
-        gaussian = radius * Math.Sin(angle);
+        (double sine, double cosine) = StrictMath.SinCos(angle);
+        gaussian = radius * sine;
         hasGaussian = true;
-        return radius * Math.Cos(angle);
+        return radius * cosine;
     }
 
     internal RandomState Capture() => new(s0, s1, s2, s3, hasGaussian, gaussian);

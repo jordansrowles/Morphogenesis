@@ -11,10 +11,11 @@ The repository contains two deliberately separate Cellular Potts implementations
 
 The production implementation is checked against the reference implementation in tests. The reference project is not used in the production simulation path.
 
-The repository also contains the M2.5 quality-diversity layer:
+The repository also contains a reusable quality-diversity layer:
 
 - `Rowles.Evolution` is a reusable deterministic .NET Grid MAP-Elites library with bounded numeric search, Iso+LineDD variation, archive metrics and checkpoint/resume support. It has no Morphogenesis dependency.
 - `Rowles.Morphogenesis.Evolution` adapts Morphogenesis experiments to `Rowles.Evolution` without coupling the generic library back to the simulator.
+- `Rowles.StrictMaths` supplies portable elementary functions for reproducibility-sensitive paths.
 
 The experiment framework resolves versioned manifests, initialises packed cell aggregates, runs independent replicates sequentially through the canonical serial kernel, and records measurements, snapshots and provenance. The headless runner and canonical experiment pack are documented in [`experiments/README.md`](experiments/README.md). Archived results and their scientific interpretation are documented in [`experiments/results/README.md`](experiments/results/README.md).
 

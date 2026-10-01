@@ -195,7 +195,80 @@ public sealed class GridMapElites
             checkpoint.BinCounts is null || checkpoint.FailureCounts is null || checkpoint.Elites is null ||
             checkpoint.NextCandidateId < 0 || checkpoint.Iteration < 0 || checkpoint.Evaluations < 0 ||
             checkpoint.Insertions < 0 || checkpoint.Replacements < 0 || checkpoint.InvalidEvaluations < 0 ||
-            checkpoint.RandomState is null || checkpoint.NextCandidateId != checkpoint.Evaluations)
+            checkpoint.RandomState is null || checkpoint.NextCandidateId != checkpoint.Evaluations ||
+            checkpoint.Insertions > checkpoint.Evaluations || checkpoint.Replacements > checkpoint.Insertions ||
+            checkpoint.InvalidEvaluations > checkpoint.Evaluations ||
+            checkpoint.Insertions - checkpoint.Replacements != checkpoint.Elites.Length ||
+            (checkpoint.RandomState.S0 | checkpoint.RandomState.S1 | checkpoint.RandomState.S2 | checkpoint.RandomState.S3) == 0 ||
+            !double.IsFinite(checkpoint.RandomState.Gaussian))
             throw new ArgumentException("Checkpoint counters or arrays are invalid.", nameof(checkpoint));
+
+        if (checkpoint.DescriptorLowerBounds.Length == 0 ||
+            checkpoint.DescriptorLowerBounds.Length != checkpoint.DescriptorUpperBounds.Length ||
+            checkpoint.DescriptorLowerBounds.Length != checkpoint.BinCounts.Length)
+            throw new ArgumentException("Checkpoint descriptor bounds and bins have inconsistent dimensions.", nameof(checkpoint));
+
+        GridArchiveConfiguration archiveConfiguration;
+        try
+        {
+            archiveConfiguration = new GridArchiveConfiguration(checkpoint.DescriptorLowerBounds,
+                checkpoint.DescriptorUpperBounds, checkpoint.BinCounts, checkpoint.ObjectiveDirection,
+                checkpoint.ObjectiveBaseline, checkpoint.MaximumCells);
+        }
+        catch (Exception exception) when (exception is ArgumentException or OverflowException)
+        {
+            throw new ArgumentException("Checkpoint archive configuration is invalid.", nameof(checkpoint), exception);
+        }
+
+        long failureTotal = 0;
+        string? previousReason = null;
+        HashSet<string> failureReasons = new(StringComparer.Ordinal);
+        foreach (FailureCountDto? failure in checkpoint.FailureCounts)
+        {
+            if (failure is null || string.IsNullOrEmpty(failure.Reason) || failure.Count <= 0 ||
+                !failureReasons.Add(failure.Reason) ||
+                (previousReason is not null && string.CompareOrdinal(previousReason, failure.Reason) >= 0) ||
+                failure.Count > long.MaxValue - failureTotal)
+                throw new ArgumentException("Checkpoint failure counters must be non-empty, unique, positive and ordinally sorted.", nameof(checkpoint));
+
+            failureTotal += failure.Count;
+            previousReason = failure.Reason;
+        }
+
+        if (failureTotal != checkpoint.InvalidEvaluations)
+            throw new ArgumentException("Checkpoint failure counter total does not match invalid evaluations.", nameof(checkpoint));
+
+        HashSet<int> cellIndices = [];
+        HashSet<long> candidateIds = [];
+        foreach (GridEliteDto? elite in checkpoint.Elites)
+        {
+            if (elite is null || (uint)elite.CellIndex >= (uint)archiveConfiguration.CellCount ||
+                !cellIndices.Add(elite.CellIndex) || elite.CandidateId < 0 ||
+                elite.CandidateId >= checkpoint.NextCandidateId || !candidateIds.Add(elite.CandidateId) ||
+                elite.Iteration < 0 || elite.Iteration >= checkpoint.Iteration ||
+                !double.IsFinite(elite.Objective) || elite.Solution is null || elite.Descriptors is null ||
+                elite.Solution.Length != checkpoint.SolutionBounds.Length ||
+                elite.Descriptors.Length != archiveConfiguration.Dimension)
+                throw new ArgumentException("Checkpoint contains an invalid elite identity, objective or dimensionality.", nameof(checkpoint));
+
+            for (int dimension = 0; dimension < elite.Solution.Length; dimension++)
+            {
+                double value = elite.Solution[dimension];
+                NumericBoundsDto bounds = checkpoint.SolutionBounds[dimension];
+                if (!double.IsFinite(bounds.Lower) || !double.IsFinite(bounds.Upper) || bounds.Upper <= bounds.Lower ||
+                    !double.IsFinite(value) || value < bounds.Lower || value > bounds.Upper)
+                    throw new ArgumentException($"Checkpoint elite solution value {dimension} is non-finite or outside its closed bounds.", nameof(checkpoint));
+            }
+
+            try
+            {
+                if (archiveConfiguration.GetCellIndex(elite.Descriptors) != elite.CellIndex)
+                    throw new ArgumentException("Checkpoint elite descriptors do not map to the stored cell index.", nameof(checkpoint));
+            }
+            catch (ArgumentException exception)
+            {
+                throw new ArgumentException("Checkpoint elite descriptors are invalid.", nameof(checkpoint), exception);
+            }
+        }
     }
 }

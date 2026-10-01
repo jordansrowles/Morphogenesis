@@ -2,6 +2,7 @@ using Rowles.Morphogenesis.Reference.Energy;
 using Rowles.Morphogenesis.Reference.Lattice;
 using Rowles.Morphogenesis.Reference.Model;
 using Rowles.Morphogenesis.Reference.Random;
+using Rowles.StrictMaths;
 
 namespace Rowles.Morphogenesis.Reference.Dynamics;
 
@@ -132,7 +133,7 @@ public sealed class ReferenceSimulation
             return 0;
         }
 
-        return Math.Exp(-deltaH / fluctuationAmplitude);
+        return StrictMath.Exp(-deltaH / fluctuationAmplitude);
     }
 
     public static bool ShouldAccept(double probability, double acceptanceRandomValue)

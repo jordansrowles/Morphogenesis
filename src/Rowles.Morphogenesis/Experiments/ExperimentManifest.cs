@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Model;
 using Rowles.Morphogenesis.Experiments.Configuration;
+using Rowles.StrictMaths;
 
 namespace Rowles.Morphogenesis.Experiments;
 
@@ -269,7 +270,7 @@ public sealed record ExperimentManifest
 
     private void ValidateInitialiserFits()
     {
-        int cellWidth = checked((int)Math.Ceiling(Math.Sqrt(Initialiser.ApproximateTargetCellArea)));
+        int cellWidth = checked((int)Math.Ceiling(StrictMath.Sqrt(Initialiser.ApproximateTargetCellArea)));
         int cellHeight = checked((int)Math.Ceiling((double)Initialiser.ApproximateTargetCellArea / cellWidth));
         bool fits = false;
         for (int columns = 1; columns <= Initialiser.CellCount; columns++)

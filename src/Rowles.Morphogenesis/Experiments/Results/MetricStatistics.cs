@@ -1,3 +1,5 @@
+using Rowles.StrictMaths;
+
 namespace Rowles.Morphogenesis.Experiments.Results;
 
 /// <summary>Statistics over successful final measurements; failed replicates are counted separately.</summary>
@@ -30,6 +32,6 @@ public sealed record MetricStatistics(
         double variance = values.Length < 2
             ? 0
             : values.Sum(value => (value - mean) * (value - mean)) / (values.Length - 1);
-        return new MetricStatistics(values.Length, mean, median, Math.Sqrt(variance), values[0], values[^1]);
+        return new MetricStatistics(values.Length, mean, median, StrictMath.Sqrt(variance), values[0], values[^1]);
     }
 }

@@ -4,4 +4,7 @@
     <AssemblyName>Rowles.Evolution</AssemblyName>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rowles.StrictMaths/Rowles.StrictMaths.csproj" />
+  </ItemGroup>
 </Project>

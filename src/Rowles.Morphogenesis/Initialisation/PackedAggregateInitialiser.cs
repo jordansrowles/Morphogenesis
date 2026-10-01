@@ -3,6 +3,7 @@ using Rowles.Morphogenesis.Experiments.Configuration;
 using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Model;
 using Rowles.Morphogenesis.Random;
+using Rowles.StrictMaths;
 
 namespace Rowles.Morphogenesis.Initialisation;
 
@@ -101,7 +102,7 @@ public static class PackedAggregateInitialiser
 
     private static (int CellWidth, int CellHeight, int Columns, int Rows) SelectPacking(ExperimentManifest manifest)
     {
-        int squareWidth = checked((int)Math.Ceiling(Math.Sqrt(manifest.Initialiser.ApproximateTargetCellArea)));
+        int squareWidth = checked((int)Math.Ceiling(StrictMath.Sqrt(manifest.Initialiser.ApproximateTargetCellArea)));
         int squareHeight = checked((int)Math.Ceiling((double)manifest.Initialiser.ApproximateTargetCellArea / squareWidth));
         Packing? best = null;
 
@@ -130,7 +131,7 @@ public static class PackedAggregateInitialiser
                     continue;
                 }
 
-                double aspectPenalty = Math.Abs(Math.Log((double)aggregateWidth / aggregateHeight));
+                double aspectPenalty = Math.Abs(StrictMath.Log((double)aggregateWidth / aggregateHeight));
                 double unusedSlotPenalty = (double)((long)rows * columns - manifest.Initialiser.CellCount) / manifest.Initialiser.CellCount;
                 double score = aspectPenalty + unusedSlotPenalty * 0.05;
                 Packing candidate = new(cellWidth, cellHeight, columns, rows, score);

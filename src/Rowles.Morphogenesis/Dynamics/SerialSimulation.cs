@@ -3,6 +3,7 @@ using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Model;
 using Rowles.Morphogenesis.Random;
 using Rowles.Morphogenesis.Topology;
+using Rowles.StrictMaths;
 
 namespace Rowles.Morphogenesis.Dynamics;
 
@@ -280,7 +281,7 @@ public sealed class SerialSimulation
             return 0;
         }
 
-        return Math.Exp(-deltaH / fluctuationAmplitude);
+        return StrictMath.Exp(-deltaH / fluctuationAmplitude);
     }
 
     public static bool ShouldAccept(double probability, double acceptanceRandomValue)

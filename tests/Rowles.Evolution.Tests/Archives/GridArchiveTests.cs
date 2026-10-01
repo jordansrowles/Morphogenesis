@@ -27,6 +27,25 @@ public sealed class GridArchiveTests
         Assert.Equal(1, archive.Occupancy);
     }
 
+    [Theory]
+    [InlineData(ObjectiveDirection.Maximise, 2, 3, 1)]
+    [InlineData(ObjectiveDirection.Minimise, 2, 1, 3)]
+    public void BothObjectiveDirectionsReplaceOnlyOnStrictImprovement(
+        ObjectiveDirection direction, double incumbent, double improvement, double deterioration)
+    {
+        GridArchive archive = new(new GridArchiveConfiguration([0], [1], [2], direction));
+        Assert.True(archive.TryInsert(0, [0.2], incumbent, [0.2], 0, out bool initialReplacement));
+        Assert.False(initialReplacement);
+
+        Assert.False(archive.TryInsert(1, [0.3], incumbent, [0.3], 0, out bool tiedReplacement));
+        Assert.False(tiedReplacement);
+        Assert.False(archive.TryInsert(2, [0.3], deterioration, [0.3], 0, out bool worseReplacement));
+        Assert.False(worseReplacement);
+        Assert.True(archive.TryInsert(3, [0.3], improvement, [0.3], 0, out bool replacement));
+        Assert.True(replacement);
+        Assert.Equal(3, archive.GetAt(0)!.CandidateId);
+    }
+
     [Fact]
     public void ProductIsGuardedBeforeAllocation()
     {

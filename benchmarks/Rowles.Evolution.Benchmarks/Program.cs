@@ -6,13 +6,120 @@ using Rowles.Evolution.Algorithms;
 using Rowles.Evolution.Archives;
 using Rowles.Evolution.Evaluation;
 using Rowles.Evolution.Metrics;
+using Rowles.Evolution.Random;
 using Rowles.Evolution.Variation;
 using Rowles.Morphogenesis.Optimisation;
+using Rowles.StrictMaths;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+if (args.Contains("--math-only", StringComparer.Ordinal))
+{
+    RunMathBenchmarks();
+    return;
+}
+
 RunSyntheticBaseline();
 if (!args.Contains("--synthetic-only", StringComparer.Ordinal)) RunMorphogenesisCampaign();
+
+static void RunMathBenchmarks()
+{
+    const int iterations = 250_000;
+    double[] exponentialValues = new double[16_384];
+    double[] positiveValues = new double[exponentialValues.Length];
+    double[] trigonometricValues = new double[exponentialValues.Length];
+    ulong state = 0x5eed20261001UL;
+    for (int i = 0; i < exponentialValues.Length; i++)
+    {
+        state += 0x9e3779b97f4a7c15UL;
+        ulong bits = state;
+        bits = (bits ^ (bits >> 30)) * 0xbf58476d1ce4e5b9UL;
+        bits = (bits ^ (bits >> 27)) * 0x94d049bb133111ebUL;
+        bits ^= bits >> 31;
+        double unit = (bits >> 11) * (1.0 / 9007199254740992.0);
+        exponentialValues[i] = (unit * 2 - 1) * 700;
+        positiveValues[i] = 0.000001 + unit * 1000;
+        trigonometricValues[i] = (unit * 2 - 1) * 1000;
+    }
+
+    ReportUnary("Exp", exponentialValues, iterations, StrictMath.Exp, Math.Exp);
+    ReportUnary("Log", positiveValues, iterations, StrictMath.Log, Math.Log);
+    ReportUnary("Sqrt", positiveValues, iterations, StrictMath.Sqrt, Math.Sqrt);
+    ReportPair(iterations, trigonometricValues);
+    ReportGaussian(iterations);
+}
+
+static void ReportUnary(string name, double[] values, int iterations,
+    Func<double, double> deterministic, Func<double, double> systemMath)
+{
+    double deterministicTotal = MeasureUnary(values, iterations, deterministic, out double deterministicNanoseconds, out long deterministicBytes);
+    double systemTotal = MeasureUnary(values, iterations, systemMath, out double systemNanoseconds, out _);
+    Console.WriteLine($"math {name} calls={iterations} strict_ns_per_call={deterministicNanoseconds:F2} system_math_ns_per_call={systemNanoseconds:F2} slowdown={deterministicNanoseconds / systemNanoseconds:F2} strict_allocated_bytes={deterministicBytes} checksum={deterministicTotal + systemTotal:R}");
+}
+
+static double MeasureUnary(double[] values, int iterations, Func<double, double> function,
+    out double nanosecondsPerCall, out long allocatedBytes)
+{
+    double checksum = 0;
+    int warmup = Math.Min(iterations, 20_000);
+    for (int i = 0; i < warmup; i++) checksum += function(values[i % values.Length]);
+    long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+    Stopwatch timer = Stopwatch.StartNew();
+    for (int i = 0; i < iterations; i++) checksum += function(values[i % values.Length]);
+    timer.Stop();
+    allocatedBytes = Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - bytesBefore);
+    nanosecondsPerCall = timer.Elapsed.TotalNanoseconds / iterations;
+    return checksum;
+}
+
+static void ReportPair(int iterations, double[] values)
+{
+    double deterministicTotal = MeasurePair(values, iterations, useStrictMath: true,
+        out double deterministicNanoseconds, out long allocatedBytes);
+    double systemTotal = MeasurePair(values, iterations, useStrictMath: false,
+        out double systemNanoseconds, out _);
+    Console.WriteLine($"math SinCos calls={iterations} strict_ns_per_call={deterministicNanoseconds:F2} system_math_ns_per_call={systemNanoseconds:F2} slowdown={deterministicNanoseconds / systemNanoseconds:F2} strict_allocated_bytes={allocatedBytes} checksum={deterministicTotal + systemTotal:R}");
+}
+
+static double MeasurePair(double[] values, int iterations, bool useStrictMath,
+    out double nanosecondsPerCall, out long allocatedBytes)
+{
+    double checksum = 0;
+    int warmup = Math.Min(iterations, 20_000);
+    for (int i = 0; i < warmup; i++) checksum += Pair(values[i % values.Length], useStrictMath);
+    long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+    Stopwatch timer = Stopwatch.StartNew();
+    for (int i = 0; i < iterations; i++) checksum += Pair(values[i % values.Length], useStrictMath);
+    timer.Stop();
+    allocatedBytes = Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - bytesBefore);
+    nanosecondsPerCall = timer.Elapsed.TotalNanoseconds / iterations;
+    return checksum;
+}
+
+static double Pair(double value, bool useStrictMath)
+{
+    if (useStrictMath)
+    {
+        (double sine, double cosine) = StrictMath.SinCos(value);
+        return sine + cosine;
+    }
+
+    return Math.Sin(value) + Math.Cos(value);
+}
+
+static void ReportGaussian(int iterations)
+{
+    EvolutionRandom random = new(0x5eed20261001UL);
+    double checksum = 0;
+    int warmup = Math.Min(iterations, 20_000);
+    for (int i = 0; i < warmup; i++) checksum += random.NextGaussian();
+    long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
+    Stopwatch timer = Stopwatch.StartNew();
+    for (int i = 0; i < iterations; i++) checksum += random.NextGaussian();
+    timer.Stop();
+    long allocatedBytes = Math.Max(0, GC.GetAllocatedBytesForCurrentThread() - bytesBefore);
+    Console.WriteLine($"math EvolutionRandom.NextGaussian calls={iterations} strict_ns_per_call={timer.Elapsed.TotalNanoseconds / iterations:F2} strict_allocated_bytes={allocatedBytes} checksum={checksum:R}");
+}
 
 static void RunSyntheticBaseline()
 {

@@ -3,4 +3,7 @@
     <RootNamespace>Rowles.Morphogenesis</RootNamespace>
     <AssemblyName>Rowles.Morphogenesis</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rowles.StrictMaths/Rowles.StrictMaths.csproj" />
+  </ItemGroup>
 </Project>

@@ -1,0 +1,13 @@
+The deterministic elementary-function algorithms in this project are managed
+adaptations of algorithms from FDLIBM 5.3 (Freely Distributable LIBM), developed
+at Sun Microsystems, Inc. The functions are independently expressed in C# and
+use e_exp.c, e_log.c, e_rem_pio2.c, k_sin.c and k_cos.c reduction methods and
+coefficients. The square-root implementation uses exact integer arithmetic.
+
+Copyright (C) 1993-2004 Sun Microsystems, Inc. All rights reserved.
+
+Permission to use, copy, modify, and distribute this software is freely granted,
+provided that this notice is preserved.
+
+FDLIBM 5.3 source and algorithm notes:
+https://www.netlib.org/fdlibm/
