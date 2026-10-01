@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="src/Rowles.Evolution/Rowles.Evolution.csproj" />
-  <Project Path="src/Rowles.Morphogenesis.Evolution/Rowles.Morphogenesis.Evolution.csproj" />
-  <Project Path="tests/Rowles.Evolution.Tests/Rowles.Evolution.Tests.csproj" />
-  <Project Path="benchmarks/Rowles.Evolution.Benchmarks/Rowles.Evolution.Benchmarks.csproj" />
-</Solution>

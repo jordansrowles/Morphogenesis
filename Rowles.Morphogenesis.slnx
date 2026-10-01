@@ -1,7 +1,11 @@
 <Solution>
   <Project Path="src/Rowles.Morphogenesis/Rowles.Morphogenesis.csproj" />
   <Project Path="src/Rowles.Morphogenesis.Reference/Rowles.Morphogenesis.Reference.csproj" />
+  <Project Path="src/Rowles.Evolution/Rowles.Evolution.csproj" />
+  <Project Path="src/Rowles.Morphogenesis.Evolution/Rowles.Morphogenesis.Evolution.csproj" />
   <Project Path="tests/Rowles.Morphogenesis.Tests/Rowles.Morphogenesis.Tests.csproj" />
   <Project Path="tests/Rowles.Morphogenesis.Reference.Tests/Rowles.Morphogenesis.Reference.Tests.csproj" />
+  <Project Path="tests/Rowles.Evolution.Tests/Rowles.Evolution.Tests.csproj" />
   <Project Path="tools/Rowles.Morphogenesis.Experiments/Rowles.Morphogenesis.Experiments.csproj" />
+  <Project Path="benchmarks/Rowles.Evolution.Benchmarks/Rowles.Evolution.Benchmarks.csproj" />
 </Solution>
