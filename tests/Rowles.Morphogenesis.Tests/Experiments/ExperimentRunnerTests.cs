@@ -201,7 +201,7 @@ public sealed class ExperimentRunnerTests
             ExperimentSeedDerivation.DeriveInitialisation(secondSeed), ExperimentSeedDerivation.DeriveDynamics(secondSeed), ReplicateRunStatus.Failed,
             "InvalidOperationException: diagnostic failure", [], null, [], 40, 20, 15, 5, 1, 2, 500, 0.5);
 
-        ExperimentEnsembleSummary summary = ExperimentRunner.SummariseResults(manifest, [succeeded, failed]);
+        ExperimentEnsembleSummary summary = ExperimentEnsembleSummary.Create(manifest, [succeeded, failed]);
 
         Assert.Equal(2, summary.AttemptedReplicates);
         Assert.Equal(1, summary.SuccessfulReplicates);

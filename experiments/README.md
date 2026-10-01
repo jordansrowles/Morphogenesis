@@ -29,7 +29,7 @@ Cell perimeter uses the configured perimeter stencil and is a lattice-model quan
 
 ## Running
 
-From `code/`:
+From the repository root:
 
 ```sh
 dotnet run --project tools/Rowles.Morphogenesis.Experiments -- run experiments/canonical/E00-single-cell-relaxation.json

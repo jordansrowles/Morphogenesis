@@ -122,6 +122,22 @@ public sealed class ExperimentManifestTests
     }
 
     [Fact]
+    public void Cell_type_definitions_must_be_ordered_by_type_identifier()
+    {
+        ExperimentManifest manifest = ExperimentManifestFactory.Create() with
+        {
+            CellTypes =
+            [
+                new CellTypeDefinition { TypeId = 0, Name = "Medium" },
+                new CellTypeDefinition { TypeId = 2, Name = "B" },
+                new CellTypeDefinition { TypeId = 1, Name = "A" }
+            ]
+        };
+
+        Assert.Throws<ArgumentException>(manifest.Validate);
+    }
+
+    [Fact]
     public void Impossible_aggregate_geometry_is_rejected_before_simulation_construction()
     {
         ExperimentManifest manifest = ExperimentManifestFactory.Create() with

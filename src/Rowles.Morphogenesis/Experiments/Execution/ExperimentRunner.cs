@@ -42,7 +42,7 @@ public static class ExperimentRunner
         stopwatch.Stop();
         long allocatedBytes = Math.Max(0, GC.GetTotalAllocatedBytes(precise: false) - allocatedBefore);
         ExperimentReplicateResult[] replicates = byIndex;
-        ExperimentEnsembleSummary summary = SummariseResults(manifest, replicates);
+        ExperimentEnsembleSummary summary = ExperimentEnsembleSummary.Create(manifest, replicates);
         ExperimentRunMetadata metadata = new(
             typeof(SerialSimulation).Assembly.GetName().Version?.ToString() ?? "unknown",
             softwareCommit,
@@ -211,11 +211,6 @@ public static class ExperimentRunner
                 TimeSpan.FromSeconds(measurementTicks / (double)Stopwatch.Frequency).TotalMilliseconds);
         }
     }
-
-    public static ExperimentEnsembleSummary SummariseResults(
-        ExperimentManifest manifest,
-        IReadOnlyList<ExperimentReplicateResult> replicates)
-        => ExperimentEnsembleSummary.Create(manifest, replicates);
 
     private static void ValidateExecutionOrder(int[] order, int replicateCount)
     {

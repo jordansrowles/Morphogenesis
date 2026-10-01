@@ -191,26 +191,19 @@ public sealed record ExperimentManifest
             throw new ArgumentException("At least medium, type A, and type B definitions are required.", nameof(CellTypes));
         }
 
-        if (CellTypes.Any(type => type is null))
-        {
-            throw new ArgumentException("Cell type definitions cannot be null.", nameof(CellTypes));
-        }
-
-        bool[] present = new bool[CellTypes.Length];
         HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
-        foreach (CellTypeDefinition? type in CellTypes)
+        for (int index = 0; index < CellTypes.Length; index++)
         {
-            if (type is null || type.TypeId < 0 || type.TypeId >= CellTypes.Length || present[type.TypeId])
+            CellTypeDefinition? type = CellTypes[index];
+            if (type is null || type.TypeId != index)
             {
-                throw new ArgumentException("Cell type IDs must be unique and contiguous from zero.", nameof(CellTypes));
+                throw new ArgumentException("Cell type definitions must be ordered by contiguous type ID from zero.", nameof(CellTypes));
             }
 
             if (string.IsNullOrWhiteSpace(type.Name) || !names.Add(type.Name.Trim()))
             {
                 throw new ArgumentException("Cell type names must be non-empty and unique.", nameof(CellTypes));
             }
-
-            present[type.TypeId] = true;
         }
 
         if (CellTypes[0].TypeId != 0 ||
@@ -220,11 +213,6 @@ public sealed record ExperimentManifest
             Initialiser.TypeAId == Initialiser.TypeBId)
         {
             throw new ArgumentException("Type 0 must be medium and initialiser A/B IDs must name distinct biological types.", nameof(CellTypes));
-        }
-
-        if (!present.All(value => value))
-        {
-            throw new ArgumentException("Cell type IDs must be contiguous from zero.", nameof(CellTypes));
         }
     }
 
