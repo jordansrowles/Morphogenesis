@@ -8,6 +8,45 @@ public static class CellConnectivity
 {
     private const uint CardinalRingBits = (1u << 1) | (1u << 3) | (1u << 4) | (1u << 6);
 
+    internal static int[] CountComponentsByCell(MorphogenesisState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        int[] componentCounts = new int[state.Cells.Length];
+        bool[] visited = new bool[state.SiteCount];
+        int[] queue = new int[state.SiteCount];
+        for (int index = 0; index < state.SiteCount; index++)
+        {
+            int cellId = state.Lattice[index];
+            if (cellId == 0 || visited[index])
+            {
+                continue;
+            }
+
+            componentCounts[cellId]++;
+            int head = 0;
+            int tail = 0;
+            queue[tail++] = index;
+            visited[index] = true;
+            while (head < tail)
+            {
+                int current = queue[head++];
+                for (int offsetIndex = 0; offsetIndex < StencilGeometry.Count(state.Configuration.Conventions.ConnectivityAdjacency); offsetIndex++)
+                {
+                    StencilGeometry.ConnectivityOffset(state.Configuration.Conventions.ConnectivityAdjacency, offsetIndex, out int dx, out int dy);
+                    int neighbour = state.Resolve(current, dx, dy);
+                    if (neighbour >= 0 && !visited[neighbour] && state.Lattice[neighbour] == cellId)
+                    {
+                        visited[neighbour] = true;
+                        queue[tail++] = neighbour;
+                    }
+                }
+            }
+        }
+
+        return componentCounts;
+    }
+
     public static int CountComponents(MorphogenesisState state, int cellId)
     {
         ArgumentNullException.ThrowIfNull(state);

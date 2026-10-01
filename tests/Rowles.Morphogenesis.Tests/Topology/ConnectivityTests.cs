@@ -129,7 +129,22 @@ public sealed class ConnectivityTests
         Assert.Equal(1, CellConnectivity.CountComponents(state, 1));
     }
 
-    private static CellDefinition Cell() => new(1, 1, 4, 1, 8, 0.1);
+    [Fact]
+    public void Initial_connectivity_validation_checks_disconnected_sparse_cell_ids()
+    {
+        int[] ids = new int[7 * 3];
+        ids[1 * 7] = 1;
+        ids[1 * 7 + 1] = 1;
+        ids[1 * 7 + 3] = 3;
+        ids[1 * 7 + 5] = 3;
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            new MorphogenesisState(7, 3, ids, [Cell(1), Cell(3)], new ContactEnergyMatrix(Contacts)));
+
+        Assert.Contains("Initial cell ID 3 must be connected", exception.Message, StringComparison.Ordinal);
+    }
+
+    private static CellDefinition Cell(int cellId = 1) => new(cellId, 1, 4, 1, 8, 0.1);
 
     private static Rowles.Morphogenesis.Reference.Model.ReferenceState MakeReferenceState(int[] ids, int width, int height)
     {

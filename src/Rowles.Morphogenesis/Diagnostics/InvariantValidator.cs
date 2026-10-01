@@ -37,6 +37,7 @@ public static class InvariantValidator
             }
         }
 
+        int[] componentCounts = CellConnectivity.CountComponentsByCell(state);
         for (int cellId = 1; cellId < state.Cells.Length; cellId++)
         {
             CellRuntime cell = state.Cells[cellId];
@@ -65,7 +66,7 @@ public static class InvariantValidator
                 throw new InvalidOperationException($"Cell {cellId} refers to an invalid contact type.");
             }
 
-            if (CellConnectivity.CountComponents(state, cellId) != 1)
+            if (componentCounts[cellId] != 1)
             {
                 throw new InvalidOperationException($"Cell {cellId} is disconnected under the configured adjacency.");
             }

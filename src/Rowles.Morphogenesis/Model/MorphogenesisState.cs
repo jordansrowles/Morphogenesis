@@ -111,9 +111,10 @@ public sealed class MorphogenesisState
             Cells[cellId].Perimeter += perimeter;
         }
 
+        int[] initialComponents = CellConnectivity.CountComponentsByCell(this);
         for (int cellId = 1; cellId < Cells.Length; cellId++)
         {
-            if (Cells[cellId].IsAlive && CellConnectivity.CountComponents(this, cellId) != 1)
+            if (Cells[cellId].IsAlive && initialComponents[cellId] != 1)
             {
                 throw new ArgumentException($"Initial cell ID {cellId} must be connected under the configured adjacency.", nameof(cellIds));
             }

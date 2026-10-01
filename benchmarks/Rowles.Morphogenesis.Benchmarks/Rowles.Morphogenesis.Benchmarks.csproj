@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <ProjectReference Include="../../src/Rowles.Morphogenesis/Rowles.Morphogenesis.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../experiments/canonical/E00-single-cell-relaxation.json" Link="Scenarios/E00-single-cell-relaxation.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/canonical/E01-fluctuation-high.json" Link="Scenarios/E01-fluctuation-high.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/canonical/E02-control.json" Link="Scenarios/E02-control.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../experiments/canonical/E02-sorting.json" Link="Scenarios/E02-sorting.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
