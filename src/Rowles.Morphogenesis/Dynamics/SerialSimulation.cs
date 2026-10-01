@@ -6,41 +6,6 @@ using Rowles.Morphogenesis.Topology;
 
 namespace Rowles.Morphogenesis.Dynamics;
 
-public enum AttemptStatus
-{
-    NoOp,
-    Rejected,
-    Accepted
-}
-
-public enum RejectionReason
-{
-    None,
-    FixedWall,
-    FinalSite,
-    Disconnected,
-    Metropolis
-}
-
-public readonly record struct AttemptResult(
-    int TargetIndex,
-    int SourceIndex,
-    int OldCellId,
-    int NewCellId,
-    AttemptStatus Status,
-    RejectionReason RejectionReason,
-    HamiltonianBreakdown DeltaH,
-    double? AcceptanceProbability,
-    double? AcceptanceRandomValue,
-    bool UsedGlobalConnectivityFallback);
-
-public readonly record struct McsSummary(
-    int Attempts,
-    int Accepted,
-    int Rejected,
-    int NoOps,
-    int ConnectivityFallbacks);
-
 public sealed class SerialSimulation
 {
     private readonly IRandomSource _random;

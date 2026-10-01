@@ -4,26 +4,6 @@ using Rowles.Morphogenesis.Model;
 
 namespace Rowles.Morphogenesis.Topology;
 
-public readonly record struct ConnectivityEvaluation(bool RemainsConnected, bool UsedGlobalFallback, int RemainingSites);
-
-public sealed class ConnectivityWorkspace
-{
-    internal readonly int[] Queue;
-    internal readonly int[] VisitedAt;
-    internal int Generation;
-
-    public ConnectivityWorkspace(int siteCount)
-    {
-        if (siteCount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(siteCount));
-        }
-
-        Queue = new int[siteCount];
-        VisitedAt = new int[siteCount];
-    }
-}
-
 public static class CellConnectivity
 {
     private const uint CardinalRingBits = (1u << 1) | (1u << 3) | (1u << 4) | (1u << 6);

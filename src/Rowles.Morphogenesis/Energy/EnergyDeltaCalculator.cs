@@ -3,19 +3,6 @@ using Rowles.Morphogenesis.Model;
 
 namespace Rowles.Morphogenesis.Energy;
 
-public readonly record struct HamiltonianBreakdown(double Contact, double Area, double Perimeter)
-{
-    public double Total => Contact + Area + Perimeter;
-}
-
-public readonly record struct MoveEvaluation(
-    HamiltonianBreakdown Terms,
-    int OldCellPerimeterDelta,
-    int NewCellPerimeterDelta)
-{
-    public double Total => Terms.Total;
-}
-
 public static class EnergyDeltaCalculator
 {
     public static MoveEvaluation Evaluate(MorphogenesisState state, int targetIndex, int newCellId)

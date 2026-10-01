@@ -5,37 +5,6 @@ using Rowles.Morphogenesis.Topology;
 
 namespace Rowles.Morphogenesis.Model;
 
-public readonly record struct CellDefinition(
-    int CellId,
-    int CellTypeId,
-    double TargetArea,
-    double AreaStiffness,
-    double TargetPerimeter,
-    double PerimeterStiffness);
-
-public readonly record struct CellState(
-    int CellId,
-    int CellTypeId,
-    bool IsAlive,
-    int Area,
-    int Perimeter,
-    double TargetArea,
-    double AreaStiffness,
-    double TargetPerimeter,
-    double PerimeterStiffness);
-
-internal struct CellRuntime
-{
-    internal int CellTypeId;
-    internal bool IsAlive;
-    internal int Area;
-    internal int Perimeter;
-    internal double TargetArea;
-    internal double AreaStiffness;
-    internal double TargetPerimeter;
-    internal double PerimeterStiffness;
-}
-
 public sealed class MorphogenesisState
 {
     private readonly int[] _lattice;

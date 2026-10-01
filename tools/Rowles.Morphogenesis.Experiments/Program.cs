@@ -38,6 +38,7 @@ internal static class Program
         string manifestPath = Path.GetFullPath(args[1]);
         string? outputPath = null;
         int? replicateOverride = null;
+        // Parse the small fixed CLI grammar here; the replicate override is applied to a resolved copy below.
         for (int index = 2; index < args.Length; index++)
         {
             switch (args[index])
@@ -65,6 +66,7 @@ internal static class Program
             manifest.Validate();
         }
 
+        // Capture source and runtime provenance before executing so the result explains its own environment.
         string? commit = Environment.GetEnvironmentVariable("GITHUB_SHA") ?? await RunCommandAsync("git", "rev-parse", "HEAD").ConfigureAwait(false);
         string? gitStatus = await RunCommandAsync("git", "status", "--porcelain").ConfigureAwait(false);
         string sourceTreeState = gitStatus is null ? "unknown" : gitStatus.Length == 0 ? "clean" : "dirty";
@@ -78,6 +80,7 @@ internal static class Program
         Console.WriteLine($"MCS: {manifest.McsCount}; cells: {manifest.Initialiser.CellCount}; target area: {manifest.Initialiser.ApproximateTargetCellArea}; fluctuation amplitude: {manifest.FluctuationAmplitude}; replicates: {manifest.ReplicateCount}");
         Console.WriteLine($"Contact matrix: {System.Text.Json.JsonSerializer.Serialize(manifest.ContactEnergies)}");
         Console.WriteLine($"Random: {ExperimentRandomMetadata.Current.Algorithm}; seed derivation: {ExperimentRandomMetadata.Current.SeedDerivationScheme}.");
+        // Separate derived streams keep initial tissue placement independent from subsequent CPM dynamics draws.
         Console.WriteLine("Each replicate derives separate initialisation and dynamics seeds from its replicate seed.");
 
         int progressInterval = Math.Max(1, manifest.ReplicateCount / 10);
@@ -94,6 +97,7 @@ internal static class Program
             sdkVersion: sdkVersion,
             sourceTreeState: sourceTreeState);
 
+        // Persist the complete raw result first, then print concise scientific and throughput summaries.
         string? directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -150,6 +154,7 @@ internal static class Program
             }
             catch (OperationCanceledException)
             {
+                // Stop a timed-out child and its descendants, then wait again so no process is left running.
                 KillProcessTree(process);
                 using CancellationTokenSource killTimeout = new(TimeSpan.FromSeconds(5));
                 try

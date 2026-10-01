@@ -63,25 +63,3 @@ public sealed class Xoshiro256StarStar : IRandomSource
         }
     }
 }
-
-public static class BoundedIntegerSampling
-{
-    public static ulong Sample(ulong exclusiveUpperBound, Func<ulong> nextUInt64)
-    {
-        ArgumentNullException.ThrowIfNull(nextUInt64);
-        if (exclusiveUpperBound == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(exclusiveUpperBound));
-        }
-
-        ulong rejectionThreshold = unchecked(0UL - exclusiveUpperBound) % exclusiveUpperBound;
-        while (true)
-        {
-            ulong value = nextUInt64();
-            if (value >= rejectionThreshold)
-            {
-                return value % exclusiveUpperBound;
-            }
-        }
-    }
-}
