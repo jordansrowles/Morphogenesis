@@ -1,8 +1,9 @@
-using Rowles.Morphogenesis.Serialisation;
 using System.Text.Json;
+using Rowles.Morphogenesis.Dynamics;
 using Rowles.Morphogenesis.Experiments.Random;
 using Rowles.Morphogenesis.Measurements;
 using Rowles.Morphogenesis.Measurements.Metrics;
+using Rowles.Morphogenesis.Serialisation;
 using Rowles.Morphogenesis.Snapshots;
 
 namespace Rowles.Morphogenesis.Experiments.Results;
@@ -46,7 +47,7 @@ public sealed record ExperimentEnsembleResult(
             string.IsNullOrWhiteSpace(result.Metadata.RuntimeVersion) ||
             string.IsNullOrWhiteSpace(result.Metadata.OperatingSystem) ||
             string.IsNullOrWhiteSpace(result.Metadata.Architecture) ||
-            result.Metadata.KernelId != "canonical-serial-v1" ||
+            result.Metadata.KernelId != SerialSimulation.KernelId ||
             result.Metadata.SourceTreeState is not ("clean" or "dirty" or "unknown"))
         {
             throw new JsonException("Experiment run provenance is incomplete or unsupported.");

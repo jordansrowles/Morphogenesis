@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Rowles.Morphogenesis.Dynamics;
 using Rowles.Morphogenesis.Experiments;
 using Rowles.Morphogenesis.Experiments.Execution;
 using Rowles.Morphogenesis.Experiments.Random;
@@ -74,7 +75,7 @@ internal static class Program
         outputPath ??= Path.GetFullPath(Path.Combine("experiments", "results", $"{manifest.ExperimentId}.json"));
 
         Console.WriteLine($"Experiment: {manifest.ExperimentId} - {manifest.Name}");
-        Console.WriteLine($"Schema: {manifest.SchemaVersion}; kernel: canonical-serial-v1; source commit: {commit ?? "unknown"} ({sourceTreeState} tree)");
+        Console.WriteLine($"Schema: {manifest.SchemaVersion}; kernel: {SerialSimulation.KernelId}; source commit: {commit ?? "unknown"} ({sourceTreeState} tree)");
         Console.WriteLine($"Runtime: {Environment.Version}; SDK: {sdkVersion ?? "unknown"}; OS: {Environment.OSVersion}; architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
         Console.WriteLine($"Grid: {manifest.GridWidth}x{manifest.GridHeight}; boundary: {manifest.BoundaryMode}; copy: {manifest.CopyNeighbourhood}; contact: {manifest.ContactCouplingNeighbourhood}; perimeter: {manifest.PerimeterNeighbourhood}; connectivity: {manifest.ConnectivityAdjacency}");
         Console.WriteLine($"MCS: {manifest.McsCount}; cells: {manifest.Initialiser.CellCount}; target area: {manifest.Initialiser.ApproximateTargetCellArea}; fluctuation amplitude: {manifest.FluctuationAmplitude}; replicates: {manifest.ReplicateCount}");

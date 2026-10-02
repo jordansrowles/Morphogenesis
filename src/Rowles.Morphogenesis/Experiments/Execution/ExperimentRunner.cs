@@ -4,10 +4,8 @@ using Rowles.Morphogenesis.Dynamics;
 using Rowles.Morphogenesis.Experiments;
 using Rowles.Morphogenesis.Experiments.Random;
 using Rowles.Morphogenesis.Experiments.Results;
-using Rowles.Morphogenesis.Initialisation;
 using Rowles.Morphogenesis.Measurements;
 using Rowles.Morphogenesis.Model;
-using Rowles.Morphogenesis.Random;
 using Rowles.Morphogenesis.Snapshots;
 
 namespace Rowles.Morphogenesis.Experiments.Execution;
@@ -28,20 +26,20 @@ public static class ExperimentRunner
         int[] order = executionOrder?.ToArray() ?? Enumerable.Range(0, manifest.ReplicateCount).ToArray();
         ValidateExecutionOrder(order, manifest.ReplicateCount);
 
-        ulong[] seeds = ReplicateSeedDerivation.DeriveRange(manifest.BaseSeed, manifest.ReplicateCount);
         ExperimentReplicateResult[] byIndex = new ExperimentReplicateResult[manifest.ReplicateCount];
         long allocatedBefore = GC.GetTotalAllocatedBytes(precise: false);
         Stopwatch stopwatch = Stopwatch.StartNew();
         for (int completed = 0; completed < order.Length; completed++)
         {
             int replicateIndex = order[completed];
-            byIndex[replicateIndex] = RunReplicate(manifest, replicateIndex, seeds[replicateIndex]);
+            byIndex[replicateIndex] = RunReplicateCore(manifest, replicateIndex);
             progress?.Invoke(completed + 1, order.Length);
         }
 
         stopwatch.Stop();
         long allocatedBytes = Math.Max(0, GC.GetTotalAllocatedBytes(precise: false) - allocatedBefore);
         ExperimentReplicateResult[] replicates = byIndex;
+        ulong[] seeds = replicates.Select(replicate => replicate.Seed).ToArray();
         ExperimentEnsembleSummary summary = ExperimentEnsembleSummary.Create(manifest, replicates);
         ExperimentRunMetadata metadata = new(
             typeof(SerialSimulation).Assembly.GetName().Version?.ToString() ?? "unknown",
@@ -50,7 +48,7 @@ public static class ExperimentRunner
             sdkVersion,
             RuntimeInformation.OSDescription,
             RuntimeInformation.ProcessArchitecture.ToString(),
-            "canonical-serial-v1",
+            SerialSimulation.KernelId,
             sourceTreeState);
         return new ExperimentEnsembleResult(
             manifest,
@@ -72,14 +70,15 @@ public static class ExperimentRunner
             throw new ArgumentOutOfRangeException(nameof(replicateIndex));
         }
 
-        return RunReplicate(manifest, replicateIndex, ReplicateSeedDerivation.Derive(manifest.BaseSeed, replicateIndex));
+        return RunReplicateCore(manifest, replicateIndex);
     }
 
-    private static ExperimentReplicateResult RunReplicate(ExperimentManifest manifest, int replicateIndex, ulong seed)
+    private static ExperimentReplicateResult RunReplicateCore(ExperimentManifest manifest, int replicateIndex)
     {
         string replicateId = $"{manifest.ExperimentId}-r{replicateIndex + 1:D4}";
-        ulong initialisationSeed = ExperimentSeedDerivation.DeriveInitialisation(seed);
-        ulong dynamicsSeed = ExperimentSeedDerivation.DeriveDynamics(seed);
+        ulong seed = 0;
+        ulong initialisationSeed = 0;
+        ulong dynamicsSeed = 0;
         List<MeasurementSample> samples = [];
         List<ExperimentSnapshot> snapshots = [];
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -94,8 +93,12 @@ public static class ExperimentRunner
         SerialSimulation? simulation = null;
         try
         {
-            PackedAggregateInitialisation initialisation = PackedAggregateInitialiser.Create(manifest, initialisationSeed);
-            simulation = new(initialisation.State, new Xoshiro256StarStar(dynamicsSeed), manifest.FluctuationAmplitude);
+            ExperimentSimulationInstance instance = ExperimentSimulationFactory.Create(manifest, replicateIndex);
+            replicateId = instance.ReplicateId;
+            seed = instance.ReplicateSeed;
+            initialisationSeed = instance.InitialisationSeed;
+            dynamicsSeed = instance.DynamicsSeed;
+            simulation = instance.Simulation;
             MorphogenesisState state = simulation.State;
 
             if (manifest.Measurements.IncludeMcsZero || manifest.McsCount == 0)
@@ -180,6 +183,13 @@ public static class ExperimentRunner
         }
         catch (Exception exception)
         {
+            if (simulation is null)
+            {
+                seed = ReplicateSeedDerivation.Derive(manifest.BaseSeed, replicateIndex);
+                initialisationSeed = ExperimentSeedDerivation.DeriveInitialisation(seed);
+                dynamicsSeed = ExperimentSeedDerivation.DeriveDynamics(seed);
+            }
+
             if (simulation is not null)
             {
                 attemptCount = simulation.AttemptCount;

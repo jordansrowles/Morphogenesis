@@ -9,7 +9,10 @@ namespace Rowles.Morphogenesis.Dynamics;
 
 public sealed class SerialSimulation
 {
+    public const string KernelId = "canonical-serial-v1";
+
     private readonly IRandomSource _random;
+    private readonly ILatticeMutationSink? _mutationSink;
     private readonly ConnectivityWorkspace _connectivityWorkspace;
     private readonly int[] _initialCellIds;
     private readonly CellReplayParameters[] _initialCells;
@@ -17,10 +20,15 @@ public sealed class SerialSimulation
     private readonly BoundaryMode _initialBoundaryMode;
     private readonly LatticeConventions _initialConventions;
 
-    public SerialSimulation(MorphogenesisState state, IRandomSource random, double fluctuationAmplitude)
+    public SerialSimulation(
+        MorphogenesisState state,
+        IRandomSource random,
+        double fluctuationAmplitude,
+        ILatticeMutationSink? mutationSink = null)
     {
         State = state ?? throw new ArgumentNullException(nameof(state));
         _random = random ?? throw new ArgumentNullException(nameof(random));
+        _mutationSink = mutationSink;
         if (!double.IsFinite(fluctuationAmplitude) || fluctuationAmplitude < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(fluctuationAmplitude));
@@ -55,8 +63,12 @@ public sealed class SerialSimulation
         _initialCells = initialCells.ToArray();
     }
 
-    public SerialSimulation(MorphogenesisState state, ulong seed, double fluctuationAmplitude)
-        : this(state, new Xoshiro256StarStar(seed), fluctuationAmplitude)
+    public SerialSimulation(
+        MorphogenesisState state,
+        ulong seed,
+        double fluctuationAmplitude,
+        ILatticeMutationSink? mutationSink = null)
+        : this(state, new Xoshiro256StarStar(seed), fluctuationAmplitude, mutationSink)
     {
         Seed = seed;
     }
@@ -353,5 +365,7 @@ public sealed class SerialSimulation
             State.Cells[newCellId].Area++;
             State.Cells[newCellId].Perimeter += evaluation.NewCellPerimeterDelta;
         }
+
+        _mutationSink?.AcceptedCopy(targetIndex, oldCellId, newCellId);
     }
 }

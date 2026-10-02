@@ -129,7 +129,8 @@ public sealed record ExperimentSnapshot(
         ArgumentNullException.ThrowIfNull(manifest);
         ArgumentNullException.ThrowIfNull(state);
         manifest.Validate();
-        int[] ids = state.GetCellIdsCopy();
+        int[] ids = new int[state.SiteCount];
+        state.CopyCellIdsTo(ids);
         int[] liveIds = ids.Where(cellId => cellId > 0).Distinct().Order().ToArray();
         SnapshotCellState[] cells = liveIds.Select(cellId =>
         {

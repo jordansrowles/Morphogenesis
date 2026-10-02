@@ -26,19 +26,29 @@ public sealed class EventClockSimulation
     private bool _waiting;
     private long _skipsRemaining;
 
-    public EventClockSimulation(MorphogenesisState state, ulong seed, double fluctuationAmplitude, ProposalSpaceKind kind)
-        : this(state, new Xoshiro256StarStar(seed), fluctuationAmplitude, kind)
+    public EventClockSimulation(
+        MorphogenesisState state,
+        ulong seed,
+        double fluctuationAmplitude,
+        ProposalSpaceKind kind,
+        ILatticeMutationSink? mutationSink = null)
+        : this(state, new Xoshiro256StarStar(seed), fluctuationAmplitude, kind, mutationSink)
     {
     }
 
-    public EventClockSimulation(MorphogenesisState state, IRandomSource random, double fluctuationAmplitude, ProposalSpaceKind kind)
+    public EventClockSimulation(
+        MorphogenesisState state,
+        IRandomSource random,
+        double fluctuationAmplitude,
+        ProposalSpaceKind kind,
+        ILatticeMutationSink? mutationSink = null)
     {
         if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
         _random = random ?? throw new ArgumentNullException(nameof(random));
         _kind = kind;
         _index = new InterfaceIndex(state);
         _proposalRandom = new ProposalRandom(random, state.SiteCount, _index.Degree);
-        _evaluator = new SerialSimulation(state, _proposalRandom, fluctuationAmplitude);
+        _evaluator = new SerialSimulation(state, _proposalRandom, fluctuationAmplitude, mutationSink);
     }
 
     public ProposalSpaceKind ProposalSpace => _kind;

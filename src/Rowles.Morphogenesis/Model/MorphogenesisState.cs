@@ -129,6 +129,8 @@ public sealed class MorphogenesisState
 
     public int SiteCount { get; }
 
+    public int CellCapacity => Cells.Length;
+
     public SimulationConfiguration Configuration { get; }
 
     public ContactEnergyMatrix ContactEnergies { get; }
@@ -160,17 +162,29 @@ public sealed class MorphogenesisState
             throw new ArgumentOutOfRangeException(nameof(cellId), "The ID does not identify a live biological cell.");
         }
 
-        CellRuntime cell = Cells[cellId];
-        return new CellState(
-            cellId,
-            cell.CellTypeId,
-            cell.IsAlive,
-            cell.Area,
-            cell.Perimeter,
-            cell.TargetArea,
-            cell.AreaStiffness,
-            cell.TargetPerimeter,
-            cell.PerimeterStiffness);
+        return CreateCellState(cellId);
+    }
+
+    public bool TryGetCellState(int cellId, out CellState state)
+    {
+        if (cellId <= 0 || cellId >= Cells.Length || !Cells[cellId].IsAlive)
+        {
+            state = default;
+            return false;
+        }
+
+        state = CreateCellState(cellId);
+        return true;
+    }
+
+    public void CopyCellIdsTo(Span<int> destination)
+    {
+        if (destination.Length < SiteCount)
+        {
+            throw new ArgumentException("The destination must contain at least one element per lattice site.", nameof(destination));
+        }
+
+        _lattice.AsSpan().CopyTo(destination);
     }
 
     public int[] GetCellIdsCopy() => (int[])_lattice.Clone();
@@ -213,6 +227,21 @@ public sealed class MorphogenesisState
     internal KernelPlan KernelPlan { get; }
 
     internal int[] Lattice => _lattice;
+
+    private CellState CreateCellState(int cellId)
+    {
+        CellRuntime cell = Cells[cellId];
+        return new CellState(
+            cellId,
+            cell.CellTypeId,
+            cell.IsAlive,
+            cell.Area,
+            cell.Perimeter,
+            cell.TargetArea,
+            cell.AreaStiffness,
+            cell.TargetPerimeter,
+            cell.PerimeterStiffness);
+    }
 
     private void ValidateConfiguration()
     {
