@@ -1,4 +1,5 @@
 using Rowles.Morphogenesis.Experiments.Results;
+using Rowles.Morphogenesis.Laboratory.Recording;
 
 namespace Rowles.Morphogenesis.Laboratory.Sessions;
 
@@ -9,4 +10,6 @@ public sealed record SimulationSessionSnapshot(
     long CurrentMcs,
     MeasurementSample? LatestMeasurement,
     SimulationOperationalCounters Counters,
-    string? Failure);
+    string? Failure,
+    RecordingState RecordingState,
+    string? RecordingFailure);

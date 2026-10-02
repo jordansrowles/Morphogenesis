@@ -6,6 +6,7 @@ using Rowles.Morphogenesis.Experiments.Configuration;
 using Rowles.Morphogenesis.Experiments.Execution;
 using Rowles.Morphogenesis.Experiments.Results;
 using Rowles.Morphogenesis.Laboratory.Publication;
+using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Measurements;
 using Rowles.Morphogenesis.Model;
 
@@ -24,6 +25,7 @@ public sealed class SimulationSession : IAsyncDisposable
     private readonly LatestValuePublisher<MeasurementSample> _measurementPublisher = new(CloneMeasurement);
     private readonly FrameBufferPool _frameBufferPool;
     private readonly LatestFrameHub _frameHub;
+    private readonly SimulationRecorder? _recorder;
     private readonly long _startedTimestamp;
     private readonly long _minimumPublishIntervalTicks;
     private readonly Task? _workerStartGate;
@@ -33,6 +35,8 @@ public sealed class SimulationSession : IAsyncDisposable
     private long _currentMcs;
     private MeasurementSample? _latestMeasurement;
     private string? _failure;
+    private RecordingState _recordingState = RecordingState.Disabled;
+    private string? _recordingFailure;
     private long _attempts;
     private long _accepted;
     private long _rejected;
@@ -51,11 +55,19 @@ public sealed class SimulationSession : IAsyncDisposable
         ExperimentManifest manifest,
         ExperimentSimulationInstance instance,
         SimulationSessionOptions options,
-        Task? workerStartGate = null)
+        Task? workerStartGate = null,
+        RecordingOptions? recordingOptions = null,
+        CoalescingLatticeChangeAccumulator? recordingAccumulator = null,
+        IRecordingStore? recordingStore = null)
     {
         _manifest = manifest;
         _instance = instance;
         _workerStartGate = workerStartGate;
+        RecordingOptions resolvedRecordingOptions = recordingOptions ?? new RecordingOptions();
+        if (resolvedRecordingOptions.Enabled)
+        {
+            _recordingState = RecordingState.Active;
+        }
         Metadata = CreateMetadata(sessionId, manifest, instance);
         _startedTimestamp = Stopwatch.GetTimestamp();
         _minimumPublishIntervalTicks = Math.Max(1,
@@ -74,6 +86,19 @@ public sealed class SimulationSession : IAsyncDisposable
             manifest.GridHeight,
             options.MaxLiveSubscribers,
             IncrementCoalescedOrDroppedFrames);
+
+        if (resolvedRecordingOptions.Enabled)
+        {
+            _recorder = new SimulationRecorder(
+                sessionId,
+                manifest,
+                Metadata,
+                instance.Simulation.State,
+                recordingAccumulator ?? throw new ArgumentNullException(nameof(recordingAccumulator)),
+                resolvedRecordingOptions,
+                recordingStore ?? throw new ArgumentNullException(nameof(recordingStore)),
+                SetRecordingState);
+        }
 
         _currentMcs = instance.Simulation.CompletedMcs;
         if (manifest.Measurements.IncludeMcsZero || manifest.McsCount == 0)
@@ -429,6 +454,8 @@ public sealed class SimulationSession : IAsyncDisposable
         {
             PublishMeasurement(Measure());
         }
+
+        _recorder?.RecordCompletedMcs(mcs);
     }
 
     private TissueMeasurements Measure() => TissueMeasurementCalculator.Measure(
@@ -558,6 +585,10 @@ public sealed class SimulationSession : IAsyncDisposable
         }
 
         PublishStateSnapshot();
+        if (IsTerminal(status))
+        {
+            CompleteRecordingAtCurrentMcs();
+        }
     }
 
     private void TransitionToTerminal(SimulationSessionStatus status, string? failure)
@@ -575,6 +606,7 @@ public sealed class SimulationSession : IAsyncDisposable
         }
 
         PublishStateSnapshot();
+        CompleteRecordingAtCurrentMcs();
     }
 
     private void FailSession(Exception exception)
@@ -587,6 +619,26 @@ public sealed class SimulationSession : IAsyncDisposable
 
     private void PublishStateSnapshot() => _statePublisher.Publish(GetSnapshot());
 
+    private void SetRecordingState(RecordingState state, string? failure)
+    {
+        lock (_snapshotGate)
+        {
+            _recordingState = state;
+            _recordingFailure = failure;
+        }
+
+        PublishStateSnapshot();
+    }
+
+    private void CompleteRecordingAtCurrentMcs()
+    {
+        SimulationRecorder? recorder = _recorder;
+        if (recorder is not null)
+        {
+            _ = recorder.CompleteAsync(GetCurrentMcs());
+        }
+    }
+
     private SimulationSessionSnapshot CreateSnapshotLocked() => new(
         Metadata.SessionId,
         _revision,
@@ -594,7 +646,9 @@ public sealed class SimulationSession : IAsyncDisposable
         _currentMcs,
         _latestMeasurement is null ? null : CloneMeasurement(_latestMeasurement),
         CreateCountersLocked(),
-        _failure);
+        _failure,
+        _recordingState,
+        _recordingFailure);
 
     private SimulationOperationalCounters CreateCountersLocked() => new(
         Stopwatch.GetElapsedTime(_startedTimestamp),
@@ -656,6 +710,12 @@ public sealed class SimulationSession : IAsyncDisposable
         }
         finally
         {
+            if (_recorder is not null)
+            {
+                await _recorder.CompleteAsync(GetCurrentMcs()).ConfigureAwait(false);
+                await _recorder.DisposeAsync().ConfigureAwait(false);
+            }
+
             ObjectDisposedException disposedException = new(nameof(SimulationSession));
             while (_requests.Reader.TryRead(out SessionRequest? request))
             {

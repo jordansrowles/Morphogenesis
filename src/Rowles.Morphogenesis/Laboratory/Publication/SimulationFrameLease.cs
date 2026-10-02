@@ -23,6 +23,22 @@ public sealed class SimulationFrameLease : IDisposable
         _subscriber = subscriber;
     }
 
+    internal SimulationFrameLease(
+        Guid sessionId,
+        long sequence,
+        long mcs,
+        int width,
+        int height,
+        FrameBufferOwner owner)
+    {
+        SessionId = sessionId;
+        Sequence = sequence;
+        Mcs = mcs;
+        Width = width;
+        Height = height;
+        _owner = owner;
+    }
+
     public Guid SessionId { get; }
 
     public long Sequence { get; }

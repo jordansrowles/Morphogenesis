@@ -9,7 +9,12 @@ public static class ExperimentSimulationFactory
 {
     public static ExperimentSimulationInstance Create(
         ExperimentManifest manifest,
-        int replicateIndex)
+        int replicateIndex) => Create(manifest, replicateIndex, mutationSink: null);
+
+    internal static ExperimentSimulationInstance Create(
+        ExperimentManifest manifest,
+        int replicateIndex,
+        ILatticeMutationSink? mutationSink)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         manifest.Validate();
@@ -26,7 +31,8 @@ public static class ExperimentSimulationFactory
         SerialSimulation simulation = new(
             initialisation.State,
             new Xoshiro256StarStar(dynamicsSeed),
-            manifest.FluctuationAmplitude);
+            manifest.FluctuationAmplitude,
+            mutationSink);
 
         return new ExperimentSimulationInstance(
             manifest.ExperimentId,
