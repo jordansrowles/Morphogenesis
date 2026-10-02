@@ -1,10 +1,11 @@
-using Rowles.Morphogenesis.Dynamics;
+// Test-only canonical implementation pinned to cbdef668ec92be0b528132f96356d01c5f805872.
+using Rowles.Morphogenesis.Energy;
 using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Model;
 
-namespace Rowles.Morphogenesis.Energy;
+namespace Rowles.Morphogenesis.Tests.Baseline;
 
-public static class EnergyDeltaCalculator
+public static class EntryEnergyDeltaCalculator
 {
     public static MoveEvaluation Evaluate(MorphogenesisState state, int targetIndex, int newCellId)
     {
@@ -41,20 +42,15 @@ public static class EnergyDeltaCalculator
         double delta = 0;
         int oldType = state.CellTypeId(oldCellId);
         int newType = state.CellTypeId(newCellId);
-        KernelPlan plan = state.KernelPlan;
-        ReadOnlySpan<NeighbourOffset> offsets = plan.ContactOffsets;
-        ReadOnlySpan<double> contacts = plan.ContactValues;
-        int typeCount = plan.ContactTypeCount;
-        int oldStride = oldType * typeCount;
-        int newStride = newType * typeCount;
-        for (int offsetIndex = 0; offsetIndex < offsets.Length; offsetIndex++)
+        ContactCouplingNeighbourhood neighbourhood = state.Configuration.Conventions.ContactCouplingNeighbourhood;
+        for (int offsetIndex = 0; offsetIndex < StencilGeometry.Count(neighbourhood); offsetIndex++)
         {
-            NeighbourOffset offset = offsets[offsetIndex];
-            int neighbourIndex = state.Resolve(targetIndex, offset.Dx, offset.Dy);
+            StencilGeometry.ContactOffset(neighbourhood, offsetIndex, out int dx, out int dy);
+            int neighbourIndex = state.Resolve(targetIndex, dx, dy);
             if (neighbourIndex < 0)
             {
-                delta -= contacts[oldStride];
-                delta += contacts[newStride];
+                delta -= state.ContactEnergies[oldType, 0];
+                delta += state.ContactEnergies[newType, 0];
                 continue;
             }
 
@@ -62,12 +58,12 @@ public static class EnergyDeltaCalculator
             int neighbourType = state.CellTypeId(neighbourId);
             if (oldCellId != neighbourId)
             {
-                delta -= contacts[oldStride + neighbourType];
+                delta -= state.ContactEnergies[oldType, neighbourType];
             }
 
             if (newCellId != neighbourId)
             {
-                delta += contacts[newStride + neighbourType];
+                delta += state.ContactEnergies[newType, neighbourType];
             }
         }
 
@@ -99,11 +95,11 @@ public static class EnergyDeltaCalculator
     public static int PerimeterDelta(MorphogenesisState state, int targetIndex, int cellId, int oldCellId, int newCellId)
     {
         int delta = 0;
-        ReadOnlySpan<NeighbourOffset> offsets = state.KernelPlan.PerimeterOffsets;
-        for (int offsetIndex = 0; offsetIndex < offsets.Length; offsetIndex++)
+        PerimeterNeighbourhood neighbourhood = state.Configuration.Conventions.PerimeterNeighbourhood;
+        for (int offsetIndex = 0; offsetIndex < StencilGeometry.Count(neighbourhood); offsetIndex++)
         {
-            NeighbourOffset offset = offsets[offsetIndex];
-            int neighbourIndex = state.Resolve(targetIndex, offset.Dx, offset.Dy);
+            StencilGeometry.PerimeterOffset(neighbourhood, offsetIndex, out int dx, out int dy);
+            int neighbourIndex = state.Resolve(targetIndex, dx, dy);
             if (oldCellId == cellId)
             {
                 bool wasUnlike = neighbourIndex < 0 || state.Lattice[neighbourIndex] != oldCellId;

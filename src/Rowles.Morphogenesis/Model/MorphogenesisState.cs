@@ -1,3 +1,4 @@
+using Rowles.Morphogenesis.Dynamics;
 using Rowles.Morphogenesis.Diagnostics;
 using Rowles.Morphogenesis.Energy;
 using Rowles.Morphogenesis.Lattice;
@@ -38,6 +39,7 @@ public sealed class MorphogenesisState
         ContactEnergies = contactEnergies;
         ValidateConfiguration();
         ValidatePeriodicStencils();
+        KernelPlan = new KernelPlan(Configuration, contactEnergies);
 
         int largestId = 0;
         for (int index = 0; index < cells.Count; index++)
@@ -207,6 +209,8 @@ public sealed class MorphogenesisState
 
         return y * Width + x;
     }
+
+    internal KernelPlan KernelPlan { get; }
 
     internal int[] Lattice => _lattice;
 

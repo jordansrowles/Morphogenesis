@@ -11,6 +11,7 @@ public sealed class ExperimentManifestTests
     {
         ExperimentManifest manifest = ExperimentManifestFactory.Create();
 
+        Assert.Equal(JsonSerializer.Serialize(manifest, ExperimentManifest.CreateSerialiserOptions()), manifest.ToJson());
         ExperimentManifest actual = ExperimentManifest.FromJson(manifest.ToJson());
 
         Assert.Equal(manifest.ToJson(), actual.ToJson());

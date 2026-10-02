@@ -1,3 +1,4 @@
+using Rowles.Morphogenesis.Serialisation;
 using System.Text.Json;
 using Rowles.Morphogenesis.Experiments.Random;
 using Rowles.Morphogenesis.Measurements;
@@ -16,14 +17,14 @@ public sealed record ExperimentEnsembleResult(
     double ElapsedMilliseconds,
     long AllocatedBytes)
 {
-    public string ToJson() => JsonSerializer.Serialize(this, ExperimentManifest.CreateSerializerOptions());
+    public string ToJson() => JsonSerializer.Serialize(this, MorphogenesisJsonContext.Instance.ExperimentEnsembleResult);
 
     public static ExperimentEnsembleResult FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        ExperimentEnsembleResult result = JsonSerializer.Deserialize<ExperimentEnsembleResult>(
+        ExperimentEnsembleResult result = JsonSerializer.Deserialize(
             json,
-            ExperimentManifest.CreateSerializerOptions())
+            MorphogenesisJsonContext.Instance.ExperimentEnsembleResult)
             ?? throw new JsonException("The experiment result was JSON null.");
 
         Validate(result);

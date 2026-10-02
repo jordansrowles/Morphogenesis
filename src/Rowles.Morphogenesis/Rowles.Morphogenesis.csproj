@@ -5,5 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Rowles.StrictMaths/Rowles.StrictMaths.csproj" />
+    <InternalsVisibleTo Include="Rowles.Morphogenesis.Tests" />
+    <InternalsVisibleTo Include="Rowles.Morphogenesis.Benchmarks" />
   </ItemGroup>
 </Project>

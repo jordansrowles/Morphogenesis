@@ -12,6 +12,50 @@ using Rowles.Morphogenesis.Experiments.Execution;
 using Rowles.Morphogenesis.Initialisation;
 using Rowles.Morphogenesis.Model;
 using Rowles.Morphogenesis.Experiments.Results;
+using Rowles.Morphogenesis.Benchmarks.Diagnostics;
+
+if (args.Length == 2 && args[0] == "--profile-process-memory")
+{
+    ProcessMemoryProfile.Write(args[1]);
+    return;
+}
+
+if (args.Length == 2 && args[0] == "--profile-proposal-space")
+{
+    ProposalSpaceProfile.Write(args[1]);
+    return;
+}
+
+if (args.Length == 2 && args[0] == "--profile-memory-layout")
+{
+    MemoryLayoutProfile.Write(args[1]);
+    return;
+}
+
+if (args.Length == 4 && args[0] == "--run-event-ensemble")
+{
+    EventEnsembleCapture.Run(args[1], args[2], int.Parse(args[3], CultureInfo.InvariantCulture));
+    return;
+}
+
+if (args.Length == 1 && args[0] == "--verify-layout-experiments")
+{
+    foreach (int count in new[] { 64, 1024, 4096 })
+        new CellLayoutBenchmarks { CellCount = count }.SetUp();
+    foreach (int count in new[] { 3, 16 })
+        new ContactLookupBenchmarks { TypeCount = count }.SetUp();
+    foreach (int width in new[] { 32, 128, 256 })
+        foreach (bool periodic in new[] { false, true })
+            new LatticeLayoutBenchmarks { Width = width, Periodic = periodic }.SetUp();
+    Console.WriteLine("All cell, contact and lattice layout variants agree on exact checksums and halo state.");
+    return;
+}
+
+if (args.Length == 2 && args[0] == "--profile-stages")
+{
+    M3BenchmarkEnvironment.WriteProposalStageProfile(args[1]);
+    return;
+}
 
 if (args.Length == 2 && args[0] == "--write-environment")
 {
@@ -36,6 +80,42 @@ BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
 
 internal static class M3BenchmarkEnvironment
 {
+    public static void WriteProposalStageProfile(string path)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+        using StreamWriter writer = new(path);
+        writer.WriteLine("scenario_id,stage,visits,instrumented_stage_ms,instrumented_total_ms");
+        foreach (M3BenchmarkScenario scenario in M3BenchmarkScenario.All)
+        {
+            ProfiledSerialSimulation Create() => new(
+                PackedAggregateInitialiser.Create(scenario.Manifest, scenario.Manifest.BaseSeed).State,
+                scenario.Manifest.BaseSeed, scenario.Manifest.FluctuationAmplitude);
+            ProfiledSerialSimulation warmup = Create();
+            Stopwatch warmupTimer = Stopwatch.StartNew();
+            do
+            {
+                for (int mcs = 0; mcs < scenario.KernelMcsPerInvocation; mcs++) warmup.RunMcs();
+            }
+            while (warmupTimer.ElapsedMilliseconds < 1000);
+            ProfiledSerialSimulation simulation = Create();
+            Stopwatch timer = Stopwatch.StartNew();
+            for (int mcs = 0; mcs < scenario.KernelMcsPerInvocation; mcs++) simulation.RunMcs();
+            timer.Stop();
+            ProposalStageProfile overhead = new();
+            for (int probe = 0; probe < 100000; probe++)
+                overhead.Record(ProposalStage.SameIdCheck, Stopwatch.GetTimestamp());
+            writer.WriteLine(string.Join(',', scenario.Id, "TimestampPairOverhead", 100000,
+                overhead.Milliseconds(ProposalStage.SameIdCheck).ToString("F6", CultureInfo.InvariantCulture),
+                timer.Elapsed.TotalMilliseconds.ToString("F6", CultureInfo.InvariantCulture)));
+            foreach (ProposalStage stage in Enum.GetValues<ProposalStage>())
+            {
+                writer.WriteLine(string.Join(',', scenario.Id, stage, simulation.Profile.Count(stage),
+                    simulation.Profile.Milliseconds(stage).ToString("F6", CultureInfo.InvariantCulture),
+                    timer.Elapsed.TotalMilliseconds.ToString("F6", CultureInfo.InvariantCulture)));
+            }
+        }
+    }
+
     private static readonly IReadOnlyDictionary<string, string> BdnBuildSettings =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {

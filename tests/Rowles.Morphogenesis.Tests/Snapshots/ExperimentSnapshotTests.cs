@@ -15,6 +15,7 @@ public sealed class ExperimentSnapshotTests
         PackedAggregateInitialisation initialisation = PackedAggregateInitialiser.Create(manifest, 17);
         ExperimentSnapshot snapshot = ExperimentSnapshot.Capture(manifest, "test-sorting-r0001", 0, 17, 0, initialisation.State);
 
+        Assert.Equal(JsonSerializer.Serialize(snapshot, ExperimentManifest.CreateSerialiserOptions()), snapshot.ToJson());
         ExperimentSnapshot actual = ExperimentSnapshot.FromJson(snapshot.ToJson());
 
         Assert.Equal(snapshot.SnapshotSchemaVersion, actual.SnapshotSchemaVersion);

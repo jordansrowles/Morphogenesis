@@ -1,3 +1,4 @@
+using Rowles.Morphogenesis.Serialisation;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Rowles.Morphogenesis.Lattice;
@@ -12,7 +13,7 @@ public sealed record ExperimentManifest
 {
     public const int CurrentSchemaVersion = 1;
 
-    private static readonly JsonSerializerOptions SerializerOptions = CreateOptions();
+    private static readonly JsonSerializerOptions _serialiserOptions = CreateOptions();
 
     public required int SchemaVersion { get; init; }
 
@@ -148,14 +149,14 @@ public sealed record ExperimentManifest
         ValidateInitialiserFits();
     }
 
-    public string ToJson() => JsonSerializer.Serialize(this, SerializerOptions);
+    public string ToJson() => JsonSerializer.Serialize(this, MorphogenesisJsonContext.Instance.ExperimentManifest);
 
-    public static JsonSerializerOptions CreateSerializerOptions() => new(SerializerOptions);
+    public static JsonSerializerOptions CreateSerialiserOptions() => new(_serialiserOptions);
 
     public static ExperimentManifest FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        ExperimentManifest manifest = JsonSerializer.Deserialize<ExperimentManifest>(json, SerializerOptions)
+        ExperimentManifest manifest = JsonSerializer.Deserialize(json, MorphogenesisJsonContext.Instance.ExperimentManifest)
             ?? throw new JsonException("The experiment manifest was JSON null.");
         manifest.Validate();
         return manifest;

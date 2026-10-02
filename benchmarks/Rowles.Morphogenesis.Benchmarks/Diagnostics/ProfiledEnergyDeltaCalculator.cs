@@ -1,12 +1,15 @@
 using Rowles.Morphogenesis.Dynamics;
+// Opt-in diagnostic copy. Differential tests require exact parity with the canonical kernel.
+using System.Diagnostics;
+using Rowles.Morphogenesis.Energy;
 using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Model;
 
-namespace Rowles.Morphogenesis.Energy;
+namespace Rowles.Morphogenesis.Benchmarks.Diagnostics;
 
-public static class EnergyDeltaCalculator
+public static class ProfiledEnergyDeltaCalculator
 {
-    public static MoveEvaluation Evaluate(MorphogenesisState state, int targetIndex, int newCellId)
+    public static MoveEvaluation Evaluate(MorphogenesisState state, int targetIndex, int newCellId, ProposalStageProfile profile)
     {
         ArgumentNullException.ThrowIfNull(state);
         if ((uint)targetIndex >= (uint)state.SiteCount)
@@ -25,11 +28,17 @@ public static class EnergyDeltaCalculator
             return new MoveEvaluation(new HamiltonianBreakdown(0, 0, 0), 0, 0);
         }
 
+        long stageStart = Stopwatch.GetTimestamp();
         double contact = ContactDelta(state, targetIndex, oldCellId, newCellId);
+        profile.Record(ProposalStage.ContactEnergy, stageStart);
+        stageStart = Stopwatch.GetTimestamp();
         double area = AreaDelta(state, oldCellId, newCellId);
+        profile.Record(ProposalStage.AreaEnergy, stageStart);
+        stageStart = Stopwatch.GetTimestamp();
         int oldPerimeterDelta = oldCellId > 0 ? PerimeterDelta(state, targetIndex, oldCellId, oldCellId, newCellId) : 0;
         int newPerimeterDelta = newCellId > 0 ? PerimeterDelta(state, targetIndex, newCellId, oldCellId, newCellId) : 0;
         double perimeter = PerimeterEnergyDelta(state, oldCellId, newCellId, oldPerimeterDelta, newPerimeterDelta);
+        profile.Record(ProposalStage.PerimeterEnergy, stageStart);
         return new MoveEvaluation(
             new HamiltonianBreakdown(contact, area, perimeter),
             oldPerimeterDelta,

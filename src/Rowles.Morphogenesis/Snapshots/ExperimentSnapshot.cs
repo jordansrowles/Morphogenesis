@@ -1,3 +1,4 @@
+using Rowles.Morphogenesis.Serialisation;
 using System.Text.Json;
 using Rowles.Morphogenesis.Experiments;
 using Rowles.Morphogenesis.Experiments.Configuration;
@@ -106,12 +107,12 @@ public sealed record ExperimentSnapshot(
         }
     }
 
-    public string ToJson() => JsonSerializer.Serialize(this, SerializerOptions);
+    public string ToJson() => JsonSerializer.Serialize(this, MorphogenesisJsonContext.Instance.ExperimentSnapshot);
 
     public static ExperimentSnapshot FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        ExperimentSnapshot snapshot = JsonSerializer.Deserialize<ExperimentSnapshot>(json, SerializerOptions)
+        ExperimentSnapshot snapshot = JsonSerializer.Deserialize(json, MorphogenesisJsonContext.Instance.ExperimentSnapshot)
             ?? throw new JsonException("The experiment snapshot was JSON null.");
         snapshot.Validate();
         return snapshot;
@@ -161,5 +162,4 @@ public sealed record ExperimentSnapshot(
         return snapshot;
     }
 
-    private static readonly JsonSerializerOptions SerializerOptions = ExperimentManifest.CreateSerializerOptions();
 }

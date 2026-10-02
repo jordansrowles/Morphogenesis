@@ -36,6 +36,8 @@ public sealed class ContactEnergyMatrix
         }
     }
 
+    internal ReadOnlySpan<double> Values => _values;
+
     public int TypeCount { get; }
 
     public double this[int firstType, int secondType]

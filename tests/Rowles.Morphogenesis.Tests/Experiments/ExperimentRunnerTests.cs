@@ -158,6 +158,7 @@ public sealed class ExperimentRunnerTests
         ExperimentManifest manifest = ExperimentManifestFactory.Create() with { McsCount = 2 };
         ExperimentEnsembleResult result = ExperimentRunner.Run(manifest);
 
+        Assert.Equal(JsonSerializer.Serialize(result, ExperimentManifest.CreateSerialiserOptions()), result.ToJson());
         ExperimentEnsembleResult actual = ExperimentEnsembleResult.FromJson(result.ToJson());
 
         Assert.Equal(manifest.ToJson(), actual.Manifest.ToJson());
