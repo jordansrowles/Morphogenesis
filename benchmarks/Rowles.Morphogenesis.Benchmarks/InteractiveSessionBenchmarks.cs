@@ -1,8 +1,11 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using Rowles.Morphogenesis.Energy;
 using Rowles.Morphogenesis.Experiments;
+using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Laboratory.Publication;
 using Rowles.Morphogenesis.Laboratory.Sessions;
+using Rowles.Morphogenesis.Model;
 
 namespace Rowles.Morphogenesis.Benchmarks;
 
@@ -157,5 +160,77 @@ public class SlowInteractiveSubscriberBenchmarks
         {
             owner.Release();
         }
+    }
+}
+
+[MemoryDiagnoser]
+[ShortRunJob]
+public class InteractiveFrameCaptureBenchmarks
+{
+    private static readonly double[,] Contacts = { { 0, 4 }, { 4, 0 } };
+    private MorphogenesisState _state = null!;
+    private FrameBufferPool _pool = null!;
+    private LatestFrameHub _hub = null!;
+    private long _sequence;
+
+    [Params(256, 512)]
+    public int Width { get; set; }
+
+    [GlobalSetup]
+    public void CreateCapturePath()
+    {
+        const int CellSideRatio = 4;
+        int side = Width / CellSideRatio;
+        int start = (Width - side) / 2;
+        int[] ids = new int[checked(Width * Width)];
+        for (int y = start; y < start + side; y++)
+        {
+            for (int x = start; x < start + side; x++)
+            {
+                ids[y * Width + x] = 1;
+            }
+        }
+
+        _state = new MorphogenesisState(
+            Width,
+            Width,
+            ids,
+            [new CellDefinition(1, 1, side * side, 0.5, 0, 0)],
+            new ContactEnergyMatrix(Contacts),
+            SimulationConfiguration.WallCanonical);
+        _pool = new FrameBufferPool(bufferCount: 10, siteCount: _state.SiteCount);
+        _hub = new LatestFrameHub(Guid.NewGuid(), Width, Width, maximumSubscribers: 8, static () => { });
+    }
+
+    [Benchmark]
+    public long CopyAndPublishIntoReusableBuffer()
+    {
+        if (!_pool.TryAcquire(out FrameBufferOwner? owner) || owner is null)
+        {
+            throw new InvalidOperationException("The frame-capture benchmark exhausted its reusable buffers.");
+        }
+
+        long sequence = ++_sequence;
+        try
+        {
+            _state.CopyCellIdsTo(owner.CellIds);
+            if (!_hub.Publish(owner, sequence, sequence))
+            {
+                throw new ObjectDisposedException(nameof(LatestFrameHub));
+            }
+        }
+        finally
+        {
+            owner.Release();
+        }
+
+        return sequence;
+    }
+
+    [GlobalCleanup]
+    public void DisposeCapturePath()
+    {
+        _hub.Dispose();
+        _pool.Dispose();
     }
 }

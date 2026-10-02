@@ -13,6 +13,7 @@ namespace Rowles.Morphogenesis.Laboratory.Sessions;
 
 public sealed class SimulationSession : IAsyncDisposable
 {
+    private const int MaximumRequestsPerBoundary = 64;
     private readonly object _snapshotGate = new();
     private readonly object _disposeGate = new();
     private readonly ExperimentManifest _manifest;
@@ -25,6 +26,7 @@ public sealed class SimulationSession : IAsyncDisposable
     private readonly LatestFrameHub _frameHub;
     private readonly long _startedTimestamp;
     private readonly long _minimumPublishIntervalTicks;
+    private readonly Task? _workerStartGate;
     private readonly Task _worker;
     private SimulationSessionStatus _status = SimulationSessionStatus.Created;
     private long _revision;
@@ -48,10 +50,12 @@ public sealed class SimulationSession : IAsyncDisposable
         Guid sessionId,
         ExperimentManifest manifest,
         ExperimentSimulationInstance instance,
-        SimulationSessionOptions options)
+        SimulationSessionOptions options,
+        Task? workerStartGate = null)
     {
         _manifest = manifest;
         _instance = instance;
+        _workerStartGate = workerStartGate;
         Metadata = CreateMetadata(sessionId, manifest, instance);
         _startedTimestamp = Stopwatch.GetTimestamp();
         _minimumPublishIntervalTicks = Math.Max(1,
@@ -241,6 +245,11 @@ public sealed class SimulationSession : IAsyncDisposable
         CancellationToken cancellationToken = _workerCancellation.Token;
         try
         {
+            if (_workerStartGate is not null)
+            {
+                await _workerStartGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (GetStatus() == SimulationSessionStatus.Running)
@@ -296,7 +305,9 @@ public sealed class SimulationSession : IAsyncDisposable
 
     private void ProcessQueuedRequests()
     {
-        while (_requests.Reader.TryRead(out SessionRequest? request))
+        for (int processed = 0;
+             processed < MaximumRequestsPerBoundary && _requests.Reader.TryRead(out SessionRequest? request);
+             processed++)
         {
             ProcessRequest(request);
         }

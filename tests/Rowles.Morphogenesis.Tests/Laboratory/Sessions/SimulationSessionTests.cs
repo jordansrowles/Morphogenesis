@@ -186,23 +186,32 @@ public sealed class SimulationSessionTests
     }
 
     [Fact]
-    public async Task CancelledQueuedCommandDoesNotChangeSessionState()
+    public async Task CancellationBeforeRequestProcessingLeavesSessionUnchanged()
     {
-        await using SimulationSession session = SimulationSessionFactory.Create(
-            SessionTestFixture.CreateManifest(mcsCount: 1_000_000, width: 256, height: 256), replicateIndex: 0);
-        await session.StartAsync(Guid.NewGuid(), expectedRevision: 0);
+        ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: 1_000_000);
+        TaskCompletionSource workerStartGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        ExperimentSimulationInstance instance = ExperimentSimulationFactory.Create(manifest, replicateIndex: 0);
+        await using SimulationSession session = new(
+            Guid.NewGuid(),
+            manifest,
+            instance,
+            new SimulationSessionOptions(),
+            workerStartGate.Task);
         using CancellationTokenSource cancellation = new();
 
-        ValueTask<SimulationCommandResult> pendingPause = session.PauseAsync(
-            Guid.NewGuid(), expectedRevision: 1, cancellationToken: cancellation.Token);
+        ValueTask<SimulationCommandResult> pendingStart = session.StartAsync(
+            Guid.NewGuid(), expectedRevision: 0, cancellationToken: cancellation.Token);
+        Assert.False(pendingStart.IsCompleted);
         cancellation.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pendingPause.AsTask());
-        SimulationSessionSnapshot afterCancellation = session.GetSnapshot();
-        Assert.Equal(1, afterCancellation.Revision);
-        Assert.Equal(SimulationSessionStatus.Running, afterCancellation.Status);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pendingStart.AsTask());
+        Task<CellInspection?> queuedInspection = session.InspectCellAsync(cellId: 1).AsTask();
+        workerStartGate.SetResult();
+        await queuedInspection;
 
-        await session.StopAsync(Guid.NewGuid(), expectedRevision: 1);
+        SimulationSessionSnapshot afterCancellation = session.GetSnapshot();
+        Assert.Equal(0, afterCancellation.Revision);
+        Assert.Equal(SimulationSessionStatus.Created, afterCancellation.Status);
     }
 
     [Fact]
