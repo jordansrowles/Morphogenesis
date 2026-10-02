@@ -1,0 +1,15 @@
+@inherits LayoutComponentBase
+<div class="shell">
+    <header class="site-header">
+        <a class="brand" href="/">Morphogenesis laboratory</a>
+        <nav aria-label="Main navigation">
+            <a href="/">Experiments</a>
+            <a href="/sessions">Sessions</a>
+        </nav>
+    </header>
+    <aside class="network-notice" role="status">Trusted-network deployment only. This server has no authentication.</aside>
+    <main>
+        @Body
+    </main>
+    <FluentProviders />
+</div>

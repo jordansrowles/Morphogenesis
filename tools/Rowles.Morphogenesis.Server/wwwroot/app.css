@@ -1,0 +1,66 @@
+:root {
+    color-scheme: light dark;
+    font-family: Inter, "Segoe UI", sans-serif;
+    background: #f3f5f8;
+    color: #1c2838;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #1f5d95; }
+.shell { max-width: 1500px; margin: auto; padding: 0 1.5rem 3rem; }
+.site-header { display: flex; align-items: center; justify-content: space-between; min-height: 4.5rem; border-bottom: 1px solid #cbd3dd; }
+.brand { color: inherit; font-weight: 700; text-decoration: none; font-size: 1.15rem; }
+nav { display: flex; gap: 1.25rem; }
+nav a { text-decoration: none; }
+.network-notice { margin: 1rem 0; padding: .7rem 1rem; background: #fff2ce; border: 1px solid #c59116; border-radius: .45rem; font-weight: 600; }
+main { min-height: 70vh; }
+.experiment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1rem; }
+.card, .plot-card { background: #fff; border: 1px solid #d4dce6; border-radius: .6rem; box-shadow: 0 2px 7px #1220360c; }
+.experiment-card { padding: 1.2rem; }
+.experiment-card h2 { margin: 0; }
+.experiment-id, .muted { color: #627086; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .35rem .8rem; }
+dt { color: #627086; }
+dd { margin: 0; font-weight: 600; }
+.create-options { display: grid; gap: .65rem; margin-top: 1.2rem; }
+.create-options label, .playback-toolbar label { display: flex; align-items: center; gap: .5rem; justify-content: space-between; }
+input[type=number], select { padding: .35rem; border: 1px solid #aab6c5; border-radius: .3rem; }
+button, .button-link { font: inherit; cursor: pointer; }
+.secondary-button { border: 0; background: none; color: #385a7b; }
+.error { padding: .7rem; color: #8a1d1d; background: #ffe5e5; border-radius: .4rem; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { padding: .7rem .8rem; border-bottom: 1px solid #d8dee7; text-align: left; }
+th { background: #e9edf3; }
+.button-link { display: inline-block; padding: .35rem .7rem; background: #e4eff9; border-radius: .35rem; text-decoration: none; }
+.session-heading { display: flex; align-items: center; justify-content: space-between; }
+.session-heading h1 { margin-bottom: .2rem; }
+.session-heading p { margin-top: 0; color: #627086; }
+.toolbar, .playback-toolbar, .view-toolbar, .counter-row { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
+.toolbar { margin: 1rem 0; padding: .75rem; background: #e8edf4; border-radius: .5rem; }
+.toolbar-status { font-weight: 700; margin-left: auto; }
+.session-main { display: grid; grid-template-columns: minmax(0, 7fr) minmax(240px, 3fr); gap: 1rem; align-items: stretch; }
+.canvas-panel, .inspector { padding: 1rem; min-width: 0; }
+.view-toolbar { margin-bottom: .75rem; }
+.view-toolbar button, .playback-toolbar button { border: 1px solid #b3becc; background: #f6f8fb; padding: .45rem .7rem; border-radius: .35rem; }
+.view-toolbar button.selected { background: #d9e9fa; border-color: #4784bc; }
+.lattice-canvas { display: block; width: 100%; aspect-ratio: 1; max-height: 72vh; object-fit: contain; image-rendering: pixelated; touch-action: none; background: #0e141d; border-radius: .35rem; }
+.frame-label { margin-top: .55rem; font-variant-numeric: tabular-nums; }
+.metrics-area { margin-top: 1rem; }
+.metric-plots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.plot-card { padding: .7rem; min-width: 0; }
+.plot-card h3 { margin: .2rem .2rem .6rem; font-size: 1rem; }
+.plot-card svg { width: 100%; height: 145px; overflow: visible; }
+.plot-axis { stroke: #8793a2; stroke-width: 1; }
+.plot-line { fill: none; stroke: #3579ad; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.plot-line-secondary { stroke: #d07945; }
+.plot-label { display: flex; justify-content: space-between; color: #627086; font-size: .8rem; }
+.counter-row { margin-top: .8rem; padding: .75rem; background: #e8edf4; border-radius: .45rem; font-size: .9rem; }
+.playback-toolbar { margin-top: 1rem; padding: .75rem; }
+.playback-toolbar input[type=range] { width: min(28vw, 360px); }
+@media (max-width: 800px) {
+    .shell { padding: 0 .8rem 2rem; }
+    .session-main, .metric-plots { grid-template-columns: 1fr; }
+    .toolbar-status { margin-left: 0; }
+}

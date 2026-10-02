@@ -1,0 +1,77 @@
+@page "/"
+@inject ExperimentCatalog Catalog
+@inject SimulationSessionRegistry Registry
+@inject NavigationManager Navigation
+
+<PageTitle>Experiments | Morphogenesis laboratory</PageTitle>
+<h1>Canonical experiments</h1>
+<p>Start a canonical simulation and inspect its lattice, measurements and optional visual recording.</p>
+<div class="experiment-grid">
+    @foreach (ExperimentCatalogEntry experiment in Catalog.Entries)
+    {
+        <article class="card experiment-card" @key="experiment.ExperimentId">
+            <h2>@experiment.Name</h2>
+            <p class="experiment-id">@experiment.ExperimentId</p>
+            <dl>
+                <dt>Grid</dt><dd>@experiment.GridWidth × @experiment.GridHeight</dd>
+                <dt>MCS target</dt><dd>@experiment.McsCount</dd>
+                <dt>Boundary</dt><dd>@experiment.BoundaryMode</dd>
+                <dt>Replicates</dt><dd>@experiment.ReplicateCount</dd>
+            </dl>
+            @if (_selected == experiment.ExperimentId)
+            {
+                <div class="create-options">
+                    <label>Replicate index <input type="number" min="0" max="@(experiment.ReplicateCount - 1)" @bind="_replicateIndex" /></label>
+                    <label>Live publish FPS <input type="number" min="1" max="20" @bind="_fps" /></label>
+                    <label class="checkbox-label"><input type="checkbox" @bind="_recordingEnabled" /> Record for playback</label>
+                    <FluentButton data-testid="create-session" @onclick="() => CreateSessionAsync(experiment)">Create session</FluentButton>
+                    <button class="secondary-button" @onclick="CancelCreate">Cancel</button>
+                </div>
+            }
+            else
+            {
+                <FluentButton data-testid="open-create-session" @onclick="() => Select(experiment)">Create session</FluentButton>
+            }
+        </article>
+    }
+</div>
+@if (_error is not null)
+{
+    <p class="error" role="alert">@_error</p>
+}
+
+@code {
+    private string? _selected;
+    private int _replicateIndex;
+    private int _fps = 10;
+    private bool _recordingEnabled;
+    private string? _error;
+
+    private void Select(ExperimentCatalogEntry experiment)
+    {
+        _selected = experiment.ExperimentId;
+        _replicateIndex = 0;
+        _fps = 10;
+        _recordingEnabled = false;
+        _error = null;
+    }
+
+    private void CancelCreate() => _selected = null;
+
+    private async Task CreateSessionAsync(ExperimentCatalogEntry experiment)
+    {
+        try
+        {
+            SessionDto session = await Registry.CreateSessionAsync(new CreateSessionRequest(
+                experiment.ExperimentId,
+                _replicateIndex,
+                _recordingEnabled,
+                _fps));
+            Navigation.NavigateTo($"/sessions/{session.SessionId:D}");
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or IOException)
+        {
+            _error = exception.Message;
+        }
+    }
+}

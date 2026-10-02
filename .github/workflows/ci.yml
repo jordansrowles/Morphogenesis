@@ -27,6 +27,14 @@ jobs:
       - name: Build
         run: dotnet build Rowles.Morphogenesis.slnx --no-restore --configuration Release
 
+      - name: Install Playwright Chromium and Linux dependencies
+        if: runner.os == 'Linux'
+        run: pwsh tests/Rowles.Morphogenesis.Server.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Install Playwright Chromium
+        if: runner.os == 'Windows'
+        run: pwsh tests/Rowles.Morphogenesis.Server.Tests/bin/Release/net10.0/playwright.ps1 install chromium
+
       - name: Run complete solution suites
         run: dotnet test Rowles.Morphogenesis.slnx --no-build --no-restore --configuration Release --filter "Category!=Scientific" --verbosity minimal
 

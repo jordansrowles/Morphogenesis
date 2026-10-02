@@ -1,0 +1,54 @@
+<article class="plot-card">
+    <h3>@Title</h3>
+    <svg viewBox="0 0 1000 180" role="img" aria-label="@Title by MCS">
+        <line x1="48" y1="145" x2="980" y2="145" class="plot-axis" />
+        @if (Samples.Count > 0)
+        {
+            <polyline points="@Points(Value)" class="plot-line" />
+            @if (SecondaryValue is not null)
+            {
+                <polyline points="@Points(SecondaryValue)" class="plot-line plot-line-secondary" />
+            }
+        }
+    </svg>
+    <div class="plot-label">MCS @if (Samples.Count > 0) { <span>@Samples[0].Mcs – @Samples[^1].Mcs</span> }</div>
+</article>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<PersistedMetricSample> Samples { get; set; } = [];
+    [Parameter] public Func<PersistedMetricSample, double> Value { get; set; } = _ => 0;
+    [Parameter] public Func<PersistedMetricSample, double>? SecondaryValue { get; set; }
+
+    private string Points(Func<PersistedMetricSample, double> selector)
+    {
+        PersistedMetricSample[] points = SelectEvenly(Samples, 2_000);
+        if (points.Length == 0)
+            return string.Empty;
+        double minX = points[0].Mcs;
+        double maxX = points[^1].Mcs;
+        double[] values = points.Select(selector).ToArray();
+        double minY = values.Min();
+        double maxY = values.Max();
+        double rangeY = maxY - minY;
+        return string.Join(" ", points.Select((sample, index) =>
+        {
+            double x = maxX == minX ? 50 : 50 + (sample.Mcs - minX) * 930 / (maxX - minX);
+            double y = rangeY == 0 ? 90 : 145 - (values[index] - minY) * 120 / rangeY;
+            return FormattableString.Invariant($"{x:F2},{y:F2}");
+        }));
+    }
+
+    private static PersistedMetricSample[] SelectEvenly(IReadOnlyList<PersistedMetricSample> samples, int limit)
+    {
+        if (samples.Count <= limit)
+            return samples.ToArray();
+        PersistedMetricSample[] selected = new PersistedMetricSample[limit];
+        for (int index = 0; index < limit; index++)
+        {
+            int sourceIndex = (int)((long)index * (samples.Count - 1) / (limit - 1));
+            selected[index] = samples[sourceIndex];
+        }
+        return selected;
+    }
+}

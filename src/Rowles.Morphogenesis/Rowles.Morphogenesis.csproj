@@ -8,5 +8,6 @@
     <ProjectReference Include="../Rowles.StrictMaths/Rowles.StrictMaths.csproj" />
     <InternalsVisibleTo Include="Rowles.Morphogenesis.Tests" />
     <InternalsVisibleTo Include="Rowles.Morphogenesis.Benchmarks" />
+    <InternalsVisibleTo Include="Rowles.Morphogenesis.Server" />
   </ItemGroup>
 </Project>

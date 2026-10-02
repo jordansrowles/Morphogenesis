@@ -1,0 +1,41 @@
+@page "/sessions"
+@inject SimulationSessionRegistry Registry
+
+<PageTitle>Sessions | Morphogenesis laboratory</PageTitle>
+<h1>Recent sessions</h1>
+@if (_sessions is null)
+{
+    <p>Loading sessions…</p>
+}
+else if (_sessions.Count == 0)
+{
+    <p>No sessions have been created.</p>
+}
+else
+{
+    <div class="table-scroll">
+        <table>
+            <thead><tr><th>Experiment</th><th>Replicate</th><th>Status</th><th>MCS</th><th>Revision</th><th>Recording</th><th>Created</th><th></th></tr></thead>
+            <tbody>
+                @foreach (SessionDto session in _sessions)
+                {
+                    <tr @key="session.SessionId">
+                        <td>@session.ExperimentId</td><td>@session.ReplicateId</td><td>@session.Status</td>
+                        <td>@session.CurrentMcs / @session.TargetMcs</td><td>@session.Revision</td><td>@session.RecordingState</td>
+                        <td>@session.CreatedAtUtc.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)</td>
+                        <td><a class="button-link" href="/sessions/@session.SessionId">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<SessionDto>? _sessions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sessions = await Registry.GetSessionsAsync();
+    }
+}

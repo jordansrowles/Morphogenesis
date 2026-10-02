@@ -1,0 +1,13 @@
+<section class="metric-plots" aria-label="Scientific metrics">
+    <MetricSeries Title="Heterotypic interface fraction" Samples="Samples" Value="@(sample => Get(sample, "heterotypic-interface-fraction"))" />
+    <MetricSeries Title="Mean cell area" Samples="Samples" Value="@(sample => Get(sample, "cell-area.mean"))" />
+    <MetricSeries Title="Mean cell perimeter" Samples="Samples" Value="@(sample => Get(sample, "cell-perimeter.mean"))" />
+    <MetricSeries Title="Type A / B cell counts" Samples="Samples" Value="@(sample => Get(sample, "type-a-cell-count"))" SecondaryValue="@(sample => Get(sample, "type-b-cell-count"))" />
+</section>
+
+@code {
+    [Parameter] public IReadOnlyList<PersistedMetricSample> Samples { get; set; } = [];
+
+    private static double Get(PersistedMetricSample sample, string key) =>
+        sample.Values.TryGetValue(key, out double value) ? value : 0;
+}

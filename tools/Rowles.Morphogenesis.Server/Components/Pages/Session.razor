@@ -1,0 +1,478 @@
+@page "/sessions/{Id:guid}"
+@implements IAsyncDisposable
+@inject SimulationSessionRegistry Registry
+@inject SqliteRecordingReader RecordingReader
+@inject IJSRuntime JavaScript
+@inject ILogger<Session> Logger
+
+<PageTitle>Session | Morphogenesis laboratory</PageTitle>
+@if (_notFound)
+{
+    <h1>Session not found</h1>
+}
+else if (_sessionDto is null)
+{
+    <h1>Loading session…</h1>
+}
+else
+{
+    <div class="session-heading">
+        <div><h1>@_sessionDto.ExperimentId</h1><p>@_sessionDto.ReplicateId · @_sessionDto.Width × @_sessionDto.Height</p></div>
+        <a href="/sessions">All sessions</a>
+    </div>
+    <section class="toolbar" aria-label="Session controls">
+        <FluentButton data-testid="start-session" Disabled="@(!CanStart)" OnClick="StartAsync">Start</FluentButton>
+        <FluentButton data-testid="pause-session" Disabled="@(!CanPause)" OnClick="PauseAsync">Pause</FluentButton>
+        <FluentButton data-testid="resume-session" Disabled="@(!CanResume)" OnClick="ResumeAsync">Resume</FluentButton>
+        <FluentButton data-testid="step-session" Disabled="@(!CanStep)" OnClick="StepAsync">Step</FluentButton>
+        <FluentButton data-testid="stop-session" Disabled="@(!CanStop)" OnClick="StopAsync">Stop</FluentButton>
+        <span class="toolbar-status" data-testid="session-status">@_sessionDto.Status</span>
+        <span data-testid="session-progress">MCS @_sessionDto.CurrentMcs / @_sessionDto.TargetMcs</span>
+        <span data-testid="session-revision">Revision @_sessionDto.Revision</span>
+        <span>Recording @_sessionDto.RecordingState</span>
+    </section>
+    @if (_commandError is not null)
+    {
+        <p class="error" role="alert">@_commandError</p>
+    }
+    <div class="session-main">
+        <section class="canvas-panel card">
+            <div class="view-toolbar" aria-label="Lattice display mode">
+                <button data-testid="view-identity" class='@(_view == "identity" ? "selected" : null)' @onclick='() => SetViewAsync("identity")'>Identity</button>
+                <button data-testid="view-type" class='@(_view == "type" ? "selected" : null)' @onclick='() => SetViewAsync("type")'>Type</button>
+                <button data-testid="view-boundary" class='@(_boundaries ? "selected" : null)' @onclick="ToggleBoundariesAsync">Boundary overlay</button>
+            </div>
+            <canvas @ref="_canvas" class="lattice-canvas" data-testid="lattice-canvas" aria-label="Simulation lattice"></canvas>
+            <div class="frame-label">Displayed frame MCS @_displayedMcs</div>
+            @if (_frameError is not null)
+            {
+                <p class="error" data-testid="frame-error">@_frameError</p>
+            }
+            @if (_frameUnavailable)
+            {
+                <p class="muted">No live frame or visual recording is available for this session.</p>
+            }
+        </section>
+        <aside class="inspector card" aria-label="Cell inspector">
+            <h2>Cell inspector</h2>
+            @if (_selectedCellId is null)
+            {
+                <p>Select a lattice site to inspect it.</p>
+            }
+            else if (_selectedCellId == 0)
+            {
+                <p data-testid="cell-inspection">Medium (cell ID 0)</p>
+            }
+            else if (_session is null)
+            {
+                <p data-testid="cell-inspection">Cell inspection is unavailable for this historical session.</p>
+            }
+            else if (_inspection is null)
+            {
+                <p data-testid="cell-inspection">Cell @_selectedCellId is not present in the current state.</p>
+            }
+            else
+            {
+                <p data-testid="cell-inspection">Cell @_inspection.CellId · @_inspection.CellTypeName</p>
+                <dl>
+                    <dt>Cell type</dt><dd>@_inspection.CellTypeId</dd>
+                    <dt>Area</dt><dd>@_inspection.Area (target @_inspection.TargetArea)</dd>
+                    <dt>Perimeter</dt><dd>@_inspection.Perimeter (target @_inspection.TargetPerimeter)</dd>
+                    <dt>Inspection MCS</dt><dd>@_inspection.Mcs</dd>
+                </dl>
+                @if (_inspection.Mcs != _selectedFrameMcs)
+                {
+                    <p class="muted">Inspection is at MCS @_inspection.Mcs; the displayed frame is MCS @_selectedFrameMcs.</p>
+                }
+            }
+        </aside>
+    </div>
+    <section class="metrics-area">
+        <MetricPlot Samples="_metrics" />
+        @if (_snapshot is not null)
+        {
+            <div class="counter-row" aria-label="Operational counters">
+                <span>Attempts @_snapshot.Counters.Attempts</span>
+                <span>Accepted @_snapshot.Counters.Accepted</span>
+                <span>Rejected @_snapshot.Counters.Rejected</span>
+                <span>No-ops @_snapshot.Counters.NoOps</span>
+                <span>Connectivity fallbacks @_snapshot.Counters.ConnectivityFallbacks</span>
+                <span>Published frames @_snapshot.Counters.PublishedFrames</span>
+                <span>Coalesced/dropped @_snapshot.Counters.CoalescedOrDroppedFrames</span>
+            </div>
+        }
+    </section>
+    @if (_recordedSource is not null)
+    {
+        <section class="playback-toolbar card" aria-label="Recorded playback">
+            <strong>Visual recording</strong>
+            <button data-testid="play-recording" @onclick="PlayRecordingAsync">Play</button>
+            <button data-testid="pause-recording" @onclick="PauseRecordingAsync">Pause</button>
+            <button @onclick="StepBackwardAsync">Step back</button>
+            <button @onclick="StepForwardAsync">Step forward</button>
+            <label>Seek <input data-testid="recording-seek" type="range" min="@_recordingFirstMcs" max="@_recordingLastMcs" value="@_recordedSource.CurrentMcs" @onchange="SeekRecordingAsync" /></label>
+            <label>Playback rate
+                <select data-testid="playback-rate" value="@_recordedSource.PlaybackRate.ToString(CultureInfo.InvariantCulture)" @onchange="SetPlaybackRateAsync">
+                    <option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option>
+                </select>
+            </label>
+            <span>Recording MCS @_recordedSource.CurrentMcs</span>
+        </section>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private readonly CancellationTokenSource _lifetime = new();
+    private ElementReference _canvas;
+    private IJSObjectReference? _canvasModule;
+    private DotNetObjectReference<Session>? _dotNetReference;
+    private byte[]? _frameTransferBuffer;
+    private SimulationSession? _session;
+    private SimulationSessionSnapshot? _snapshot;
+    private SimulationMetadata? _metadata;
+    private SessionDto? _sessionDto;
+    private IReadOnlyList<PersistedMetricSample> _metrics = [];
+    private RecordedSimulationSource? _recordedSource;
+    private CellInspection? _inspection;
+    private int? _selectedCellId;
+    private long _selectedFrameMcs;
+    private long _displayedMcs;
+    private long _recordingFirstMcs;
+    private long _recordingLastMcs;
+    private string _view = "identity";
+    private string? _commandError;
+    private string? _frameError;
+    private bool _boundaries;
+    private bool _notFound;
+    private bool _frameUnavailable;
+    private bool _javascriptReady;
+    private Task? _stateWatcher;
+    private Task? _frameWatcher;
+    private Task? _metricWatcher;
+    private CancellationTokenSource? _frameLifetime;
+
+    private bool CanStart => _sessionDto?.Status == SimulationSessionStatus.Created;
+    private bool CanPause => _sessionDto?.Status == SimulationSessionStatus.Running;
+    private bool CanResume => _sessionDto?.Status == SimulationSessionStatus.Paused;
+    private bool CanStep => _sessionDto?.Status is SimulationSessionStatus.Created or SimulationSessionStatus.Paused;
+    private bool CanStop => _sessionDto is not null && _sessionDto.Status is not (SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sessionDto = await Registry.GetSessionAsync(Id);
+        if (_sessionDto is null)
+        {
+            _notFound = true;
+            return;
+        }
+
+        if (Registry.TryGetSession(Id, out SimulationSession? liveSession))
+        {
+            _session = liveSession;
+            _metadata = liveSession.Metadata;
+            _snapshot = liveSession.GetSnapshot();
+            _stateWatcher = WatchStateAsync(_lifetime.Token);
+            _metricWatcher = WatchMetricsAsync(_lifetime.Token);
+        }
+        else
+        {
+            _frameUnavailable = true;
+        }
+
+        if (_recordedSource is not null)
+        {
+            await InitialiseRecordedCanvasAsync(_recordedSource);
+        }
+        else if (_session is not null && _metadata is not null)
+            AllocateTransferBuffer(_metadata);
+        _metrics = SelectDisplayedMetrics(await Registry.GetMetricsAsync(Id));
+        await TryOpenRecordingAsync(_lifetime.Token);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _notFound || _sessionDto is null)
+            return;
+        _canvasModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/latticeCanvas.js");
+        _dotNetReference = DotNetObjectReference.Create(this);
+        if (_recordedSource is not null)
+        {
+            await InitialiseRecordedCanvasAsync(_recordedSource);
+        }
+        else if (_session is not null && _metadata is not null)
+        {
+            await _canvasModule.InvokeVoidAsync(
+                "initialise",
+                _canvas,
+                _metadata.GridWidth,
+                _metadata.GridHeight,
+                _metadata.CellTypeByCellId,
+                _metadata.BoundaryMode.ToString(),
+                _dotNetReference);
+            _javascriptReady = true;
+            CancellationTokenSource frameLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+            _frameLifetime = frameLifetime;
+            _frameWatcher = WatchFramesAsync(_session!.WatchFramesAsync(frameLifetime.Token), frameLifetime.Token);
+        }
+        else
+        {
+            _frameUnavailable = true;
+        }
+    }
+
+    private async Task StartAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StartAsync(Guid.NewGuid(), revision, token));
+    private async Task PauseAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.PauseAsync(Guid.NewGuid(), revision, token));
+    private async Task ResumeAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.ResumeAsync(Guid.NewGuid(), revision, token));
+    private async Task StepAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StepAsync(Guid.NewGuid(), revision, token));
+    private async Task StopAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StopAsync(Guid.NewGuid(), revision, token));
+
+    private async Task ExecuteCommandAsync(Func<SimulationSession, long, CancellationToken, ValueTask<SimulationCommandResult>> command)
+    {
+        if (_session is null || _snapshot is null)
+            return;
+        try
+        {
+            SimulationCommandResult result = await command(_session, _snapshot.Revision, _lifetime.Token);
+            _snapshot = _session.GetSnapshot();
+            _sessionDto = await Registry.GetSessionAsync(Id);
+            _commandError = result.Disposition == SimulationCommandDisposition.Applied
+                ? null
+                : $"Command was not applied ({result.Disposition}); current revision is {result.Revision}.";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or ObjectDisposedException or OperationCanceledException)
+        {
+            _commandError = exception.Message;
+        }
+    }
+
+    private async Task WatchStateAsync(CancellationToken cancellationToken)
+    {
+        if (_session is null)
+            return;
+        try
+        {
+            await foreach (SimulationSessionSnapshot snapshot in _session.WatchStateAsync(cancellationToken).ConfigureAwait(false))
+            {
+                _snapshot = snapshot;
+                _sessionDto = await Registry.GetSessionAsync(Id, cancellationToken).ConfigureAwait(false);
+                await TryOpenRecordingAsync(cancellationToken).ConfigureAwait(false);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    private async Task WatchMetricsAsync(CancellationToken cancellationToken)
+    {
+        if (_session is null)
+            return;
+        try
+        {
+            await foreach (MeasurementSample _ in _session.WatchMeasurementsAsync(cancellationToken).ConfigureAwait(false))
+            {
+                _metrics = SelectDisplayedMetrics(await Registry.GetMetricsAsync(Id, cancellationToken).ConfigureAwait(false));
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    private async Task WatchFramesAsync(IAsyncEnumerable<SimulationFrameLease> frames, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (SimulationFrameLease frame in frames.WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                try
+                {
+                    CopyFrame(frame.CellIds.Span);
+                    await InvokeAsync(async () =>
+                    {
+                        if (_canvasModule is not null)
+                            await _canvasModule.InvokeVoidAsync("draw", cancellationToken, _frameTransferBuffer, frame.Width, frame.Height, frame.Mcs, _view, _boundaries);
+                        _displayedMcs = frame.Mcs;
+                        _frameUnavailable = false;
+                        StateHasChanged();
+                    });
+                }
+                finally
+                {
+                    frame.Dispose();
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError(
+                exception,
+                "Frame transfer failed for session {SessionId} ({ExperimentId}/{ReplicateId}) at MCS {Mcs}, revision {Revision}",
+                Id,
+                _sessionDto?.ExperimentId,
+                _sessionDto?.ReplicateId,
+                _snapshot?.CurrentMcs,
+                _snapshot?.Revision);
+            _frameError = $"Frame transfer failed: {exception.Message}";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CopyFrame(ReadOnlySpan<int> cellIds)
+    {
+        if (_frameTransferBuffer is null || _frameTransferBuffer.Length != checked(cellIds.Length * sizeof(int)))
+            _frameTransferBuffer = new byte[checked(cellIds.Length * sizeof(int))];
+        for (int index = 0; index < cellIds.Length; index++)
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(_frameTransferBuffer.AsSpan(index * sizeof(int), sizeof(int)), cellIds[index]);
+    }
+
+    private async Task SetViewAsync(string view)
+    {
+        _view = view;
+        if (_canvasModule is not null)
+            await _canvasModule.InvokeVoidAsync("setView", view);
+    }
+
+    private async Task ToggleBoundariesAsync()
+    {
+        _boundaries = !_boundaries;
+        if (_canvasModule is not null)
+            await _canvasModule.InvokeVoidAsync("setBoundaries", _boundaries);
+    }
+
+    [JSInvokable]
+    public async Task OnCellSelected(int cellId, long displayedMcs)
+    {
+        _selectedCellId = cellId;
+        _selectedFrameMcs = displayedMcs;
+        _inspection = cellId == 0 || _session is null
+            ? null
+            : await _session.InspectCellAsync(cellId, _lifetime.Token);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task TryOpenRecordingAsync(CancellationToken cancellationToken)
+    {
+        if (_recordedSource is not null)
+            return;
+        PersistedRun? run = await DatabaseRunAsync(cancellationToken).ConfigureAwait(false);
+        if (run is null || !run.Payload.Recording.Enabled || run.RecordingState != RecordingState.Completed)
+            return;
+        IReadOnlyList<RecordingFrameIndexEntry> frames = await RecordingReader.GetFrameIndexAsync(Id, cancellationToken).ConfigureAwait(false);
+        if (frames.Count == 0)
+            return;
+        _recordingFirstMcs = frames[0].Mcs;
+        _recordingLastMcs = frames[^1].Mcs;
+        _recordedSource = await RecordedSimulationSource.OpenAsync(RecordingReader, Id, cancellationToken).ConfigureAwait(false);
+        if (_metadata is null)
+        {
+            _metadata = _recordedSource.Metadata;
+            AllocateTransferBuffer(_metadata);
+            if (_javascriptReady)
+                await InitialiseRecordedCanvasAsync(_recordedSource).ConfigureAwait(false);
+        }
+        if (_javascriptReady)
+        {
+            if (_frameLifetime is not null)
+            {
+                await _frameLifetime.CancelAsync().ConfigureAwait(false);
+                if (_frameWatcher is not null)
+                    await _frameWatcher.ConfigureAwait(false);
+                _frameLifetime.Dispose();
+            }
+            _frameLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+            _frameWatcher = WatchFramesAsync(_recordedSource.WatchFramesAsync(_frameLifetime.Token), _frameLifetime.Token);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task<PersistedRun?> DatabaseRunAsync(CancellationToken cancellationToken) =>
+        ScopedDatabase.GetRunAsync(Id, cancellationToken);
+
+    [Inject] private LaboratoryDatabase ScopedDatabase { get; set; } = null!;
+
+    private void AllocateTransferBuffer(SimulationMetadata metadata) =>
+        _frameTransferBuffer = new byte[checked(metadata.GridWidth * metadata.GridHeight * sizeof(int))];
+
+    private static IReadOnlyList<PersistedMetricSample> SelectDisplayedMetrics(
+        IReadOnlyList<PersistedMetricSample> samples,
+        int limit = 2_000)
+    {
+        if (samples.Count <= limit)
+            return samples;
+
+        PersistedMetricSample[] displayed = new PersistedMetricSample[limit];
+        for (int index = 0; index < limit; index++)
+        {
+            int sourceIndex = (int)((long)index * (samples.Count - 1) / (limit - 1));
+            displayed[index] = samples[sourceIndex];
+        }
+        return displayed;
+    }
+
+    private async Task InitialiseRecordedCanvasAsync(RecordedSimulationSource source)
+    {
+        await _canvasModule!.InvokeVoidAsync(
+            "initialise",
+            _canvas,
+            source.Metadata.GridWidth,
+            source.Metadata.GridHeight,
+            source.Metadata.CellTypeByCellId,
+            source.Metadata.BoundaryMode.ToString(),
+            _dotNetReference);
+        _javascriptReady = true;
+        _frameLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _frameWatcher = WatchFramesAsync(source.WatchFramesAsync(_frameLifetime.Token), _frameLifetime.Token);
+    }
+
+    private async Task PlayRecordingAsync() { if (_recordedSource is not null) await _recordedSource.PlayAsync(_lifetime.Token); }
+    private async Task PauseRecordingAsync() { if (_recordedSource is not null) await _recordedSource.PauseAsync(_lifetime.Token); }
+    private async Task StepForwardAsync() { if (_recordedSource is not null) await _recordedSource.StepForwardAsync(_lifetime.Token); }
+    private async Task StepBackwardAsync() { if (_recordedSource is not null) await _recordedSource.StepBackwardAsync(_lifetime.Token); }
+
+    private async Task SeekRecordingAsync(ChangeEventArgs args)
+    {
+        if (_recordedSource is not null && long.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long mcs))
+            await _recordedSource.SeekAsync(mcs, _lifetime.Token);
+    }
+
+    private void SetPlaybackRateAsync(ChangeEventArgs args)
+    {
+        if (_recordedSource is not null && double.TryParse(args.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double rate))
+            _recordedSource.SetPlaybackRate(rate);
+    }
+
+    private static bool IsTerminal(SimulationSessionStatus status) => status is
+        SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or
+        SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled;
+
+    public async ValueTask DisposeAsync()
+    {
+        _lifetime.Cancel();
+        _frameLifetime?.Cancel();
+        Task[] watchers = new[] { _stateWatcher, _frameWatcher, _metricWatcher }.OfType<Task>().ToArray();
+        try { await Task.WhenAll(watchers).ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+        if (_recordedSource is not null)
+            await _recordedSource.DisposeAsync().ConfigureAwait(false);
+        if (_canvasModule is not null)
+        {
+            try { await _canvasModule.DisposeAsync().ConfigureAwait(false); }
+            catch (JSDisconnectedException) { }
+        }
+        _dotNetReference?.Dispose();
+        _frameLifetime?.Dispose();
+        _lifetime.Dispose();
+    }
+}
