@@ -20,6 +20,9 @@ public sealed class EquivalenceBandSetTests
         Assert.Equal(first.BandPayloadSha256, restored.BandPayloadSha256);
         Assert.Equal(first.Bands, restored.Bands);
         Assert.Equal(EventEnsembleProtocol.Version, restored.AnalysisProtocolVersion);
+        Assert.Equal(EquivalenceBandSet.CurrentFormatVersion, restored.FormatVersion);
+        Assert.Equal(EventEnsembleProtocol.AnalysisProtocolSha256, first.AnalysisProtocolSha256);
+        Assert.Equal(first.AnalysisProtocolSha256, restored.AnalysisProtocolSha256);
     }
 
     [Fact]
@@ -34,12 +37,27 @@ public sealed class EquivalenceBandSetTests
     }
 
     [Fact]
-    public void Protocol_version_and_invalid_hashes_are_rejected()
+    public void Protocol_versions_and_invalid_hashes_are_rejected()
     {
         EquivalenceBandSet valid = EquivalenceBandSet.Create(new string('A', 64), new string('B', 64), CreateBands());
+        Assert.Equal(2, EventEnsembleProtocol.Version);
+        Assert.Equal(2, EquivalenceBandSet.CurrentFormatVersion);
         Assert.Throws<InvalidDataException>(() => (valid with { AnalysisProtocolVersion = EventEnsembleProtocol.Version + 1 }).ValidateIntegrity());
-        Assert.Throws<FormatException>(() => (valid with { QualificationProtocolSha256 = "not-a-hash" }).ValidateIntegrity());
-        Assert.Throws<FormatException>(() => (valid with { CanonicalCaptureSha256 = "not-a-hash" }).ValidateIntegrity());
+        Assert.Throws<InvalidDataException>(() => (valid with { AnalysisProtocolSha256 = new string('C', 64) }).ValidateIntegrity());
+        Assert.Throws<InvalidDataException>(() => (valid with { AnalysisProtocolSha256 = "not-a-hash" }).ValidateIntegrity());
+        Assert.Throws<InvalidDataException>(() => (valid with { QualificationProtocolSha256 = "not-a-hash" }).ValidateIntegrity());
+        Assert.Throws<InvalidDataException>(() => (valid with { CanonicalCaptureSha256 = "not-a-hash" }).ValidateIntegrity());
+    }
+
+    [Fact]
+    public void Analysis_protocol_identity_is_part_of_the_band_payload_hash()
+    {
+        EquivalenceBandSet set = EquivalenceBandSet.Create(new string('A', 64), new string('B', 64), CreateBands());
+        EquivalenceBandPayload payload = new(set.FormatVersion, set.AnalysisProtocolVersion,
+            set.AnalysisProtocolSha256, set.CanonicalCaptureSha256, set.QualificationProtocolSha256,
+            set.SeedCount, set.MetricDefinitions, set.Bands);
+        EquivalenceBandPayload changed = payload with { AnalysisProtocolSha256 = new string('C', 64) };
+        Assert.NotEqual(EquivalenceBandSet.HashPayload(payload), EquivalenceBandSet.HashPayload(changed));
     }
 
     [Fact]

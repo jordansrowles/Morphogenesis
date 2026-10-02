@@ -57,13 +57,17 @@ public sealed class BootstrapVarianceTests
     {
         double[] constant = Enumerable.Repeat(2d, 64).ToArray();
         BootstrapVarianceResult equal = BootstrapVariance.Calculate(constant, constant, "zero-equal");
-        BootstrapVarianceResult different = BootstrapVariance.Calculate(constant, Enumerable.Range(0, 64).Select(value => (double)value).ToArray(), "zero-different");
         Assert.Equal(1, equal.Ratio);
         Assert.Equal(1, equal.LowerBound);
         Assert.Equal(1, equal.UpperBound);
+        Assert.Equal(0, equal.ReplicateCount);
         Assert.True(equal.IsEquivalent);
+        double[] sparseOutlier = [.. Enumerable.Repeat(2d, 63), 3d];
+        BootstrapVarianceResult different = BootstrapVariance.Calculate(constant, sparseOutlier, "zero-different");
         Assert.True(double.IsPositiveInfinity(different.Ratio));
         Assert.True(double.IsPositiveInfinity(different.LowerBound));
+        Assert.True(double.IsPositiveInfinity(different.UpperBound));
+        Assert.Equal(0, different.ReplicateCount);
         Assert.False(different.IsEquivalent);
     }
 }

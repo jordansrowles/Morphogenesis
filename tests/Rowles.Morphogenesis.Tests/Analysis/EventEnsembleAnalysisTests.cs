@@ -17,7 +17,104 @@ public sealed class EventEnsembleAnalysisTests
         Assert.Equal(EventEnsembleAnalysis.ExpectedFinalVarianceMetricCount, first.VarianceMetricsEvaluated);
         Assert.Equal(0, first.MeanEquivalenceFailures);
         Assert.Equal(0, first.VarianceRatioFailures);
+        AssertSummaryIdentities(first, 64);
         Assert.Equal(JsonSerializer.Serialize(first), JsonSerializer.Serialize(second));
+    }
+
+    [Theory]
+    [InlineData(128, "border")]
+    [InlineData(128, "directed")]
+    [InlineData(256, "border")]
+    [InlineData(256, "directed")]
+    public void Expanded_captures_pass_and_keep_deterministic_provenance(int seedCount, string kernel)
+    {
+        using AnalysisFixture fixture = AnalysisFixture.Create();
+        string[] prefix64 = File.ReadAllLines(System.IO.Path.Combine(fixture.Path, "canonical-samples-64.csv"));
+        fixture.ExpandTo(seedCount);
+        string[] expanded = File.ReadAllLines(System.IO.Path.Combine(fixture.Path, $"canonical-samples-{seedCount}.csv"));
+        string[] expandedPrefix = [expanded[0], .. expanded.Skip(1).Where(line =>
+            int.Parse(line.Split(',')[2], CultureInfo.InvariantCulture) < 64)];
+        Assert.Equal(prefix64, expandedPrefix);
+
+        EnsembleQualificationResult first = EventEnsembleAnalysis.Compare(kernel, fixture.Path, seedCount);
+        EnsembleQualificationResult second = EventEnsembleAnalysis.Compare(kernel, fixture.Path, seedCount);
+        Assert.True(first.Passed, string.Join(Environment.NewLine, first.FailureDescriptions));
+        AssertSummaryIdentities(first, seedCount);
+        Assert.Equal(first.FrozenCanonicalCaptureSha256, second.FrozenCanonicalCaptureSha256);
+        Assert.Equal(first.CanonicalCaptureSha256, second.CanonicalCaptureSha256);
+        Assert.Equal(first.CandidateCaptureSha256, second.CandidateCaptureSha256);
+        Assert.Equal(first.BandPayloadSha256, second.BandPayloadSha256);
+        Assert.Equal(first.QualificationProtocolSha256, second.QualificationProtocolSha256);
+        Assert.Equal(first.AnalysisProtocolSha256, second.AnalysisProtocolSha256);
+    }
+
+    [Fact]
+    public void Expanded_canonical_configuration_may_change_only_replicate_count()
+    {
+        using AnalysisFixture fixture = AnalysisFixture.Create();
+        fixture.ExpandTo(128);
+        string canonical64 = System.IO.Path.Combine(fixture.Path, "sorting-32-t6-canonical-manifest-64.json");
+        string canonical128 = System.IO.Path.Combine(fixture.Path, "sorting-32-t6-canonical-manifest-128.json");
+        Assert.NotEqual(EventEnsembleAnalysis.ConfigurationIdentity(canonical64),
+            EventEnsembleAnalysis.ConfigurationIdentity(canonical128));
+        Assert.Equal(EventEnsembleAnalysis.ScientificConfigurationIdentity(canonical64),
+            EventEnsembleAnalysis.ScientificConfigurationIdentity(canonical128));
+        Assert.True(EventEnsembleAnalysis.Compare("border", fixture.Path, 128).Passed);
+    }
+
+    [Fact]
+    public void Expanded_canonical_configuration_drift_is_rejected_even_when_candidate_matches_it()
+    {
+        using AnalysisFixture fixture = AnalysisFixture.Create();
+        fixture.ExpandTo(128);
+        foreach (string kernel in new[] { "canonical", "border" })
+        {
+            string path = System.IO.Path.Combine(fixture.Path, $"sorting-32-t6-{kernel}-manifest-128.json");
+            File.WriteAllText(path, File.ReadAllText(path).Replace("\"gridWidth\":32", "\"gridWidth\":64", StringComparison.Ordinal));
+        }
+
+        EnsembleQualificationResult result = EventEnsembleAnalysis.Compare("border", fixture.Path, 128);
+        Assert.False(result.Passed);
+        Assert.Contains(result.FailureDescriptions, failure => failure.Contains(
+            "Canonical scientific configuration differs from the frozen 64-seed configuration", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Expanded_candidate_configuration_must_match_current_canonical_configuration()
+    {
+        using AnalysisFixture fixture = AnalysisFixture.Create();
+        fixture.ExpandTo(128);
+        string path = System.IO.Path.Combine(fixture.Path, "sorting-32-t6-border-manifest-128.json");
+        File.WriteAllText(path, File.ReadAllText(path).Replace("\"gridWidth\":32", "\"gridWidth\":64", StringComparison.Ordinal));
+
+        EnsembleQualificationResult result = EventEnsembleAnalysis.Compare("border", fixture.Path, 128);
+        Assert.False(result.Passed);
+        Assert.Contains(result.FailureDescriptions, failure => failure.Contains("configuration differs", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Expanded_canonical_prefix_tampering_is_rejected()
+    {
+        using AnalysisFixture fixture = AnalysisFixture.Create();
+        fixture.ExpandTo(128);
+        string path = System.IO.Path.Combine(fixture.Path, "canonical-samples-128.csv");
+        string[] lines = File.ReadAllLines(path);
+        string[] headers = lines[0].Split(',');
+        int metricColumn = Array.IndexOf(headers, "area_mean");
+        int rowIndex = Array.FindIndex(lines, line =>
+        {
+            string[] fields = line.Split(',');
+            return fields[0] == "sorting-32-t6" && fields[2] == "0" && fields[6] == "10";
+        });
+        Assert.True(rowIndex > 0);
+        string[] row = lines[rowIndex].Split(',');
+        row[metricColumn] = "999";
+        lines[rowIndex] = string.Join(',', row);
+        File.WriteAllLines(path, lines);
+
+        EnsembleQualificationResult result = EventEnsembleAnalysis.Compare("border", fixture.Path, 128);
+        Assert.False(result.Passed);
+        Assert.Contains(result.FailureDescriptions, failure => failure.Contains("Canonical seed prefix changed", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -115,6 +212,12 @@ public sealed class EventEnsembleAnalysisTests
         Assert.False(result.Passed);
         Assert.True(result.ProvenanceFailures > 0);
         Assert.Equal(0, result.MeanMetricsEvaluated);
+        Assert.NotNull(result.AnalysisProtocolSha256);
+        Assert.Null(result.FrozenCanonicalCaptureSha256);
+        Assert.Null(result.BandPayloadSha256);
+        Assert.Null(result.QualificationProtocolSha256);
+        Assert.NotNull(result.CanonicalCaptureSha256);
+        Assert.NotNull(result.CandidateCaptureSha256);
     }
 
     [Fact]
@@ -125,6 +228,12 @@ public sealed class EventEnsembleAnalysisTests
         EnsembleQualificationResult result = EventEnsembleAnalysis.Compare("border", fixture.Path, 64);
         Assert.False(result.Passed);
         Assert.Contains(result.FailureDescriptions, failure => failure.Contains("protocol file SHA-256", StringComparison.Ordinal));
+        Assert.NotNull(result.FrozenCanonicalCaptureSha256);
+        Assert.NotNull(result.BandPayloadSha256);
+        Assert.Null(result.QualificationProtocolSha256);
+        Assert.NotNull(result.AnalysisProtocolSha256);
+        Assert.NotNull(result.CanonicalCaptureSha256);
+        Assert.NotNull(result.CandidateCaptureSha256);
     }
 
     [Fact]
@@ -147,6 +256,8 @@ public sealed class EventEnsembleAnalysisTests
         EnsembleQualificationResult result = EventEnsembleAnalysis.Compare("border", fixture.Path, 64);
         Assert.False(result.Passed);
         Assert.Contains(result.FailureDescriptions, failure => failure.Contains("configuration differs", StringComparison.Ordinal));
+        Assert.NotNull(result.CanonicalCaptureSha256);
+        Assert.Null(result.CandidateCaptureSha256);
     }
 
     [Fact]
@@ -160,6 +271,27 @@ public sealed class EventEnsembleAnalysisTests
         Assert.Equal(EventEnsembleAnalysis.ConfigurationIdentity(canonical), EventEnsembleAnalysis.ConfigurationIdentity(candidate));
         File.WriteAllText(candidate, "{\"kernel\":\"directed\",\"configuration\":{\"contactEnergies\":[[0,1],[1,0]],\"gridWidth\":64}}");
         Assert.NotEqual(EventEnsembleAnalysis.ConfigurationIdentity(canonical), EventEnsembleAnalysis.ConfigurationIdentity(candidate));
+    }
+
+    [Fact]
+    public void Scientific_configuration_identity_excludes_only_top_level_replicate_count()
+    {
+        using TemporaryDirectory directory = new();
+        string canonical = System.IO.Path.Combine(directory.Path, "canonical.json");
+        string expanded = System.IO.Path.Combine(directory.Path, "expanded.json");
+        File.WriteAllText(canonical,
+            "{\"kernel\":\"canonical\",\"configuration\":{\"replicateCount\":64,\"experimentId\":\"same\",\"nested\":{\"replicateCount\":4},\"values\":[1,2]}}");
+        File.WriteAllText(expanded,
+            "{\"kernel\":\"canonical\",\"configuration\":{\"replicateCount\":128,\"experimentId\":\"same\",\"nested\":{\"replicateCount\":4},\"values\":[1,2]}}");
+        Assert.Equal(EventEnsembleAnalysis.ScientificConfigurationIdentity(canonical),
+            EventEnsembleAnalysis.ScientificConfigurationIdentity(expanded));
+        Assert.NotEqual(EventEnsembleAnalysis.ConfigurationIdentity(canonical),
+            EventEnsembleAnalysis.ConfigurationIdentity(expanded));
+
+        File.WriteAllText(expanded,
+            "{\"kernel\":\"canonical\",\"configuration\":{\"replicateCount\":128,\"experimentId\":\"same\",\"nested\":{\"replicateCount\":5},\"values\":[1,2]}}");
+        Assert.NotEqual(EventEnsembleAnalysis.ScientificConfigurationIdentity(canonical),
+            EventEnsembleAnalysis.ScientificConfigurationIdentity(expanded));
     }
 
     [Fact]
@@ -186,11 +318,41 @@ public sealed class EventEnsembleAnalysisTests
         Assert.Throws<InvalidOperationException>(() => EventEnsembleAnalysis.Freeze(
             fixture.Path, System.IO.Path.Combine(fixture.Path, "protocol.md")));
     }
+
+    private static void AssertSummaryIdentities(EnsembleQualificationResult result, int seedCount)
+    {
+        string?[] identities =
+        [
+            result.FrozenCanonicalCaptureSha256,
+            result.CanonicalCaptureSha256,
+            result.CandidateCaptureSha256,
+            result.BandPayloadSha256,
+            result.QualificationProtocolSha256,
+            result.AnalysisProtocolSha256
+        ];
+        foreach (string? identity in identities)
+        {
+            Assert.NotNull(identity);
+            Assert.Equal(32, Convert.FromHexString(identity!).Length);
+        }
+
+        Assert.Equal(EventEnsembleProtocol.AnalysisProtocolSha256, result.AnalysisProtocolSha256);
+        if (seedCount == 64)
+            Assert.Equal(result.FrozenCanonicalCaptureSha256, result.CanonicalCaptureSha256);
+        else
+            Assert.NotEqual(result.FrozenCanonicalCaptureSha256, result.CanonicalCaptureSha256);
+    }
 }
 
 internal sealed class AnalysisFixture : IDisposable
 {
-    private AnalysisFixture(string path) => Path = path;
+    private readonly Func<string, int, int, string, double, double>? _candidateChange;
+
+    private AnalysisFixture(string path, Func<string, int, int, string, double, double>? candidateChange)
+    {
+        Path = path;
+        _candidateChange = candidateChange;
+    }
 
     internal string Path { get; }
 
@@ -198,23 +360,35 @@ internal sealed class AnalysisFixture : IDisposable
     {
         string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"m3-workflow-{Guid.NewGuid():N}");
         Directory.CreateDirectory(path);
-        AnalysisFixture fixture = new(path);
+        AnalysisFixture fixture = new(path, change);
         string protocolPath = System.IO.Path.Combine(path, "protocol.md");
         File.WriteAllText(protocolPath, "Frozen synthetic event qualification protocol v1\n");
-        WriteCapture(path, "canonical", change: null);
-        WriteManifests(path, "canonical");
+        fixture.WriteCapture("canonical", 64);
+        fixture.WriteManifests("canonical", 64);
         EventEnsembleAnalysis.Freeze(path, protocolPath);
         foreach (string kernel in new[] { "border", "directed" })
         {
-            WriteCapture(path, kernel, change);
-            WriteManifests(path, kernel);
+            fixture.WriteCapture(kernel, 64);
+            fixture.WriteManifests(kernel, 64);
         }
         return fixture;
     }
 
-    private static void WriteCapture(string root, string kernel, Func<string, int, int, string, double, double>? change)
+    internal void ExpandTo(int seedCount)
     {
-        string path = System.IO.Path.Combine(root, $"{kernel}-samples-64.csv");
+        if (seedCount is not (128 or 256)) throw new ArgumentOutOfRangeException(nameof(seedCount));
+        foreach (string kernel in new[] { "canonical", "border", "directed" })
+        {
+            WriteCapture(kernel, seedCount);
+            WriteManifests(kernel, seedCount);
+        }
+    }
+
+    internal void WriteCapture(string kernel, int seedCount,
+        Func<string, int, int, string, double, double>? change = null)
+    {
+        string path = System.IO.Path.Combine(Path, $"{kernel}-samples-{seedCount}.csv");
+        Func<string, int, int, string, double, double>? rowChange = kernel == "canonical" ? null : change ?? _candidateChange;
         using StreamWriter writer = new(path);
         string[] headers = ["condition", "kernel", "replicate", "initialisation_seed", "dynamics_seed", "initial_hash", "mcs", .. EventEnsembleProtocol.Metrics];
         writer.WriteLine(string.Join(',', headers));
@@ -222,7 +396,7 @@ internal sealed class AnalysisFixture : IDisposable
         {
             foreach (int mcs in EventEnsembleProtocol.Checkpoints(condition))
             {
-                for (int replicate = 0; replicate < 64; replicate++)
+                for (int replicate = 0; replicate < seedCount; replicate++)
                 {
                     List<string> fields =
                     [
@@ -238,7 +412,7 @@ internal sealed class AnalysisFixture : IDisposable
                     {
                         double value = metric == "area_mean" ? replicate : 1;
                         if (mcs == 0 && metric == "mixing") value = 0.5;
-                        if (change is not null) value = change(condition, mcs, replicate, metric, value);
+                        if (rowChange is not null) value = rowChange(condition, mcs, replicate, metric, value);
                         fields.Add(value.ToString("R", CultureInfo.InvariantCulture));
                     }
                     writer.WriteLine(string.Join(',', fields));
@@ -247,17 +421,24 @@ internal sealed class AnalysisFixture : IDisposable
         }
     }
 
-    private static void WriteManifests(string root, string kernel)
+    internal void WriteManifests(string kernel, int seedCount)
     {
         foreach (string condition in EventEnsembleProtocol.Conditions)
         {
-            string name = $"{condition}-{kernel}-manifest-64.json";
+            string name = $"{condition}-{kernel}-manifest-{seedCount}.json";
             string manifest = JsonSerializer.Serialize(new
             {
                 Kernel = kernel,
-                Configuration = new { ExperimentId = condition, GridWidth = 32, Name = "synthetic" }
+                Configuration = new
+                {
+                    ExperimentId = condition,
+                    GridWidth = 32,
+                    Name = "synthetic",
+                    ReplicateCount = seedCount,
+                    Nested = new { replicateCount = 4 }
+                }
             }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            File.WriteAllText(System.IO.Path.Combine(root, name), manifest);
+            File.WriteAllText(System.IO.Path.Combine(Path, name), manifest);
         }
     }
 

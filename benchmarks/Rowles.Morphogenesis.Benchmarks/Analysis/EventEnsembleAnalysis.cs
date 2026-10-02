@@ -69,6 +69,10 @@ internal static class EventEnsembleAnalysis
         string root = Path.GetFullPath(directory);
         List<string> provenanceFailures = [];
         EquivalenceBandSet? bands = null;
+        string? frozenCanonicalCaptureSha256 = null;
+        string? bandPayloadSha256 = null;
+        string? qualificationProtocolSha256 = null;
+        bool canonicalFrozenCaptureMatches = true;
         string bandPath = Path.Combine(root, EquivalenceBandSet.FileName);
         try
         {
@@ -81,25 +85,40 @@ internal static class EventEnsembleAnalysis
 
         if (bands is not null)
         {
-            ValidateProtocolCopy(root, bands, provenanceFailures);
-            ValidateCaptureIdentity(root, bands, provenanceFailures);
-            ValidateManifestIdentities(root, kernel, seedCount, provenanceFailures);
+            frozenCanonicalCaptureSha256 = bands.CanonicalCaptureSha256;
+            bandPayloadSha256 = bands.BandPayloadSha256;
+            if (ValidateProtocolCopy(root, bands, provenanceFailures))
+                qualificationProtocolSha256 = bands.QualificationProtocolSha256;
+            canonicalFrozenCaptureMatches = ValidateCaptureIdentity(root, bands, provenanceFailures);
             if (bands.SeedCount != 64 || bands.AnalysisProtocolVersion != EventEnsembleProtocol.Version)
                 provenanceFailures.Add("Frozen-band seed count or analysis protocol version differs from this qualification.");
             if (!bands.MetricDefinitions.Select(metric => metric.Name).SequenceEqual(EventEnsembleProtocol.Metrics))
                 provenanceFailures.Add("Frozen-band metric schema differs from this qualification.");
         }
 
+        ManifestValidationResult manifestValidation = ValidateManifestIdentities(root, kernel, seedCount, provenanceFailures);
+
         CaptureData canonical = ReadCapture(root, "canonical", seedCount);
         CaptureData candidate = ReadCapture(root, kernel, seedCount);
-        if (bands is not null) ValidateBandsAgainstCanonical(bands, canonical, provenanceFailures);
-        ValidateCanonicalPrefix(root, canonical, seedCount, provenanceFailures);
-        ValidatePairedIdentity(canonical, candidate, provenanceFailures);
+        bool canonicalMatchesBands = bands is null || ValidateBandsAgainstCanonical(bands, canonical, provenanceFailures);
+        bool canonicalPrefixMatches = ValidateCanonicalPrefix(root, canonical, seedCount, provenanceFailures);
+        bool pairedIdentityMatches = ValidatePairedIdentity(canonical, candidate, provenanceFailures);
+        bool canonicalCaptureTrusted = manifestValidation.CanonicalValid && canonicalFrozenCaptureMatches &&
+                                      canonicalMatchesBands && canonicalPrefixMatches;
+        bool candidateCaptureTrusted = manifestValidation.CandidateValid && pairedIdentityMatches;
+        string? canonicalCaptureSha256 = canonicalCaptureTrusted
+            ? TryCaptureIdentity(root, "canonical", seedCount, provenanceFailures)
+            : null;
+        string? candidateCaptureSha256 = candidateCaptureTrusted
+            ? TryCaptureIdentity(root, kernel, seedCount, provenanceFailures)
+            : null;
 
         if (provenanceFailures.Count > 0)
         {
             return new EnsembleQualificationResult(kernel, seedCount, 0, 0, 0, 0,
-                provenanceFailures.Count, 0, false, provenanceFailures.ToArray());
+                provenanceFailures.Count, 0, false, provenanceFailures.ToArray(), frozenCanonicalCaptureSha256,
+                canonicalCaptureSha256, candidateCaptureSha256, bandPayloadSha256, qualificationProtocolSha256,
+                EventEnsembleProtocol.AnalysisProtocolSha256);
         }
 
         Dictionary<(EndpointKey Endpoint, string Metric), EquivalenceBand> bandMap = bands?.Bands
@@ -186,10 +205,21 @@ internal static class EventEnsembleAnalysis
         return new EnsembleQualificationResult(kernel, seedCount, evaluated, varianceEvaluated, meanFailures, varianceFailures,
             finalProvenanceFailures, checkpointZeroFailures,
             meanFailures == 0 && varianceFailures == 0 && finalProvenanceFailures == 0 && checkpointZeroFailures == 0,
-            failures.ToArray());
+            failures.ToArray(), frozenCanonicalCaptureSha256, canonicalCaptureSha256, candidateCaptureSha256,
+            bandPayloadSha256, qualificationProtocolSha256, EventEnsembleProtocol.AnalysisProtocolSha256);
     }
 
     internal static string ConfigurationIdentity(string manifestPath)
+    {
+        return GetConfigurationIdentity(manifestPath, excludeTopLevelReplicateCount: false);
+    }
+
+    internal static string ScientificConfigurationIdentity(string manifestPath)
+    {
+        return GetConfigurationIdentity(manifestPath, excludeTopLevelReplicateCount: true);
+    }
+
+    private static string GetConfigurationIdentity(string manifestPath, bool excludeTopLevelReplicateCount)
     {
         using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
         JsonElement root = document.RootElement;
@@ -200,9 +230,31 @@ internal static class EventEnsembleAnalysis
         using MemoryStream stream = new();
         using (Utf8JsonWriter writer = new(stream))
         {
-            WriteCanonicalJson(writer, configuration);
+            if (excludeTopLevelReplicateCount)
+                WriteScientificConfigurationJson(writer, configuration);
+            else
+                WriteCanonicalJson(writer, configuration);
         }
         return Hash(stream.ToArray());
+    }
+
+    private static void WriteScientificConfigurationJson(Utf8JsonWriter writer, JsonElement configuration)
+    {
+        if (configuration.ValueKind != JsonValueKind.Object)
+        {
+            WriteCanonicalJson(writer, configuration);
+            return;
+        }
+
+        writer.WriteStartObject();
+        foreach (JsonProperty property in configuration.EnumerateObject()
+                     .Where(property => property.Name != "replicateCount")
+                     .OrderBy(property => property.Name, StringComparer.Ordinal))
+        {
+            writer.WritePropertyName(property.Name);
+            WriteCanonicalJson(writer, property.Value);
+        }
+        writer.WriteEndObject();
     }
 
     private static CaptureData ReadCapture(string root, string kernel, int seedCount)
@@ -287,48 +339,65 @@ internal static class EventEnsembleAnalysis
         return new CaptureData(groups);
     }
 
-    private static void ValidateProtocolCopy(string root, EquivalenceBandSet bands, List<string> failures)
+    private static bool ValidateProtocolCopy(string root, EquivalenceBandSet bands, List<string> failures)
     {
         string path = Path.Combine(root, ProtocolCopyName);
         if (!File.Exists(path))
         {
             failures.Add("Frozen qualification protocol copy is missing.");
-            return;
+            return false;
         }
         if (Hash(File.ReadAllBytes(path)) != bands.QualificationProtocolSha256)
+        {
             failures.Add("Qualification protocol file SHA-256 differs from frozen provenance.");
+            return false;
+        }
+        return true;
     }
 
-    private static void ValidateCaptureIdentity(string root, EquivalenceBandSet bands, List<string> failures)
+    private static bool ValidateCaptureIdentity(string root, EquivalenceBandSet bands, List<string> failures)
     {
         try
         {
             string actual = CaptureIdentity(root, "canonical", 64);
             if (actual != bands.CanonicalCaptureSha256)
+            {
                 failures.Add("Canonical capture SHA-256 differs from frozen provenance.");
+                return false;
+            }
+            return true;
         }
         catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException or FormatException)
         {
             failures.Add($"Canonical capture provenance cannot be verified: {exception.Message}");
+            return false;
         }
     }
 
-    private static void ValidateManifestIdentities(string root, string kernel, int seedCount, List<string> failures)
+    private static ManifestValidationResult ValidateManifestIdentities(string root, string kernel, int seedCount,
+        List<string> failures)
     {
+        bool canonicalValid = true;
+        bool candidateValid = true;
         foreach (string condition in EventEnsembleProtocol.Conditions)
         {
             string canonicalPath = ManifestPath(root, condition, "canonical", seedCount);
             if (!File.Exists(canonicalPath))
             {
                 failures.Add($"Canonical resolved manifest is missing for {condition}/{seedCount}.");
+                canonicalValid = false;
+                candidateValid = false;
                 continue;
             }
-            ValidateResolvedManifestKernel(canonicalPath, "canonical", condition, seedCount, failures);
+            if (!ValidateResolvedManifestKernel(canonicalPath, "canonical", condition, seedCount, failures))
+                canonicalValid = false;
             string expected;
             try { expected = ConfigurationIdentity(canonicalPath); }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
             {
                 failures.Add($"Canonical manifest is invalid for {condition}/{seedCount}: {exception.Message}");
+                canonicalValid = false;
+                candidateValid = false;
                 continue;
             }
 
@@ -336,22 +405,64 @@ internal static class EventEnsembleAnalysis
             if (!File.Exists(path))
             {
                 failures.Add($"{kernel} resolved manifest is missing for {condition}/{seedCount}.");
+                candidateValid = false;
                 continue;
             }
-            ValidateResolvedManifestKernel(path, kernel, condition, seedCount, failures);
+            if (!ValidateResolvedManifestKernel(path, kernel, condition, seedCount, failures))
+                candidateValid = false;
             try
             {
                 if (ConfigurationIdentity(path) != expected)
+                {
                     failures.Add($"Resolved simulation configuration differs for {condition}/{seedCount}/{kernel}.");
+                    candidateValid = false;
+                }
             }
             catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
             {
                 failures.Add($"{kernel} manifest is invalid for {condition}/{seedCount}: {exception.Message}");
+                candidateValid = false;
+            }
+
+            if (seedCount != 64)
+            {
+                string frozenPath = ManifestPath(root, condition, "canonical", 64);
+                if (!File.Exists(frozenPath))
+                {
+                    failures.Add($"Frozen 64-seed canonical resolved manifest is missing for {condition}.");
+                    canonicalValid = false;
+                    candidateValid = false;
+                    continue;
+                }
+                if (!ValidateResolvedManifestKernel(frozenPath, "canonical", condition, 64, failures))
+                {
+                    canonicalValid = false;
+                    candidateValid = false;
+                    continue;
+                }
+
+                try
+                {
+                    if (ScientificConfigurationIdentity(frozenPath) != ScientificConfigurationIdentity(canonicalPath))
+                    {
+                        failures.Add("Canonical scientific configuration differs from the frozen 64-seed configuration " +
+                                     $"for {condition}/{seedCount}.");
+                        canonicalValid = false;
+                        candidateValid = false;
+                    }
+                }
+                catch (Exception exception) when (exception is IOException or JsonException or InvalidDataException)
+                {
+                    failures.Add($"Canonical scientific configuration cannot be verified for {condition}/{seedCount}: {exception.Message}");
+                    canonicalValid = false;
+                    candidateValid = false;
+                }
             }
         }
+        return new ManifestValidationResult(canonicalValid, candidateValid);
     }
 
-    private static void ValidateResolvedManifestKernel(string path, string expectedKernel, string condition,
+    private static bool ValidateResolvedManifestKernel(string path, string expectedKernel, string condition,
         int seedCount, List<string> failures)
     {
         try
@@ -359,11 +470,29 @@ internal static class EventEnsembleAnalysis
             using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(path));
             if (!document.RootElement.TryGetProperty("kernel", out JsonElement kernel) ||
                 kernel.ValueKind != JsonValueKind.String || kernel.GetString() != expectedKernel)
+            {
                 failures.Add($"Resolved manifest kernel is incorrect for {condition}/{seedCount}; expected '{expectedKernel}'.");
+                return false;
+            }
+            return true;
         }
-        catch (Exception exception) when (exception is IOException or JsonException)
+        catch (Exception exception) when (exception is IOException or JsonException or InvalidOperationException)
         {
             failures.Add($"Resolved manifest is invalid for {condition}/{seedCount}: {exception.Message}");
+            return false;
+        }
+    }
+
+    private static string? TryCaptureIdentity(string root, string kernel, int seedCount, List<string> failures)
+    {
+        try
+        {
+            return CaptureIdentity(root, kernel, seedCount);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            failures.Add($"{kernel} capture identity cannot be calculated for {seedCount} seeds: {exception.Message}");
+            return null;
         }
     }
 
@@ -391,9 +520,9 @@ internal static class EventEnsembleAnalysis
         }
     }
 
-    private static void ValidateCanonicalPrefix(string root, CaptureData canonical, int seedCount, List<string> failures)
+    private static bool ValidateCanonicalPrefix(string root, CaptureData canonical, int seedCount, List<string> failures)
     {
-        if (seedCount == 64) return;
+        if (seedCount == 64) return true;
         try
         {
             CaptureData prefix = ReadCapture(root, "canonical", 64);
@@ -405,18 +534,20 @@ internal static class EventEnsembleAnalysis
                     if (!rows[replicate].RawFields.SequenceEqual(expandedRows[replicate].RawFields, StringComparer.Ordinal))
                     {
                         failures.Add($"Canonical seed prefix changed for {key.Condition}/{key.Mcs}/seed {replicate}.");
-                        return;
+                        return false;
                     }
                 }
             }
+            return true;
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException)
         {
             failures.Add($"Canonical seed prefix cannot be verified: {exception.Message}");
+            return false;
         }
     }
 
-    private static void ValidatePairedIdentity(CaptureData canonical, CaptureData candidate, List<string> failures)
+    private static bool ValidatePairedIdentity(CaptureData canonical, CaptureData candidate, List<string> failures)
     {
         foreach ((EndpointKey key, CaptureRow[] rows) in canonical.Rows)
         {
@@ -428,10 +559,11 @@ internal static class EventEnsembleAnalysis
                     rows[replicate].InitialHash != candidates[replicate].InitialHash)
                 {
                     failures.Add($"Paired seeds or initial tissue differ for {key.Condition}/{key.Mcs}/seed {replicate}.");
-                    return;
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     private static string CaptureIdentity(string root, string kernel, int seedCount)
@@ -477,8 +609,9 @@ internal static class EventEnsembleAnalysis
         writer.WriteLine();
     }
 
-    private static void ValidateBandsAgainstCanonical(EquivalenceBandSet bands, CaptureData canonical, List<string> failures)
+    private static bool ValidateBandsAgainstCanonical(EquivalenceBandSet bands, CaptureData canonical, List<string> failures)
     {
+        bool valid = true;
         Dictionary<(string Condition, int Mcs, string Metric), EquivalenceBand> bandMap = bands.Bands
             .ToDictionary(band => (band.Condition, band.Mcs, band.Metric));
         foreach ((EndpointKey endpoint, CaptureRow[] allRows) in canonical.Rows)
@@ -490,6 +623,7 @@ internal static class EventEnsembleAnalysis
                 if (!bandMap.TryGetValue((endpoint.Condition, endpoint.Mcs, metric), out EquivalenceBand? band))
                 {
                     failures.Add($"Frozen canonical band is missing for {endpoint.Condition}/{endpoint.Mcs}/{metric}.");
+                    valid = false;
                     continue;
                 }
                 double[] values = rows.Select(row => row.Metrics[metricIndex]).ToArray();
@@ -501,10 +635,11 @@ internal static class EventEnsembleAnalysis
                     band.LowerBound != mean - halfWidth || band.UpperBound != mean + halfWidth)
                 {
                     failures.Add($"Frozen canonical band does not match the paired 64-seed capture for {endpoint.Condition}/{endpoint.Mcs}/{metric}.");
-                    return;
+                    return false;
                 }
             }
         }
+        return valid;
     }
 
     private static IEnumerable<string> ParseCsvRow(string line)
@@ -547,4 +682,5 @@ internal static class EventEnsembleAnalysis
 
     private sealed record CaptureRow(int Replicate, ulong InitialisationSeed, ulong DynamicsSeed, string InitialHash, double[] Metrics, string[] RawFields);
     private sealed record CaptureData(Dictionary<EndpointKey, CaptureRow[]> Rows);
+    private sealed record ManifestValidationResult(bool CanonicalValid, bool CandidateValid);
 }

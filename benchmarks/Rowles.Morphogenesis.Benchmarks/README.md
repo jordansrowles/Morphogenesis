@@ -93,6 +93,8 @@ Each ensemble contains sorting and control at 32 and 64 sites, three sorting flu
 
 The capture command writes kernel-specific manifests named `<condition>-<kernel>-manifest-<seeds>.json`, sample CSV, per-cell CSV and deterministic initial-state hashes. The freeze command writes `canonical-bands-64.json` and a copy of the frozen protocol. Comparison writes a structured `<kernel>-summary-<seeds>.json` and detailed endpoint CSV. Raw sample, per-cell, manifest and comparison files are disposable local benchmark artefacts unless a project evidence record explicitly retains them. Preserve the frozen protocol, frozen-band JSON, provenance summary and qualification summaries with any retained local evidence. The full expensive ensemble is not part of ordinary CI.
 
+Frozen-band format version 2 records both the integer analysis protocol version and a deterministic analysis protocol SHA-256. Canonical captures at 128 and 256 seeds are checked against the frozen 64-seed scientific configuration, excluding only the top-level `replicateCount`. Qualification summaries include the exact canonical, candidate, frozen-band and protocol identities used for each comparison.
+
 ## NativeAOT and runtime comparison
 
 Restore the Linux x64 NativeAOT runtime pack with its publish properties, then publish without warning suppression:

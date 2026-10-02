@@ -24,9 +24,15 @@ internal static class BootstrapVariance
 
         double canonicalVariance = Variance(canonical);
         double candidateVariance = Variance(candidate);
-        double ratio = canonicalVariance == 0
-            ? candidateVariance == 0 ? 1 : double.PositiveInfinity
-            : candidateVariance / canonicalVariance;
+        if (canonicalVariance == 0)
+        {
+            return candidateVariance == 0
+                ? new BootstrapVarianceResult(1, 1, 1, 0, true)
+                : new BootstrapVarianceResult(double.PositiveInfinity, double.PositiveInfinity,
+                    double.PositiveInfinity, 0, false);
+        }
+
+        double ratio = candidateVariance / canonicalVariance;
         BootstrapRandom random = new(EventEnsembleProtocol.BootstrapSeed(key));
         int[] indexes = new int[canonical.Count];
         double[] ratios = new double[EventEnsembleProtocol.BootstrapReplicates];
@@ -49,8 +55,8 @@ internal static class BootstrapVariance
         }
 
         Array.Sort(ratios);
-        double lower = Quantile(ratios, 0.05);
-        double upper = Quantile(ratios, 0.95);
+        double lower = Quantile(ratios, EventEnsembleProtocol.VarianceBootstrapLowerQuantile);
+        double upper = Quantile(ratios, EventEnsembleProtocol.VarianceBootstrapUpperQuantile);
         bool equivalent = lower >= EventEnsembleProtocol.VarianceRatioLowerBound &&
                           upper <= EventEnsembleProtocol.VarianceRatioUpperBound;
         return new BootstrapVarianceResult(ratio, lower, upper, ratios.Length, equivalent);

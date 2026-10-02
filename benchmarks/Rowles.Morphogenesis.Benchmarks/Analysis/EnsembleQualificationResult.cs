@@ -10,4 +10,10 @@ internal sealed record EnsembleQualificationResult(
     int ProvenanceFailures,
     int CheckpointZeroFailures,
     bool Passed,
-    string[] FailureDescriptions);
+    string[] FailureDescriptions,
+    string? FrozenCanonicalCaptureSha256,
+    string? CanonicalCaptureSha256,
+    string? CandidateCaptureSha256,
+    string? BandPayloadSha256,
+    string? QualificationProtocolSha256,
+    string AnalysisProtocolSha256);

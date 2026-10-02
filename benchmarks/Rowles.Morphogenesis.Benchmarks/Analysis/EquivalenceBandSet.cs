@@ -18,6 +18,7 @@ internal sealed record EquivalenceBand(
 internal sealed record EquivalenceBandPayload(
     int FormatVersion,
     int AnalysisProtocolVersion,
+    string AnalysisProtocolSha256,
     string CanonicalCaptureSha256,
     string QualificationProtocolSha256,
     int SeedCount,
@@ -27,6 +28,7 @@ internal sealed record EquivalenceBandPayload(
 internal sealed record EquivalenceBandSet(
     int FormatVersion,
     int AnalysisProtocolVersion,
+    string AnalysisProtocolSha256,
     string CanonicalCaptureSha256,
     string QualificationProtocolSha256,
     string BandPayloadSha256,
@@ -35,7 +37,7 @@ internal sealed record EquivalenceBandSet(
     EquivalenceBand[] Bands,
     DateTimeOffset CreatedAtUtc)
 {
-    internal const int CurrentFormatVersion = 1;
+    internal const int CurrentFormatVersion = 2;
     internal const string FileName = "canonical-bands-64.json";
     private static readonly JsonSerializerOptions _serialiserOptions = new() { WriteIndented = true };
 
@@ -55,13 +57,14 @@ internal sealed record EquivalenceBandSet(
         EquivalenceBandPayload payload = new(
             CurrentFormatVersion,
             EventEnsembleProtocol.Version,
+            EventEnsembleProtocol.AnalysisProtocolSha256,
             canonicalCaptureSha256,
             qualificationProtocolSha256,
             64,
             definitions,
             orderedBands);
         return new EquivalenceBandSet(payload.FormatVersion, payload.AnalysisProtocolVersion,
-            payload.CanonicalCaptureSha256, payload.QualificationProtocolSha256,
+            payload.AnalysisProtocolSha256, payload.CanonicalCaptureSha256, payload.QualificationProtocolSha256,
             HashPayload(payload), payload.SeedCount, payload.MetricDefinitions, payload.Bands, createdAt);
     }
 
@@ -83,6 +86,9 @@ internal sealed record EquivalenceBandSet(
     {
         if (FormatVersion != CurrentFormatVersion) throw new InvalidDataException("Unsupported frozen-band format version.");
         if (AnalysisProtocolVersion != EventEnsembleProtocol.Version) throw new InvalidDataException("Frozen bands use a different analysis protocol version.");
+        ValidateSha256(AnalysisProtocolSha256, "analysis protocol");
+        if (AnalysisProtocolSha256 != EventEnsembleProtocol.AnalysisProtocolSha256)
+            throw new InvalidDataException("Frozen bands use a different analysis protocol SHA-256.");
         if (SeedCount != 64) throw new InvalidDataException("Frozen canonical bands must use 64 seeds.");
         EquivalenceMetricDefinition[] expectedDefinitions = EventEnsembleProtocol.Metrics
             .Select(metric => new EquivalenceMetricDefinition(metric, MetricDefinition(metric))).ToArray();
@@ -110,16 +116,15 @@ internal sealed record EquivalenceBandSet(
             throw new InvalidDataException("Frozen-band payload contains invalid values.");
         if (CreatedAtUtc == default || CreatedAtUtc.Offset != TimeSpan.Zero)
             throw new InvalidDataException("Frozen-band creation time must use UTC.");
-        if (Convert.FromHexString(CanonicalCaptureSha256).Length != 32 ||
-            Convert.FromHexString(QualificationProtocolSha256).Length != 32)
-            throw new InvalidDataException("Frozen-band provenance hashes must be SHA-256 values.");
-        EquivalenceBandPayload payload = new(FormatVersion, AnalysisProtocolVersion, CanonicalCaptureSha256,
+        ValidateSha256(CanonicalCaptureSha256, "canonical capture");
+        ValidateSha256(QualificationProtocolSha256, "qualification protocol");
+        EquivalenceBandPayload payload = new(FormatVersion, AnalysisProtocolVersion, AnalysisProtocolSha256, CanonicalCaptureSha256,
             QualificationProtocolSha256, SeedCount, MetricDefinitions, Bands);
         if (!StringComparer.Ordinal.Equals(BandPayloadSha256, HashPayload(payload)))
             throw new InvalidDataException("Frozen-band payload hash does not match its content.");
     }
 
-    private static string HashPayload(EquivalenceBandPayload payload)
+    internal static string HashPayload(EquivalenceBandPayload payload)
     {
         EquivalenceBand[] orderedBands = payload.Bands
             .OrderBy(band => band.Condition, StringComparer.Ordinal)
@@ -128,6 +133,19 @@ internal sealed record EquivalenceBandSet(
             .ToArray();
         EquivalenceBandPayload orderedPayload = payload with { Bands = orderedBands };
         return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(orderedPayload)));
+    }
+
+    private static void ValidateSha256(string? value, string name)
+    {
+        try
+        {
+            if (value is null || Convert.FromHexString(value).Length != 32)
+                throw new InvalidDataException($"Frozen-band {name} hash must be a 32-byte SHA-256 value.");
+        }
+        catch (FormatException exception)
+        {
+            throw new InvalidDataException($"Frozen-band {name} hash must be a 32-byte SHA-256 value.", exception);
+        }
     }
 
     private static string MetricDefinition(string metric) => metric switch
