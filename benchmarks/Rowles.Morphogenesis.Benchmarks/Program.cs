@@ -13,6 +13,43 @@ using Rowles.Morphogenesis.Initialisation;
 using Rowles.Morphogenesis.Model;
 using Rowles.Morphogenesis.Experiments.Results;
 using Rowles.Morphogenesis.Benchmarks.Diagnostics;
+using Rowles.Morphogenesis.Benchmarks.Analysis;
+
+if (args.Length == 3 && args[0] == "--freeze-event-bands")
+{
+    try
+    {
+        EquivalenceBandSet bands = EventEnsembleAnalysis.Freeze(args[1], args[2]);
+        Console.WriteLine($"Frozen {bands.Bands.Length} canonical metric bands from {bands.SeedCount} seeds.");
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"Band freezing failed: {exception.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+if (args.Length == 4 && args[0] == "--compare-event-ensemble")
+{
+    try
+    {
+        int seeds = int.Parse(args[3], CultureInfo.InvariantCulture);
+        EnsembleQualificationResult result = EventEnsembleAnalysis.Compare(args[1], args[2], seeds);
+        string path = Path.Combine(args[2], $"{args[1]}-summary-{seeds}.json");
+        File.WriteAllText(path, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"{result.Kernel}: {(result.Passed ? "PASS" : "FAIL")}; {result.MeanMetricsEvaluated} mean endpoints, {result.MeanEquivalenceFailures} mean failures, {result.VarianceMetricsEvaluated} final variance checks with {result.VarianceRatioFailures} failures, {result.ProvenanceFailures} provenance failures, {result.CheckpointZeroFailures} checkpoint-zero failures.");
+        foreach (string failure in result.FailureDescriptions.Take(20)) Console.WriteLine($"- {failure}");
+        if (result.FailureDescriptions.Length > 20) Console.WriteLine($"... and {result.FailureDescriptions.Length - 20} more failures; see {path}.");
+        Environment.ExitCode = result.Passed ? 0 : 1;
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"Ensemble comparison failed: {exception.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
 
 if (args.Length == 2 && args[0] == "--profile-process-memory")
 {

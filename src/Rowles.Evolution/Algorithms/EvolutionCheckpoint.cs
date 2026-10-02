@@ -3,7 +3,7 @@ using Rowles.Evolution.Random;
 
 namespace Rowles.Evolution.Algorithms;
 
-/// <summary>Explicit checkpoint schema; runtime algorithm objects are never serialized.</summary>
+/// <summary>Explicit checkpoint schema; runtime algorithm objects are never serialised.</summary>
 public sealed record EvolutionCheckpoint(int SchemaVersion, NumericBoundsDto[] SolutionBounds,
     double[] DescriptorLowerBounds, double[] DescriptorUpperBounds, int[] BinCounts,
     ObjectiveDirection ObjectiveDirection, double? ObjectiveBaseline, int MaximumCells,

@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../benchmarks/Rowles.Morphogenesis.Benchmarks/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
+    <Compile Include="../../benchmarks/Rowles.Morphogenesis.Benchmarks/Analysis/*.cs" Link="Analysis/%(Filename)%(Extension)" />
     <None Include="../Rowles.Morphogenesis.Reference.Tests/Fixtures/G10.golden.json" Link="Fixtures/G10.golden.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../experiments/canonical/*.json" Link="experiments/canonical/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../experiments/results/*.json" Link="experiments/results/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

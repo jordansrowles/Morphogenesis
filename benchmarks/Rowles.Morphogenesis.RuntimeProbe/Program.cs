@@ -9,7 +9,7 @@ using Rowles.Morphogenesis.Model;
 string label = args.Length > 0 ? args[0] : "unspecified";
 int samples = args.Length > 1 ? int.Parse(args[1], CultureInfo.InvariantCulture) : 7;
 if (samples < 1) throw new ArgumentOutOfRangeException(nameof(samples));
-Console.WriteLine("runtime,scenario,sample,mcs,elapsed_ms,allocated_bytes,accepted,rejected,no_ops,fallbacks,state_hash");
+Console.WriteLine("runtime,scenario,sample,mcs,elapsed_ms,allocated_bytes,gc_gen0,gc_gen1,gc_gen2,accepted,rejected,no_ops,fallbacks,state_hash");
 foreach (ProbeFixture fixture in ProbeFixture.All)
 {
     SerialSimulation warmup = fixture.Create();
@@ -21,6 +21,9 @@ foreach (ProbeFixture fixture in ProbeFixture.All)
         long accepted = 0, rejected = 0, noOps = 0, fallbacks = 0;
         Stopwatch timer = new();
         long before = GC.GetAllocatedBytesForCurrentThread();
+        int generationZeroBefore = GC.CollectionCount(0);
+        int generationOneBefore = GC.CollectionCount(1);
+        int generationTwoBefore = GC.CollectionCount(2);
         timer.Start();
         for (int mcs = 0; mcs < fixture.BatchMcs; mcs++)
         {
@@ -30,10 +33,14 @@ foreach (ProbeFixture fixture in ProbeFixture.All)
         }
         timer.Stop();
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        int generationZeroCollections = GC.CollectionCount(0) - generationZeroBefore;
+        int generationOneCollections = GC.CollectionCount(1) - generationOneBefore;
+        int generationTwoCollections = GC.CollectionCount(2) - generationTwoBefore;
         ulong hash = fixture.Hash(simulation.State);
         Console.WriteLine(string.Join(',', label, fixture.Id, sample, fixture.BatchMcs,
             timer.Elapsed.TotalMilliseconds.ToString("F6", CultureInfo.InvariantCulture),
-            allocated, accepted, rejected, noOps, fallbacks, hash.ToString("X16", CultureInfo.InvariantCulture)));
+            allocated, generationZeroCollections, generationOneCollections, generationTwoCollections,
+            accepted, rejected, noOps, fallbacks, hash.ToString("X16", CultureInfo.InvariantCulture)));
     }
 }
 

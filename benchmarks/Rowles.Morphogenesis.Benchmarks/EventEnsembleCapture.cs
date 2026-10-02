@@ -8,6 +8,7 @@ using Rowles.Morphogenesis.Initialisation;
 using Rowles.Morphogenesis.Lattice;
 using Rowles.Morphogenesis.Measurements;
 using Rowles.Morphogenesis.Model;
+using System.Text.Json;
 
 namespace Rowles.Morphogenesis.Benchmarks;
 
@@ -19,7 +20,7 @@ internal static class EventEnsembleCapture
         if (kernel is not ("canonical" or "border" or "directed")) throw new ArgumentException("Unknown kernel.", nameof(kernel));
         if (seeds is not (64 or 128 or 256)) throw new ArgumentOutOfRangeException(nameof(seeds));
         Directory.CreateDirectory(directory);
-        if (kernel != "canonical" && !File.Exists(Path.Combine(directory, "canonical-bands-64.csv")))
+        if (kernel != "canonical" && !File.Exists(Path.Combine(directory, Analysis.EquivalenceBandSet.FileName)))
             throw new InvalidOperationException("Freeze canonical bands before observing accelerated scientific metrics.");
         using StreamWriter samples = new(Path.Combine(directory, $"{kernel}-samples-{seeds}.csv"));
         using StreamWriter cells = new(Path.Combine(directory, $"{kernel}-cells-{seeds}.csv"));
@@ -27,7 +28,7 @@ internal static class EventEnsembleCapture
         cells.WriteLine("condition,kernel,replicate,mcs,cell_id,type_id,area,perimeter,shape");
         foreach ((string condition, ExperimentManifest manifest) in Conditions(seeds))
         {
-            File.WriteAllText(Path.Combine(directory, $"{condition}-manifest-{seeds}.json"), manifest.ToJson());
+            WriteManifest(directory, condition, kernel, seeds, manifest);
             for (int replicate = 0; replicate < seeds; replicate++)
             {
                 ulong seed = ReplicateSeedDerivation.Derive(manifest.BaseSeed, replicate);
@@ -128,6 +129,18 @@ internal static class EventEnsembleCapture
         BoundaryMode = wall ? BoundaryMode.Wall : BoundaryMode.Periodic
     };
 
+    private static void WriteManifest(string directory, string condition, string kernel, int seeds, ExperimentManifest manifest)
+    {
+        using JsonDocument configuration = JsonDocument.Parse(manifest.ToJson());
+        ResolvedEnsembleManifest resolved = new(kernel, configuration.RootElement.Clone());
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(resolved, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        });
+        File.WriteAllBytes(Path.Combine(directory, $"{condition}-{kernel}-manifest-{seeds}.json"), json);
+    }
+
     private static double Quantile(double[] sorted, double fraction)
     {
         double index = (sorted.Length - 1) * fraction;
@@ -151,4 +164,6 @@ internal static class EventEnsembleCapture
 
     private static void Write(StreamWriter writer, params object[] values) => writer.WriteLine(string.Join(',',
         values.Select(value => value is IFormattable formattable ? formattable.ToString(null, CultureInfo.InvariantCulture) : value.ToString())));
+
+    private sealed record ResolvedEnsembleManifest(string Kernel, JsonElement Configuration);
 }
