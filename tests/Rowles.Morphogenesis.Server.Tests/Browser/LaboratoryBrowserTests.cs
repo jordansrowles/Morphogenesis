@@ -312,15 +312,10 @@ public sealed class LaboratoryBrowserTests
             WorkingDirectory = repositoryRoot,
             UseShellExecute = false
         };
-        start.ArgumentList.Add("run");
-        start.ArgumentList.Add("--no-build");
-        start.ArgumentList.Add("--no-restore");
-        start.ArgumentList.Add("--no-launch-profile");
-        start.ArgumentList.Add("--project");
-        start.ArgumentList.Add(Path.Combine(repositoryRoot, "tools", "Rowles.Morphogenesis.Server", "Rowles.Morphogenesis.Server.csproj"));
-        string configuration = Directory.GetParent(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar))?.Name ?? "Debug";
-        start.ArgumentList.Add("--configuration");
-        start.ArgumentList.Add(configuration);
+        string serverAssembly = Path.Combine(AppContext.BaseDirectory, "Rowles.Morphogenesis.Server.dll");
+        if (!File.Exists(serverAssembly))
+            throw new FileNotFoundException("The server application was not copied beside the browser tests.", serverAssembly);
+        start.ArgumentList.Add(serverAssembly);
         start.Environment["Laboratory__BindUrl"] = $"http://127.0.0.1:{port}";
         start.Environment["Laboratory__DataDirectory"] = dataDirectory;
         start.Environment["Laboratory__LogDirectory"] = logDirectory;
