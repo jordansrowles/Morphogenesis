@@ -5,8 +5,10 @@ using Rowles.Morphogenesis.Server;
 using Rowles.Morphogenesis.Server.Api;
 using Rowles.Morphogenesis.Server.Components;
 using Rowles.Morphogenesis.Server.Configuration;
+using Rowles.Morphogenesis.Server.Diagnostics;
 using Rowles.Morphogenesis.Server.Experiments;
 using Rowles.Morphogenesis.Server.Persistence;
+using Rowles.Morphogenesis.Server.Services;
 using Rowles.Morphogenesis.Server.Sessions;
 using Serilog;
 using Serilog.Context;
@@ -14,7 +16,12 @@ using Serilog.Context;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 LaboratoryServerOptions serverOptions = LaboratoryServerOptions.Load(builder.Configuration);
 builder.WebHost.UseUrls(serverOptions.BindUrl);
+builder.WebHost.ConfigureKestrel(options =>
+    options.Limits.MaxRequestBodySize = serverOptions.ResourceLimits.MaxRequestBodyBytes);
 builder.Services.AddSingleton(serverOptions);
+builder.Services.AddSingleton(sp => sp.GetRequiredService<LaboratoryServerOptions>().ResourceLimits);
+builder.Services.AddSingleton<LaboratoryDiagnostics>();
+builder.Services.AddSingleton<SessionCapacityService>();
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -40,10 +47,15 @@ builder.Services.AddHostedService<DatabaseStartupService>();
 builder.Services.AddHostedService<ExperimentCatalogStartupService>();
 builder.Services.AddSingleton<SimulationSessionRegistry>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SimulationSessionRegistry>());
+builder.Services.AddSingleton<SessionRetentionService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionRetentionService>());
+builder.Services.AddProblemDetails();
 
 WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
+else
+    app.UseExceptionHandler();
 app.UseRouting();
 app.Use(async (context, next) =>
 {
@@ -73,7 +85,15 @@ app.Use(async (context, next) =>
 {
     IHttpMaxRequestBodySizeFeature? bodySize = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
     if (bodySize is { IsReadOnly: false })
-        bodySize.MaxRequestBodySize = serverOptions.MaxRequestBodyBytes;
+        bodySize.MaxRequestBodySize = serverOptions.ResourceLimits.MaxRequestBodyBytes;
+    if (context.Request.Path.StartsWithSegments("/api") &&
+        context.Request.ContentLength is long contentLength &&
+        contentLength > serverOptions.ResourceLimits.MaxRequestBodyBytes)
+    {
+        context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        return;
+    }
+
     await next(context).ConfigureAwait(false);
 });
 app.UseStaticFiles();
@@ -84,6 +104,12 @@ app.MapDiagnosticsEndpoints();
 app.MapExperimentEndpoints();
 app.MapSessionEndpoints();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+Microsoft.Extensions.Logging.ILogger lifecycleLogger = app.Services.GetRequiredService<ILoggerFactory>()
+    .CreateLogger("Rowles.Morphogenesis.Server.Lifecycle");
+app.Lifetime.ApplicationStarted.Register(() => lifecycleLogger.LogInformation(
+    "Morphogenesis laboratory server started at {BindUrl}", serverOptions.BindUrl));
+app.Lifetime.ApplicationStopping.Register(() => lifecycleLogger.LogInformation(
+    "Morphogenesis laboratory server is stopping"));
 app.Run();
 
 public partial class Program;

@@ -45,6 +45,7 @@ public sealed class SimulationSession : IAsyncDisposable
     private long _publishedFrames;
     private long _coalescedOrDroppedFrames;
     private long _frameCaptureTicks;
+    private long _capturedFrames;
     private long _frameSequence;
     private long _lastPublishTimestamp;
     private int _disposeStarted;
@@ -142,6 +143,8 @@ public sealed class SimulationSession : IAsyncDisposable
     public IAsyncEnumerable<SimulationFrameLease> WatchFramesAsync(
         CancellationToken cancellationToken = default) => _frameHub.Watch(cancellationToken);
 
+    public int LiveSubscriberCount => _frameHub.SubscriberCount;
+
     public ValueTask<SimulationCommandResult> StartAsync(
         Guid commandId,
         long expectedRevision,
@@ -171,6 +174,18 @@ public sealed class SimulationSession : IAsyncDisposable
         long expectedRevision,
         CancellationToken cancellationToken = default) =>
         EnqueueCommandAsync(new SimulationCommand(commandId, expectedRevision, SimulationCommandKind.Stop), cancellationToken);
+
+    public ValueTask<SimulationCommandResult> CancelForResourcePolicyAsync(
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        return EnqueueCommandAsync(new SimulationCommand(
+            Guid.NewGuid(),
+            GetSnapshot().Revision,
+            SimulationCommandKind.Stop,
+            $"ResourcePolicy: {reason}"), cancellationToken);
+    }
 
     public ValueTask<CellInspection?> InspectCellAsync(
         int cellId,
@@ -415,7 +430,7 @@ public sealed class SimulationSession : IAsyncDisposable
             case (SimulationSessionStatus.Running, SimulationCommandKind.Stop):
             case (SimulationSessionStatus.Paused, SimulationCommandKind.Stop):
                 CaptureFinalFrameIfNeeded();
-                TransitionToTerminal(SimulationSessionStatus.Cancelled, null);
+                TransitionToTerminal(SimulationSessionStatus.Cancelled, command.Failure);
                 return CreateCommandResult(SimulationCommandDisposition.Applied, null);
             default:
                 return CreateCommandResult(SimulationCommandDisposition.InvalidState, null);
@@ -545,6 +560,7 @@ public sealed class SimulationSession : IAsyncDisposable
         try
         {
             _instance.Simulation.State.CopyCellIdsTo(owner.CellIds);
+            Interlocked.Increment(ref _capturedFrames);
         }
         catch
         {
@@ -660,7 +676,8 @@ public sealed class SimulationSession : IAsyncDisposable
         _connectivityFallbacks,
         Interlocked.Read(ref _publishedFrames),
         Interlocked.Read(ref _coalescedOrDroppedFrames),
-        Interlocked.Read(ref _frameCaptureTicks));
+        Interlocked.Read(ref _frameCaptureTicks),
+        Interlocked.Read(ref _capturedFrames));
 
     private SimulationCommandResult CreateCommandResult(
         SimulationCommandDisposition disposition,

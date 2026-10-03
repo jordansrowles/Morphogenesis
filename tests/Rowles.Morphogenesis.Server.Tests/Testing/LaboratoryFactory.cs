@@ -29,9 +29,14 @@ internal sealed class TemporaryLaboratoryRoot : IDisposable
 
 internal sealed class LaboratoryFactory : WebApplicationFactory<Program>
 {
-    internal LaboratoryFactory(string root, bool longRunning = true, Action<string>? mutateCatalogue = null)
+    internal LaboratoryFactory(
+        string root,
+        bool longRunning = true,
+        Action<string>? mutateCatalogue = null,
+        LaboratoryResourceLimits? resourceLimits = null)
     {
         Root = root;
+        ResourceLimits = resourceLimits ?? new LaboratoryResourceLimits();
         DataDirectory = System.IO.Path.Combine(root, "data");
         LogDirectory = System.IO.Path.Combine(root, "logs");
         CanonicalDirectory = System.IO.Path.Combine(root, "canonical");
@@ -62,6 +67,7 @@ internal sealed class LaboratoryFactory : WebApplicationFactory<Program>
     internal string DataDirectory { get; }
     internal string LogDirectory { get; }
     internal string CanonicalDirectory { get; }
+    internal LaboratoryResourceLimits ResourceLimits { get; }
     internal string DatabasePath => System.IO.Path.Combine(DataDirectory, "laboratory.db");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -76,7 +82,8 @@ internal sealed class LaboratoryFactory : WebApplicationFactory<Program>
                 DataDirectory = DataDirectory,
                 LogDirectory = LogDirectory,
                 CanonicalExperimentsDirectory = CanonicalDirectory,
-                DatabaseFileName = "laboratory.db"
+                DatabaseFileName = "laboratory.db",
+                ResourceLimits = ResourceLimits
             });
         });
     }

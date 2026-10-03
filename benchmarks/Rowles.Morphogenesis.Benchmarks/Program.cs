@@ -178,7 +178,7 @@ internal static class M3BenchmarkEnvironment
             Git("status", "--porcelain=v1"),
             Git("diff", "--name-only", "HEAD", "--", "src/Rowles.Morphogenesis"),
             Run("dotnet", "--version"),
-            typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown",
+            Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown",
             Environment.Version.ToString(),
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.OSDescription,

@@ -118,15 +118,17 @@ public sealed class RecordingCodecTests
             {
                 int index = random.Next(SiteCount);
                 int newCellId = random.Next(0, 12);
-                accumulator.AcceptedCopy(index, oldCellId: reconstructed[index], newCellId);
+                accumulator.AcceptedCopy(index, oldCellId: state[index], newCellId);
+                state[index] = newCellId;
                 if (change % 3 == 0)
                 {
                     newCellId = random.Next(0, 12);
-                    accumulator.AcceptedCopy(index, oldCellId: reconstructed[index], newCellId);
+                    accumulator.AcceptedCopy(index, oldCellId: state[index], newCellId);
+                    state[index] = newCellId;
                 }
             }
 
-            accumulator.SortChanges();
+            accumulator.SortChanges(state);
             byte[] deltaPayload = new byte[DeltaPayloadCodec.GetBufferSize(SiteCount)];
             int deltaLength = DeltaPayloadCodec.Encode(
                 accumulator.SortedIndices,
@@ -141,13 +143,7 @@ public sealed class RecordingCodecTests
                 reconstructed[indices[change]] = cellIds[change];
             }
 
-            int[] expected = state.ToArray();
-            for (int change = 0; change < accumulator.Count; change++)
-            {
-                expected[accumulator.SortedIndices[change]] = accumulator.SortedCellIds[change];
-            }
-
-            Assert.Equal(expected, reconstructed);
+            Assert.Equal(state, reconstructed);
         }
     }
 

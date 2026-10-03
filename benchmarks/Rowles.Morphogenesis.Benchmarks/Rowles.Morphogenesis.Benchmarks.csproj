@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <ProjectReference Include="../../src/Rowles.Morphogenesis/Rowles.Morphogenesis.csproj" />
+    <ProjectReference Include="../../tools/Rowles.Morphogenesis.Server/Rowles.Morphogenesis.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../tests/Rowles.Morphogenesis.Tests/Baseline/*.cs" Link="EntryBaseline/%(Filename)%(Extension)" />

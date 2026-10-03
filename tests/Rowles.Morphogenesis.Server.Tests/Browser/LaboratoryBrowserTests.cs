@@ -7,11 +7,68 @@ using Microsoft.Playwright;
 using Rowles.Morphogenesis.Experiments;
 using Rowles.Morphogenesis.Laboratory.Sessions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Rowles.Morphogenesis.Server.Tests.Browser;
 
 public sealed class LaboratoryBrowserTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public LaboratoryBrowserTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
+    [Fact]
+    [Trait("Category", "BrowserPerformance")]
+    public async Task ChromiumCanvasRenderSustainsRequiredRatesAndStableHeap()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "morphogenesis-canvas-profile", Guid.NewGuid().ToString("N"));
+        string dataDirectory = Path.Combine(root, "data");
+        string logDirectory = Path.Combine(root, "logs");
+        string canonicalDirectory = Path.Combine(root, "canonical");
+        Directory.CreateDirectory(dataDirectory);
+        Directory.CreateDirectory(logDirectory);
+        Directory.CreateDirectory(canonicalDirectory);
+        CopyCanonicalExperiments(canonicalDirectory);
+
+        (Process server, Uri serverUri) = StartServer(dataDirectory, logDirectory, canonicalDirectory);
+        try
+        {
+            await WaitForServerAsync(server, serverUri);
+            using IPlaywright playwright = await Playwright.CreateAsync();
+            await using IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            IPage page = await browser.NewPageAsync();
+            page.SetDefaultTimeout(120_000);
+            await page.GotoAsync(serverUri.ToString());
+
+            JsonElement identity256 = await MeasureCanvasAsync(page, 256, boundaries: false);
+            JsonElement identity512 = await MeasureCanvasAsync(page, 512, boundaries: false);
+            JsonElement boundaries256 = await MeasureCanvasAsync(page, 256, boundaries: true);
+            Assert.True(identity256.GetProperty("framesPerSecond").GetDouble() >= 20, identity256.ToString());
+            Assert.True(identity512.GetProperty("framesPerSecond").GetDouble() >= 10, identity512.ToString());
+            Assert.True(boundaries256.GetProperty("framesPerSecond").GetDouble() >= 10, boundaries256.ToString());
+            foreach (JsonElement result in new[] { identity256, identity512, boundaries256 })
+            {
+                long heapGrowth = result.GetProperty("peakHeapBytes").GetInt64() - result.GetProperty("initialHeapBytes").GetInt64();
+                Assert.True(heapGrowth <= 128L * 1024 * 1024, $"Canvas heap grew by {heapGrowth:N0} bytes: {result}");
+            }
+
+            _output.WriteLine($"Canvas profile: {identity256}; {identity512}; {boundaries256}");
+        }
+        finally
+        {
+            if (!server.HasExited)
+                server.Kill(entireProcessTree: true);
+            await server.WaitForExitAsync();
+            server.Dispose();
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task BrowserCanRunSelectInspectAndPlayBackAnE02SessionAndSendAStaleCommand()
     {
@@ -149,6 +206,63 @@ public sealed class LaboratoryBrowserTests
         await page.WaitForURLAsync("**/sessions/*");
         await page.GetByTestId("session-status").WaitForAsync();
     }
+
+    private static Task<JsonElement> MeasureCanvasAsync(IPage page, int width, bool boundaries) =>
+        page.EvaluateAsync<JsonElement>("""
+            async ({ width, boundaries }) => {
+                const module = await import('/js/latticeCanvas.js');
+                document.querySelector('[data-canvas-benchmark]')?.remove();
+                const canvas = document.createElement('canvas');
+                canvas.dataset.canvasBenchmark = 'true';
+                document.body.appendChild(canvas);
+                const height = width;
+                if (!performance.memory)
+                    throw new Error('Chromium performance.memory is unavailable.');
+                const typeByCellId = Array.from({ length: 16 }, (_, index) => index);
+                const cellIds = new Int32Array(width * height);
+                for (let index = 0; index < cellIds.length; index++)
+                    cellIds[index] = index % typeByCellId.length;
+                const bytes = new Uint8Array(cellIds.buffer);
+                module.initialise(canvas, width, height, typeByCellId, 'Wall', { invokeMethodAsync: async () => { } });
+
+                async function frame(mcs) {
+                    module.draw(bytes, width, height, mcs, 'identity', boundaries);
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                }
+
+                const warmupEnds = performance.now() + 3000;
+                let mcs = 0;
+                while (performance.now() < warmupEnds)
+                    await frame(mcs++);
+
+                const initialHeapBytes = performance.memory?.usedJSHeapSize ?? 0;
+                const heapSamples = [initialHeapBytes];
+                const started = performance.now();
+                const measurementStartedAtMcs = mcs;
+                let nextHeapSample = started + 15000;
+                const ends = started + 60000;
+                while (performance.now() < ends) {
+                    await frame(mcs++);
+                    if (performance.now() >= nextHeapSample) {
+                        heapSamples.push(performance.memory?.usedJSHeapSize ?? initialHeapBytes);
+                        nextHeapSample += 15000;
+                    }
+                }
+                const elapsedMilliseconds = performance.now() - started;
+                const finalHeapBytes = performance.memory?.usedJSHeapSize ?? initialHeapBytes;
+                heapSamples.push(finalHeapBytes);
+                return {
+                    width,
+                    boundaries,
+                    frames: mcs - measurementStartedAtMcs,
+                    framesPerSecond: (mcs - measurementStartedAtMcs) / (elapsedMilliseconds / 1000),
+                    initialHeapBytes,
+                    peakHeapBytes: Math.max(...heapSamples),
+                    heapSamples
+                };
+            }
+            """,
+            new { width, boundaries });
 
     private static void CopyCanonicalExperiments(string destination)
     {

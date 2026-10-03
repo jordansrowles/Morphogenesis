@@ -10,4 +10,5 @@ public sealed record SimulationOperationalCounters(
     long ConnectivityFallbacks,
     long PublishedFrames,
     long CoalescedOrDroppedFrames,
-    long FrameCaptureTicks);
+    long FrameCaptureTicks,
+    long CapturedFrames = 0);

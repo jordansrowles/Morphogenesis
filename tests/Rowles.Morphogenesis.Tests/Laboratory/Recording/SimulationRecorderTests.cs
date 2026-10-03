@@ -132,7 +132,8 @@ public sealed class SimulationRecorderTests
                 await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
             }
         };
-        ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: 1_000_000, width: 16, height: 16);
+        const int MCSCount = 64;
+        ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: MCSCount, width: 16, height: 16);
         int outstandingBefore = ExactByteArrayPool.Instance.OutstandingCount;
         SimulationSession session = SimulationSessionFactory.Create(
             manifest,
@@ -145,11 +146,10 @@ public sealed class SimulationRecorderTests
             await session.StartAsync(Guid.NewGuid(), expectedRevision: 0);
             await WaitForRecordingStateAsync(session, RecordingState.Failed);
 
-            SimulationSessionSnapshot failedRecording = session.GetSnapshot();
-            Assert.Equal(SimulationSessionStatus.Running, failedRecording.Status);
-            Assert.Equal(1, failedRecording.Revision);
-            Assert.Contains(nameof(RecordingBackpressureException), failedRecording.RecordingFailure);
-            await session.StopAsync(Guid.NewGuid(), expectedRevision: 1);
+            SimulationSessionSnapshot completed = await WaitForSessionStatusAsync(session, SimulationSessionStatus.Completed);
+            Assert.Equal(MCSCount, completed.CurrentMcs);
+            Assert.Equal(RecordingState.Failed, completed.RecordingState);
+            Assert.Contains(nameof(RecordingBackpressureException), completed.RecordingFailure);
         }
         finally
         {
@@ -291,6 +291,22 @@ public sealed class SimulationRecorderTests
         }
 
         throw new TimeoutException($"The recording did not reach {state}.");
+    }
+
+    private static async Task<SimulationSessionSnapshot> WaitForSessionStatusAsync(
+        SimulationSession session,
+        SimulationSessionStatus status)
+    {
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+        await using IAsyncEnumerator<SimulationSessionSnapshot> snapshots =
+            session.WatchStateAsync(timeout.Token).GetAsyncEnumerator();
+        while (await snapshots.MoveNextAsync().ConfigureAwait(false))
+        {
+            if (snapshots.Current.Status == status)
+                return snapshots.Current;
+        }
+
+        throw new TimeoutException($"The session did not reach {status}.");
     }
 
     private static async Task<int[]> CopyLatestFrameAsync(SimulationSession session)

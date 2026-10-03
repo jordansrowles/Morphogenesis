@@ -1,27 +1,32 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using Microsoft.Data.Sqlite;
 using Rowles.Morphogenesis.Server.Configuration;
+using Rowles.Morphogenesis.Server.Diagnostics;
 
 namespace Rowles.Morphogenesis.Server.Persistence;
 
 public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
 {
-    private const int Capacity = 128;
     private readonly string _connectionString;
-    private readonly Channel<IWriteOperation> _operations = Channel.CreateBounded<IWriteOperation>(
-        new BoundedChannelOptions(Capacity)
-        {
-            SingleReader = true,
-            SingleWriter = false,
-            FullMode = BoundedChannelFullMode.Wait,
-            AllowSynchronousContinuations = false
-        });
+    private readonly Channel<IWriteOperation> _operations;
+    private readonly LaboratoryDiagnostics _diagnostics;
     private SqliteConnection? _connection;
     private Task? _worker;
     private int _started;
+    private long _queueDepth;
 
-    public SqliteWriteQueue(LaboratoryServerOptions options)
+    public SqliteWriteQueue(LaboratoryServerOptions options, LaboratoryDiagnostics diagnostics)
     {
+        _diagnostics = diagnostics;
+        _operations = Channel.CreateBounded<IWriteOperation>(
+            new BoundedChannelOptions(options.ResourceLimits.SqliteWriterQueueCapacity)
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                FullMode = BoundedChannelFullMode.Wait,
+                AllowSynchronousContinuations = false
+            });
         SqliteConnectionStringBuilder builder = new()
         {
             DataSource = options.DatabasePath,
@@ -31,6 +36,8 @@ public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
         };
         _connectionString = builder.ToString();
     }
+
+    public long QueueDepth => Interlocked.Read(ref _queueDepth);
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -56,7 +63,17 @@ public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
         ObjectDisposedException.ThrowIf(_operations.Reader.Completion.IsCompleted, this);
 
         WriteOperation<T> queued = new(operation);
-        await _operations.Writer.WriteAsync(queued, cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _queueDepth);
+        try
+        {
+            await _operations.Writer.WriteAsync(queued, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            Interlocked.Decrement(ref _queueDepth);
+            throw;
+        }
+
         return await queued.Completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -97,7 +114,18 @@ public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
     private async Task ProcessQueueAsync(SqliteConnection connection)
     {
         await foreach (IWriteOperation operation in _operations.Reader.ReadAllAsync().ConfigureAwait(false))
-            await operation.ExecuteAsync(connection).ConfigureAwait(false);
+        {
+            long started = Stopwatch.GetTimestamp();
+            try
+            {
+                await operation.ExecuteAsync(connection).ConfigureAwait(false);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _queueDepth);
+                _diagnostics.RecordSqliteWrite(Stopwatch.GetElapsedTime(started));
+            }
+        }
     }
 
     private interface IWriteOperation

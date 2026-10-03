@@ -4,6 +4,7 @@ using Rowles.Morphogenesis.Experiments.Results;
 using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Laboratory.Sessions;
 using Rowles.Morphogenesis.Server.Configuration;
+using Rowles.Morphogenesis.Server.Diagnostics;
 using Rowles.Morphogenesis.Server.Experiments;
 using Rowles.Morphogenesis.Server.Persistence;
 
@@ -15,17 +16,30 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
     private readonly ExperimentCatalog _catalog;
     private readonly LaboratoryDatabase _database;
     private readonly SqliteRecordingStore _recordingStore;
+    private readonly LaboratoryResourceLimits _limits;
+    private readonly SessionCapacityService _capacity;
+    private readonly LaboratoryDiagnostics _diagnostics;
+    private readonly ILogger<SimulationSessionRegistry> _logger;
+    private readonly SemaphoreSlim _policyGate = new(1, 1);
     private readonly CancellationTokenSource _stopping = new();
     private int _disposed;
 
     public SimulationSessionRegistry(
         ExperimentCatalog catalog,
         LaboratoryDatabase database,
-        SqliteRecordingStore recordingStore)
+        SqliteRecordingStore recordingStore,
+        LaboratoryResourceLimits limits,
+        SessionCapacityService capacity,
+        LaboratoryDiagnostics diagnostics,
+        ILogger<SimulationSessionRegistry> logger)
     {
         _catalog = catalog;
         _database = database;
         _recordingStore = recordingStore;
+        _limits = limits;
+        _capacity = capacity;
+        _diagnostics = diagnostics;
+        _logger = logger;
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -59,18 +73,31 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             throw new SessionRequestException("The requested canonical experiment does not exist.");
         if (request.ReplicateIndex < 0 || request.ReplicateIndex >= entry.ReplicateCount)
             throw new SessionRequestException("The replicate index is outside the experiment manifest.");
-        if (entry.GridWidth > 512 || entry.GridHeight > 512 || (long)entry.GridWidth * entry.GridHeight > 262_144)
-            throw new SessionRequestException("The experiment lattice exceeds the interactive session limit.");
-        if (request.LivePublishMaxFps is < 1 or > 20)
-            throw new SessionRequestException("Live publish FPS must be between 1 and 20.");
+        try
+        {
+            _limits.GetSiteCount(entry.GridWidth, entry.GridHeight);
+        }
+        catch (LaboratoryResourceLimitException exception)
+        {
+            _diagnostics.RecordCommandFailure();
+            throw new SessionRequestException(exception.Message);
+        }
+        if (request.LivePublishMaxFps < 1 || request.LivePublishMaxFps > _limits.MaxLivePublishFps)
+            throw new SessionRequestException($"Live publish FPS must be between 1 and {_limits.MaxLivePublishFps}.");
 
         ExperimentManifest manifest = _catalog.GetManifest(entry);
         RecordingOptions recordingOptions = new() { Enabled = request.RecordingEnabled };
         SimulationSession session = SimulationSessionFactory.Create(
             manifest,
             request.ReplicateIndex,
-            new SimulationSessionOptions { LivePublishMaxFps = request.LivePublishMaxFps },
-            recordingOptions,
+            new SimulationSessionOptions
+            {
+                LivePublishMaxFps = request.LivePublishMaxFps,
+                CommandQueueCapacity = _limits.CommandQueueCapacity,
+                MaxLiveSubscribers = _limits.MaxLiveSubscribersPerSession,
+                FrameBufferCount = _limits.FrameBufferCountPerSession
+            },
+            recordingOptions with { WriterQueueCapacity = _limits.RecordingWriterQueueCapacity },
             request.RecordingEnabled ? _recordingStore : null);
         ActiveSession active = new(session, manifest, DateTimeOffset.UtcNow);
         try
@@ -93,8 +120,18 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             if (!_sessions.TryAdd(session.Metadata.SessionId, active))
                 throw new InvalidOperationException("A session identifier was already registered.");
 
-            active.StartObservers(_stopping.Token, _database);
+            active.StartObservers(_stopping.Token, _database, _capacity, _logger);
             await PersistSnapshotAsync(active, session.GetSnapshot().LatestMeasurement, cancellationToken).ConfigureAwait(false);
+            if (request.RecordingEnabled)
+            {
+                _logger.LogInformation(
+                    "Recording started for session {SessionId}, experiment {ExperimentId}, replicate {ReplicateId}, MCS {Mcs}, revision {Revision}",
+                    session.Metadata.SessionId,
+                    session.Metadata.RunIdentity.ExperimentId,
+                    session.Metadata.RunIdentity.ReplicateId,
+                    session.GetSnapshot().CurrentMcs,
+                    session.GetSnapshot().Revision);
+            }
             return await GetDtoAsync(active, cancellationToken).ConfigureAwait(false);
         }
         catch
@@ -131,6 +168,165 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         if (!_sessions.TryGetValue(sessionId, out ActiveSession? active))
             return await GetSessionAsync(sessionId, cancellationToken).ConfigureAwait(false);
         return await GetDtoAsync(active, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask<SimulationCommandResult> ExecuteCommandAsync(
+        Guid sessionId,
+        SimulationCommandKind kind,
+        Guid commandId,
+        long expectedRevision,
+        CancellationToken cancellationToken = default)
+    {
+        await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!_sessions.TryGetValue(sessionId, out ActiveSession? active))
+                throw new KeyNotFoundException($"Live session '{sessionId:D}' was not found.");
+
+            SimulationSessionStatus status = active.Session.GetSnapshot().Status;
+            bool reservesRunning = kind is SimulationCommandKind.Start or SimulationCommandKind.Resume;
+            bool reservesStep = kind == SimulationCommandKind.Step &&
+                status is SimulationSessionStatus.Created or SimulationSessionStatus.Paused;
+            if (reservesRunning && !_capacity.TryReserveRunning(sessionId))
+                throw new SessionCapacityException("The maximum number of running simulations has been reached.");
+            if (reservesStep && !_capacity.TryReserveStep(sessionId))
+                throw new SessionCapacityException("No transient simulation slot is available for this step.");
+
+            try
+            {
+                SimulationCommandResult result = kind switch
+                {
+                    SimulationCommandKind.Start => await active.Session.StartAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
+                    SimulationCommandKind.Pause => await active.Session.PauseAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
+                    SimulationCommandKind.Resume => await active.Session.ResumeAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
+                    SimulationCommandKind.Step => await active.Session.StepAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
+                    SimulationCommandKind.Stop => await active.Session.StopAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
+                    _ => throw new ArgumentOutOfRangeException(nameof(kind))
+                };
+
+                SimulationSessionSnapshot after = active.Session.GetSnapshot();
+                _capacity.ObserveStatus(sessionId, after.Status);
+                if (result.Disposition == SimulationCommandDisposition.Applied)
+                {
+                    active.MarkActivity(DateTimeOffset.UtcNow);
+                    _logger.LogInformation(
+                        "Applied {CommandKind} to simulation session {SessionId} at MCS {Mcs} revision {Revision}",
+                        kind,
+                        sessionId,
+                        after.CurrentMcs,
+                        after.Revision);
+                    if (kind is SimulationCommandKind.Pause or SimulationCommandKind.Stop)
+                        _capacity.ReleaseRunning(sessionId);
+                    if (kind == SimulationCommandKind.Pause)
+                        await EnforcePausedSessionLimitAsync(sessionId, cancellationToken).ConfigureAwait(false);
+                }
+                else if (result.Disposition == SimulationCommandDisposition.Conflict)
+                {
+                    _diagnostics.RecordCommandConflict();
+                    _logger.LogWarning(
+                        "Rejected stale {CommandKind} for simulation session {SessionId}: expected revision {ExpectedRevision}, current revision {CurrentRevision}",
+                        kind,
+                        sessionId,
+                        expectedRevision,
+                        result.Revision);
+                }
+                else
+                {
+                    _diagnostics.RecordCommandFailure();
+                    _logger.LogWarning(
+                        "Rejected invalid {CommandKind} for simulation session {SessionId} in status {Status}",
+                        kind,
+                        sessionId,
+                        result.Status);
+                }
+
+                return result;
+            }
+            catch
+            {
+                SimulationSessionStatus currentStatus = active.Session.GetSnapshot().Status;
+                if (currentStatus != SimulationSessionStatus.Running)
+                    _capacity.ReleaseRunning(sessionId);
+                if (reservesStep)
+                    _capacity.CompleteStep(sessionId);
+                _diagnostics.RecordCommandFailure();
+                throw;
+            }
+            finally
+            {
+                if (reservesStep)
+                    _capacity.CompleteStep(sessionId);
+                if (reservesRunning && active.Session.GetSnapshot().Status != SimulationSessionStatus.Running)
+                    _capacity.ReleaseRunning(sessionId);
+            }
+        }
+        finally
+        {
+            _policyGate.Release();
+        }
+    }
+
+    public void MarkActivity(Guid sessionId)
+    {
+        if (_sessions.TryGetValue(sessionId, out ActiveSession? active))
+            active.MarkActivity(DateTimeOffset.UtcNow);
+    }
+
+    public async Task<int> CancelIdleSessionsAsync(DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
+    {
+        await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ActiveSession[] idle = _sessions.Values
+                .Where(active => IsIdle(active, nowUtc))
+                .OrderBy(active => active.LastActivityUtc)
+                .ToArray();
+            int cancelled = 0;
+            foreach (ActiveSession active in idle)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
+                string reason = snapshot.Status == SimulationSessionStatus.Created
+                    ? "CreatedSessionIdleTimeout"
+                    : "PausedSessionIdleTimeout";
+                SimulationCommandResult result = await active.Session.CancelForResourcePolicyAsync(reason, cancellationToken).ConfigureAwait(false);
+                if (result.Disposition != SimulationCommandDisposition.Applied)
+                    continue;
+
+                await RemoveTerminalSessionAsync(active, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation(
+                    "Cancelled idle simulation session {SessionId} under resource policy {Policy}",
+                    snapshot.SessionId,
+                    reason);
+                cancelled++;
+            }
+
+            return cancelled;
+        }
+        finally
+        {
+            _policyGate.Release();
+        }
+    }
+
+    public async Task RemovePersistedSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_sessions.TryGetValue(sessionId, out ActiveSession? active))
+            {
+                await active.StopObserversAsync().ConfigureAwait(false);
+                _diagnostics.RecordRetiredSession(active.Session.GetSnapshot());
+                _sessions.TryRemove(sessionId, out _);
+                _capacity.RemoveSession(sessionId);
+                await active.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            _policyGate.Release();
+        }
     }
 
     public async Task<IReadOnlyList<PersistedMetricSample>> GetMetricsAsync(
@@ -182,6 +378,68 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         }
     }
 
+    private async Task EnforcePausedSessionLimitAsync(Guid justPausedSessionId, CancellationToken cancellationToken)
+    {
+        ActiveSession[] paused = _sessions.Values
+            .Where(active => active.Session.GetSnapshot().Status == SimulationSessionStatus.Paused)
+            .OrderBy(active => active.LastActivityUtc)
+            .ToArray();
+        int excess = paused.Length - _limits.MaxPausedSessions;
+        for (int index = 0; index < excess; index++)
+        {
+            ActiveSession? oldestIdle = paused.FirstOrDefault(active =>
+                active.Session.Metadata.SessionId != justPausedSessionId &&
+                _sessions.ContainsKey(active.Session.Metadata.SessionId));
+            if (oldestIdle is null)
+                break;
+
+            SimulationSessionSnapshot snapshot = oldestIdle.Session.GetSnapshot();
+            SimulationCommandResult result = await oldestIdle.Session.CancelForResourcePolicyAsync(
+                "MaximumPausedSessionsExceeded",
+                cancellationToken).ConfigureAwait(false);
+            if (result.Disposition != SimulationCommandDisposition.Applied)
+                continue;
+
+            await RemoveTerminalSessionAsync(oldestIdle, cancellationToken).ConfigureAwait(false);
+            _logger.LogWarning(
+                "Cancelled paused simulation session {SessionId} because the paused-session capacity was exceeded; MCS {Mcs}, revision {Revision}",
+                snapshot.SessionId,
+                snapshot.CurrentMcs,
+                snapshot.Revision);
+        }
+    }
+
+    private async Task RemoveTerminalSessionAsync(ActiveSession active, CancellationToken cancellationToken)
+    {
+        Guid sessionId = active.Session.Metadata.SessionId;
+        await active.StopObserversAsync().ConfigureAwait(false);
+        SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
+        await _database.UpdateSnapshotAsync(
+            sessionId,
+            snapshot,
+            snapshot.LatestMeasurement,
+            DateTimeOffset.UtcNow,
+            cancellationToken).ConfigureAwait(false);
+        active.MarkPersisted(snapshot);
+        _diagnostics.RecordRetiredSession(snapshot);
+        _capacity.ObserveStatus(sessionId, snapshot.Status);
+        _sessions.TryRemove(sessionId, out _);
+        _capacity.RemoveSession(sessionId);
+        await active.DisposeAsync().ConfigureAwait(false);
+    }
+
+    private bool IsIdle(ActiveSession active, DateTimeOffset nowUtc)
+    {
+        SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
+        TimeSpan idle = nowUtc - active.LastActivityUtc;
+        return snapshot.Status switch
+        {
+            SimulationSessionStatus.Created => idle >= _limits.CreatedSessionIdleTimeout,
+            SimulationSessionStatus.Paused => idle >= _limits.PausedSessionIdleTimeout,
+            _ => false
+        };
+    }
+
     private async Task DisposeSessionsAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -192,9 +450,11 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         foreach (ActiveSession active in sessions)
         {
             await active.DisposeAsync().ConfigureAwait(false);
+            _capacity.RemoveSession(active.Session.Metadata.SessionId);
         }
         _sessions.Clear();
         _stopping.Dispose();
+        _policyGate.Dispose();
     }
 
     public ValueTask DisposeAsync() => new(DisposeSessionsAsync());
@@ -205,6 +465,9 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         private readonly object _timeGate = new();
         private long _lastProgressMcs;
         private long _lastPersistedRevision = -1;
+        private long _lastActivityUtcTicks;
+        private SimulationSessionStatus _observedStatus;
+        private RecordingState _observedRecordingState;
         private SimulationSessionStatus _lastPersistedStatus;
         private Task[] _observers = [];
 
@@ -213,6 +476,10 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             Session = session;
             Manifest = manifest;
             CreatedAtUtc = createdAtUtc;
+            _lastActivityUtcTicks = createdAtUtc.UtcTicks;
+            SimulationSessionSnapshot snapshot = session.GetSnapshot();
+            _observedStatus = snapshot.Status;
+            _observedRecordingState = snapshot.RecordingState;
         }
 
         internal SimulationSession Session { get; }
@@ -221,13 +488,21 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         internal SemaphoreSlim PersistenceGate { get; } = new(1, 1);
         internal DateTimeOffset? StartedAtUtc { get; private set; }
         internal DateTimeOffset? CompletedAtUtc { get; private set; }
+        internal DateTimeOffset LastActivityUtc => new(Interlocked.Read(ref _lastActivityUtcTicks), TimeSpan.Zero);
 
-        internal void StartObservers(CancellationToken registryStopping, LaboratoryDatabase database)
+        internal void MarkActivity(DateTimeOffset activityUtc) =>
+            Interlocked.Exchange(ref _lastActivityUtcTicks, activityUtc.UtcTicks);
+
+        internal void StartObservers(
+            CancellationToken registryStopping,
+            LaboratoryDatabase database,
+            SessionCapacityService capacity,
+            ILogger<SimulationSessionRegistry> logger)
         {
             CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(registryStopping, _observerCancellation.Token);
             _observers =
             [
-                ObserveStateAsync(linked.Token, database),
+                ObserveStateAsync(linked.Token, database, capacity, logger),
                 ObserveMeasurementsAsync(linked.Token, database),
                 PersistProgressAsync(linked.Token, database)
             ];
@@ -273,10 +548,50 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             PersistenceGate.Dispose();
         }
 
-        private async Task ObserveStateAsync(CancellationToken cancellationToken, LaboratoryDatabase database)
+        private async Task ObserveStateAsync(
+            CancellationToken cancellationToken,
+            LaboratoryDatabase database,
+            SessionCapacityService capacity,
+            ILogger<SimulationSessionRegistry> logger)
         {
             await foreach (SimulationSessionSnapshot snapshot in Session.WatchStateAsync(cancellationToken).ConfigureAwait(false))
             {
+                capacity.ObserveStatus(snapshot.SessionId, snapshot.Status);
+                if (snapshot.Status != _observedStatus)
+                {
+                    logger.LogInformation(
+                        "Simulation session {SessionId} changed to {Status} at MCS {Mcs}, revision {Revision}",
+                        snapshot.SessionId,
+                        snapshot.Status,
+                        snapshot.CurrentMcs,
+                        snapshot.Revision);
+                    _observedStatus = snapshot.Status;
+                }
+
+                if (snapshot.RecordingState != _observedRecordingState)
+                {
+                    if (snapshot.RecordingState == RecordingState.Failed)
+                    {
+                        logger.LogWarning(
+                            "Recording failed for session {SessionId} at MCS {Mcs}, revision {Revision}: {RecordingFailure}",
+                            snapshot.SessionId,
+                            snapshot.CurrentMcs,
+                            snapshot.Revision,
+                            snapshot.RecordingFailure);
+                    }
+                    else if (snapshot.RecordingState is RecordingState.Active or RecordingState.Completed)
+                    {
+                        logger.LogInformation(
+                            "Recording for session {SessionId} changed to {RecordingState} at MCS {Mcs}, revision {Revision}",
+                            snapshot.SessionId,
+                            snapshot.RecordingState,
+                            snapshot.CurrentMcs,
+                            snapshot.Revision);
+                    }
+
+                    _observedRecordingState = snapshot.RecordingState;
+                }
+
                 if (snapshot.Revision != _lastPersistedRevision || snapshot.Status != _lastPersistedStatus)
                     await PersistObservedSnapshotAsync(database, cancellationToken).ConfigureAwait(false);
             }
@@ -324,3 +639,5 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
 }
 
 public sealed class SessionRequestException(string message) : ArgumentException(message);
+
+public sealed class SessionCapacityException(string message) : InvalidOperationException(message);

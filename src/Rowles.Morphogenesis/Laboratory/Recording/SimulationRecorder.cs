@@ -109,7 +109,8 @@ internal sealed class SimulationRecorder : IAsyncDisposable
                 return;
             }
 
-            _accumulator.SortChanges();
+            _state.CopyCellIdsTo(_keyframeCellIds);
+            _accumulator.SortChanges(_keyframeCellIds);
             int deltaPayloadSize = DeltaPayloadCodec.Encode(
                 _accumulator.SortedIndices,
                 _accumulator.SortedCellIds,

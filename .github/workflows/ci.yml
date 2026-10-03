@@ -36,7 +36,7 @@ jobs:
         run: pwsh tests/Rowles.Morphogenesis.Server.Tests/bin/Release/net10.0/playwright.ps1 install chromium
 
       - name: Run complete solution suites
-        run: dotnet test Rowles.Morphogenesis.slnx --no-build --no-restore --configuration Release --filter "Category!=Scientific" --verbosity minimal
+        run: dotnet test Rowles.Morphogenesis.slnx --no-build --no-restore --configuration Release --filter "Category!=Scientific&Category!=Soak&Category!=BrowserPerformance" --verbosity minimal
 
   scientific-regression:
     name: Scientific regression

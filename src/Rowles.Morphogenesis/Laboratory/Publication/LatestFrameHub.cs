@@ -44,6 +44,15 @@ internal sealed class LatestFrameHub : IDisposable
         }
     }
 
+    internal int SubscriberCount
+    {
+        get
+        {
+            lock (_gate)
+                return _subscribers.Count;
+        }
+    }
+
     internal bool Publish(FrameBufferOwner owner, long sequence, long mcs)
     {
         lock (_gate)

@@ -1,0 +1,23 @@
+[Unit]
+Description=Rowles Morphogenesis visual laboratory
+After=network.target
+
+[Service]
+Type=simple
+User=morphogenesis
+Group=morphogenesis
+WorkingDirectory=/opt/rowles-morphogenesis
+ExecStart=/usr/bin/dotnet /opt/rowles-morphogenesis/Rowles.Morphogenesis.Server.dll
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+Environment=Laboratory__DataDirectory=/var/lib/rowles-morphogenesis
+Environment=Laboratory__LogDirectory=/var/log/rowles-morphogenesis
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rowles-morphogenesis /var/log/rowles-morphogenesis
+
+[Install]
+WantedBy=multi-user.target

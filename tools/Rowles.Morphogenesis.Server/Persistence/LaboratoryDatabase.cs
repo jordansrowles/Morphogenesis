@@ -6,6 +6,7 @@ using Rowles.Morphogenesis.Experiments.Results;
 using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Laboratory.Sessions;
 using Rowles.Morphogenesis.Server.Configuration;
+using Rowles.Morphogenesis.Server.Diagnostics;
 
 namespace Rowles.Morphogenesis.Server.Persistence;
 
@@ -16,12 +17,17 @@ public sealed class LaboratoryDatabase
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly LaboratoryServerOptions _options;
     private readonly SqliteWriteQueue _writeQueue;
+    private readonly LaboratoryDiagnostics _diagnostics;
     private readonly string _readConnectionString;
 
-    public LaboratoryDatabase(LaboratoryServerOptions options, SqliteWriteQueue writeQueue)
+    public LaboratoryDatabase(
+        LaboratoryServerOptions options,
+        SqliteWriteQueue writeQueue,
+        LaboratoryDiagnostics diagnostics)
     {
         _options = options;
         _writeQueue = writeQueue;
+        _diagnostics = diagnostics;
         SqliteConnectionStringBuilder builder = new()
         {
             DataSource = options.DatabasePath,
@@ -235,13 +241,36 @@ public sealed class LaboratoryDatabase
             return true;
         }, cancellationToken).AsTask();
 
-    public Task AppendFrameAsync(
+    public async Task AppendFrameAsync(
         Guid sessionId,
         EncodedRecordingFrame frame,
-        CancellationToken cancellationToken = default) =>
-        _writeQueue.ExecuteAsync(async (connection, token) =>
+        CancellationToken cancellationToken = default)
+    {
+        await _writeQueue.ExecuteAsync(async (connection, token) =>
         {
             await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync(token).ConfigureAwait(false);
+            await using (SqliteCommand current = connection.CreateCommand())
+            {
+                current.Transaction = transaction;
+                current.CommandText = """
+                    SELECT RecordingBytes, (SELECT COALESCE(SUM(RecordingBytes), 0) FROM Runs)
+                    FROM Runs WHERE Id = $runId;
+                    """;
+                current.Parameters.AddWithValue("$runId", sessionId.ToString("D"));
+                await using SqliteDataReader reader = await current.ExecuteReaderAsync(token).ConfigureAwait(false);
+                if (!await reader.ReadAsync(token).ConfigureAwait(false))
+                    throw new KeyNotFoundException($"Persisted run '{sessionId:D}' was not found.");
+
+                long projectedRunBytes = checked(reader.GetInt64(0) + frame.EnvelopeBytes.LongLength);
+                long projectedStoredBytes = checked(reader.GetInt64(1) + frame.EnvelopeBytes.LongLength);
+                if (projectedRunBytes > _options.ResourceLimits.MaxRecordingBytesPerRun ||
+                    projectedStoredBytes > _options.ResourceLimits.MaxStoredRecordingBytes)
+                {
+                    throw new RecordingStorageLimitExceededException(
+                        "RecordingStorageLimitExceeded: the projected frame would exceed the configured per-run or stored recording byte limit.");
+                }
+            }
+
             await using (SqliteCommand insert = connection.CreateCommand())
             {
                 insert.Transaction = transaction;
@@ -275,6 +304,54 @@ public sealed class LaboratoryDatabase
 
             await transaction.CommitAsync(token).ConfigureAwait(false);
             return true;
+        }, cancellationToken).ConfigureAwait(false);
+        _diagnostics.RecordRecordingBytes(frame.EnvelopeBytes.LongLength);
+    }
+
+    public Task<RetentionDeletionResult> DeleteExpiredRunsAndEnforceCapsAsync(
+        DateTimeOffset terminalCutoffUtc,
+        int maximumRunCount,
+        long maximumRecordingBytes,
+        CancellationToken cancellationToken = default) =>
+        _writeQueue.ExecuteAsync(async (connection, token) =>
+        {
+            await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync(token).ConfigureAwait(false);
+            HashSet<Guid> deletedRunIds = [];
+            string[] expiredIds = await ReadRunIdsAsync(
+                connection,
+                transaction,
+                """
+                SELECT Id FROM Runs
+                WHERE Status IN ($completed, $failed, $interrupted, $cancelled)
+                  AND CompletedAtUtc IS NOT NULL AND CompletedAtUtc < $cutoff;
+                """,
+                command =>
+                {
+                    command.Parameters.AddWithValue("$completed", (int)SimulationSessionStatus.Completed);
+                    command.Parameters.AddWithValue("$failed", (int)SimulationSessionStatus.Failed);
+                    command.Parameters.AddWithValue("$interrupted", (int)SimulationSessionStatus.Interrupted);
+                    command.Parameters.AddWithValue("$cancelled", (int)SimulationSessionStatus.Cancelled);
+                    command.Parameters.AddWithValue("$cutoff", FormatUtc(terminalCutoffUtc));
+                },
+                token).ConfigureAwait(false);
+            foreach (string id in expiredIds)
+                deletedRunIds.Add(Guid.Parse(id));
+            await DeleteRunsAsync(connection, transaction, expiredIds, token).ConfigureAwait(false);
+
+            (long runCount, long storedBytes) = await ReadStoredCountsAsync(connection, transaction, token).ConfigureAwait(false);
+            while (runCount > maximumRunCount || storedBytes > maximumRecordingBytes)
+            {
+                string? oldestTerminalId = await ReadOldestTerminalRunIdAsync(connection, transaction, token).ConfigureAwait(false);
+                if (oldestTerminalId is null)
+                    break;
+
+                await DeleteRunsAsync(connection, transaction, [oldestTerminalId], token).ConfigureAwait(false);
+                deletedRunIds.Add(Guid.Parse(oldestTerminalId));
+                (runCount, storedBytes) = await ReadStoredCountsAsync(connection, transaction, token).ConfigureAwait(false);
+            }
+
+            await transaction.CommitAsync(token).ConfigureAwait(false);
+            return new RetentionDeletionResult(deletedRunIds.ToArray(), runCount, storedBytes);
         }, cancellationToken).AsTask();
 
     public Task CompleteRecordingAsync(
@@ -500,6 +577,76 @@ public sealed class LaboratoryDatabase
 
     public Task<int> GetUserVersionAsync(CancellationToken cancellationToken = default) =>
         ReadAsync(ReadUserVersionAsync, cancellationToken);
+
+    private static async Task<string[]> ReadRunIdsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string sql,
+        Action<SqliteCommand> bindParameters,
+        CancellationToken cancellationToken)
+    {
+        await using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        bindParameters(command);
+        List<string> ids = [];
+        await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            ids.Add(reader.GetString(0));
+        return ids.ToArray();
+    }
+
+    private static async Task DeleteRunsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        IReadOnlyList<string> ids,
+        CancellationToken cancellationToken)
+    {
+        await using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "DELETE FROM Runs WHERE Id = $id;";
+        SqliteParameter idParameter = command.Parameters.Add("$id", SqliteType.Text);
+        foreach (string id in ids)
+        {
+            idParameter.Value = id;
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<(long RunCount, long StoredBytes)> ReadStoredCountsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT COUNT(*), COALESCE(SUM(RecordingBytes), 0) FROM Runs;";
+        await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            throw new InvalidDataException("The run count query returned no aggregate row.");
+        return (reader.GetInt64(0), reader.GetInt64(1));
+    }
+
+    private static async Task<string?> ReadOldestTerminalRunIdAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            SELECT Id FROM Runs
+            WHERE Status IN ($completed, $failed, $interrupted, $cancelled)
+            ORDER BY COALESCE(CompletedAtUtc, CreatedAtUtc), CreatedAtUtc
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$completed", (int)SimulationSessionStatus.Completed);
+        command.Parameters.AddWithValue("$failed", (int)SimulationSessionStatus.Failed);
+        command.Parameters.AddWithValue("$interrupted", (int)SimulationSessionStatus.Interrupted);
+        command.Parameters.AddWithValue("$cancelled", (int)SimulationSessionStatus.Cancelled);
+        object? value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        return value is string id ? id : null;
+    }
 
     private Task InsertRunAsync(
         string manifestJson,

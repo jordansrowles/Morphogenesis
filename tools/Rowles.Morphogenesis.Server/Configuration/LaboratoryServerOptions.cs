@@ -4,9 +4,6 @@ namespace Rowles.Morphogenesis.Server.Configuration;
 
 public sealed class LaboratoryServerOptions
 {
-    public const int DefaultMaxManifestBytes = 1024 * 1024;
-    public const int DefaultMaxRequestBodyBytes = 2 * 1024 * 1024;
-
     public string BindUrl { get; set; } = "http://127.0.0.1:5080";
 
     public string DataDirectory { get; set; } = "./data";
@@ -17,9 +14,7 @@ public sealed class LaboratoryServerOptions
 
     public string CanonicalExperimentsDirectory { get; set; } = Path.Combine(AppContext.BaseDirectory, "experiments", "canonical");
 
-    public int MaxManifestBytes { get; set; } = DefaultMaxManifestBytes;
-
-    public int MaxRequestBodyBytes { get; set; } = DefaultMaxRequestBodyBytes;
+    public LaboratoryResourceLimits ResourceLimits { get; set; } = new();
 
     public string DatabasePath => Path.Combine(DataDirectory, DatabaseFileName);
 
@@ -56,7 +51,6 @@ public sealed class LaboratoryServerOptions
             throw new InvalidOperationException("DatabaseFileName must be a file name without a directory component.");
         }
 
-        if (MaxManifestBytes <= 0 || MaxRequestBodyBytes <= 0)
-            throw new InvalidOperationException("Manifest and request body limits must be positive.");
+        ResourceLimits.Validate();
     }
 }

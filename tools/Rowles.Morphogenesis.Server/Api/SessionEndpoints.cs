@@ -49,6 +49,7 @@ public static class SessionEndpoints
         }
         catch (SessionRequestException exception)
         {
+            logger.LogWarning(exception, "Rejected session creation for experiment {ExperimentId}", request.ExperimentId);
             return Results.BadRequest(new { error = exception.Message });
         }
         catch (Exception exception) when (exception is ArgumentOutOfRangeException or ArgumentException)
@@ -78,19 +79,19 @@ public static class SessionEndpoints
     }
 
     private static Task<IResult> StartAsync(Guid id, SessionCommandRequest? request, SimulationSessionRegistry registry, ILoggerFactory loggerFactory, CancellationToken token) =>
-        ExecuteCommandAsync(id, request, registry, loggerFactory, "start", static (session, command, ct) => session.StartAsync(command.CommandId, command.ExpectedRevision, ct), token);
+        ExecuteCommandAsync(id, request, registry, loggerFactory, "start", SimulationCommandKind.Start, token);
 
     private static Task<IResult> PauseAsync(Guid id, SessionCommandRequest? request, SimulationSessionRegistry registry, ILoggerFactory loggerFactory, CancellationToken token) =>
-        ExecuteCommandAsync(id, request, registry, loggerFactory, "pause", static (session, command, ct) => session.PauseAsync(command.CommandId, command.ExpectedRevision, ct), token);
+        ExecuteCommandAsync(id, request, registry, loggerFactory, "pause", SimulationCommandKind.Pause, token);
 
     private static Task<IResult> ResumeAsync(Guid id, SessionCommandRequest? request, SimulationSessionRegistry registry, ILoggerFactory loggerFactory, CancellationToken token) =>
-        ExecuteCommandAsync(id, request, registry, loggerFactory, "resume", static (session, command, ct) => session.ResumeAsync(command.CommandId, command.ExpectedRevision, ct), token);
+        ExecuteCommandAsync(id, request, registry, loggerFactory, "resume", SimulationCommandKind.Resume, token);
 
     private static Task<IResult> StepAsync(Guid id, SessionCommandRequest? request, SimulationSessionRegistry registry, ILoggerFactory loggerFactory, CancellationToken token) =>
-        ExecuteCommandAsync(id, request, registry, loggerFactory, "step", static (session, command, ct) => session.StepAsync(command.CommandId, command.ExpectedRevision, ct), token);
+        ExecuteCommandAsync(id, request, registry, loggerFactory, "step", SimulationCommandKind.Step, token);
 
     private static Task<IResult> StopAsync(Guid id, SessionCommandRequest? request, SimulationSessionRegistry registry, ILoggerFactory loggerFactory, CancellationToken token) =>
-        ExecuteCommandAsync(id, request, registry, loggerFactory, "stop", static (session, command, ct) => session.StopAsync(command.CommandId, command.ExpectedRevision, ct), token);
+        ExecuteCommandAsync(id, request, registry, loggerFactory, "stop", SimulationCommandKind.Stop, token);
 
     private static async Task<IResult> ExecuteCommandAsync(
         Guid id,
@@ -98,7 +99,7 @@ public static class SessionEndpoints
         SimulationSessionRegistry registry,
         ILoggerFactory loggerFactory,
         string commandName,
-        Func<SimulationSession, SessionCommandRequest, CancellationToken, ValueTask<SimulationCommandResult>> command,
+        SimulationCommandKind commandKind,
         CancellationToken cancellationToken)
     {
         ILogger logger = loggerFactory.CreateLogger("Rowles.Morphogenesis.Server.SessionEndpoints");
@@ -123,7 +124,21 @@ public static class SessionEndpoints
                 : Results.Conflict(historical);
         }
 
-        SimulationCommandResult result = await command(session, request, cancellationToken).ConfigureAwait(false);
+        SimulationCommandResult result;
+        try
+        {
+            result = await registry.ExecuteCommandAsync(
+                id,
+                commandKind,
+                request.CommandId,
+                request.ExpectedRevision,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (SessionCapacityException exception)
+        {
+            logger.LogWarning(exception, "Rejected {CommandName} because laboratory session capacity is exhausted for {SessionId}", commandName, id);
+            return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+        }
         SessionDto? authoritative = await registry.GetAuthoritativeDtoAsync(id, cancellationToken).ConfigureAwait(false);
         if (authoritative is not null)
         {
@@ -250,6 +265,8 @@ public static class SessionEndpoints
         if (!registry.TryGetSession(id, out SimulationSession session))
             return Results.NotFound();
         CellInspection? inspection = await session.InspectCellAsync(cellId, cancellationToken).ConfigureAwait(false);
+        if (inspection is not null)
+            registry.MarkActivity(id);
         return inspection is null ? Results.NotFound() : Results.Ok(inspection);
     }
 

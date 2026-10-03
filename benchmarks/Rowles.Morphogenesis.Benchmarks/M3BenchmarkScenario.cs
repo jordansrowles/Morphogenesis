@@ -8,6 +8,8 @@ internal sealed record M3BenchmarkScenario(string Id, ExperimentManifest Manifes
 {
     public static M3BenchmarkScenario[] All { get; } = CreateAll();
 
+    public static M3BenchmarkScenario Interactive512 { get; } = CreateInteractive512();
+
     public static M3BenchmarkScenario Get(string id) =>
         All.Single(scenario => scenario.Id.Equals(id, StringComparison.Ordinal));
 
@@ -36,6 +38,13 @@ internal sealed record M3BenchmarkScenario(string Id, ExperimentManifest Manifes
             new("B05-scale-256", b05c, 20),
             new("B06-wall-control", b06, 1000)
         ];
+    }
+
+    private static M3BenchmarkScenario CreateInteractive512()
+    {
+        ExperimentManifest control = All.Single(scenario => scenario.Id == "B01-e02-control").Manifest;
+        ExperimentManifest manifest = Scale(control, "B05-interactive-512", 512, 1_024, 1, BoundaryMode.Wall);
+        return new M3BenchmarkScenario("B05-interactive-512", manifest, 1);
     }
 
     private static ExperimentManifest Scale(ExperimentManifest baseline, string id, int gridSize,

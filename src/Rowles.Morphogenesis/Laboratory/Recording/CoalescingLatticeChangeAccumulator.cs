@@ -4,11 +4,11 @@ namespace Rowles.Morphogenesis.Laboratory.Recording;
 
 public sealed class CoalescingLatticeChangeAccumulator : ILatticeMutationSink
 {
-    private readonly int[] _positionBySite;
+    private readonly ulong[] _changedSiteWords;
     private readonly int[] _changedIndices;
     private readonly int[] _changedCellIds;
     private int _count;
-    private bool _isSorted = true;
+    private bool _indicesSorted = true;
 
     public CoalescingLatticeChangeAccumulator(int siteCount)
     {
@@ -17,13 +17,12 @@ public sealed class CoalescingLatticeChangeAccumulator : ILatticeMutationSink
             throw new ArgumentOutOfRangeException(nameof(siteCount));
         }
 
-        _positionBySite = new int[siteCount];
-        Array.Fill(_positionBySite, -1);
+        _changedSiteWords = new ulong[checked((siteCount + 63) / 64)];
         _changedIndices = new int[siteCount];
         _changedCellIds = new int[siteCount];
     }
 
-    public int SiteCount => _positionBySite.Length;
+    public int SiteCount => _changedIndices.Length;
 
     public int Count => _count;
 
@@ -31,23 +30,16 @@ public sealed class CoalescingLatticeChangeAccumulator : ILatticeMutationSink
     {
         get
         {
-            EnsureSorted();
+            EnsureIndicesSorted();
             return _changedIndices.AsSpan(0, _count);
         }
     }
 
-    public ReadOnlySpan<int> SortedCellIds
-    {
-        get
-        {
-            EnsureSorted();
-            return _changedCellIds.AsSpan(0, _count);
-        }
-    }
+    public ReadOnlySpan<int> SortedCellIds => _changedCellIds.AsSpan(0, _count);
 
     public void AcceptedCopy(int targetIndex, int oldCellId, int newCellId)
     {
-        if ((uint)targetIndex >= (uint)_positionBySite.Length)
+        if ((uint)targetIndex >= (uint)SiteCount)
         {
             throw new ArgumentOutOfRangeException(nameof(targetIndex));
         }
@@ -57,84 +49,47 @@ public sealed class CoalescingLatticeChangeAccumulator : ILatticeMutationSink
             throw new ArgumentOutOfRangeException(nameof(newCellId));
         }
 
-        int position = _positionBySite[targetIndex];
-        if (position < 0)
+        int wordIndex = targetIndex >> 6;
+        ulong siteMask = 1UL << (targetIndex & 63);
+        ulong changedSites = _changedSiteWords[wordIndex];
+        if ((changedSites & siteMask) == 0)
         {
-            position = _count++;
-            _positionBySite[targetIndex] = position;
-            _changedIndices[position] = targetIndex;
+            _changedSiteWords[wordIndex] = changedSites | siteMask;
+            _changedIndices[_count++] = targetIndex;
+            _indicesSorted = false;
         }
-
-        _changedCellIds[position] = newCellId;
-        _isSorted = false;
     }
 
-    public void SortChanges()
+    public void SortChanges(ReadOnlySpan<int> cellIdsBySite)
     {
-        EnsureSorted();
+        if (cellIdsBySite.Length != SiteCount)
+        {
+            throw new ArgumentException("Cell ID data must match the accumulator site count.", nameof(cellIdsBySite));
+        }
+
+        EnsureIndicesSorted();
+        for (int position = 0; position < _count; position++)
+        {
+            _changedCellIds[position] = cellIdsBySite[_changedIndices[position]];
+        }
     }
 
     public void Reset()
     {
-        for (int position = 0; position < _count; position++)
-        {
-            _positionBySite[_changedIndices[position]] = -1;
-        }
-
+        Array.Clear(_changedSiteWords);
         _count = 0;
-        _isSorted = true;
+        _indicesSorted = true;
     }
 
-    private void EnsureSorted()
+    private void EnsureIndicesSorted()
     {
-        if (_isSorted || _count < 2)
+        if (_indicesSorted || _count < 2)
         {
-            _isSorted = true;
+            _indicesSorted = true;
             return;
         }
 
-        for (int root = _count / 2 - 1; root >= 0; root--)
-        {
-            SiftDown(root, _count);
-        }
-
-        for (int end = _count - 1; end > 0; end--)
-        {
-            Swap(0, end);
-            SiftDown(0, end);
-        }
-
-        _isSorted = true;
-    }
-
-    private void SiftDown(int root, int length)
-    {
-        while (true)
-        {
-            int child = checked(root * 2 + 1);
-            if (child >= length)
-            {
-                return;
-            }
-
-            if (child + 1 < length && _changedIndices[child] < _changedIndices[child + 1])
-            {
-                child++;
-            }
-
-            if (_changedIndices[root] >= _changedIndices[child])
-            {
-                return;
-            }
-
-            Swap(root, child);
-            root = child;
-        }
-    }
-
-    private void Swap(int first, int second)
-    {
-        (_changedIndices[first], _changedIndices[second]) = (_changedIndices[second], _changedIndices[first]);
-        (_changedCellIds[first], _changedCellIds[second]) = (_changedCellIds[second], _changedCellIds[first]);
+        Array.Sort(_changedIndices, 0, _count);
+        _indicesSorted = true;
     }
 }

@@ -21,7 +21,7 @@ public sealed class ExperimentCatalog
         foreach (string path in Directory.EnumerateFiles(directory, "*.json", SearchOption.TopDirectoryOnly))
         {
             FileInfo file = new(path);
-            if (file.Length > options.MaxManifestBytes)
+            if (file.Length > options.ResourceLimits.MaxManifestBytes)
                 throw new InvalidDataException($"Canonical manifest '{file.Name}' exceeds the configured manifest size limit.");
             string json = File.ReadAllText(path);
             ExperimentManifest manifest;

@@ -214,6 +214,7 @@ else
             _javascriptReady = true;
             CancellationTokenSource frameLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
             _frameLifetime = frameLifetime;
+            Registry.MarkActivity(Id);
             _frameWatcher = WatchFramesAsync(_session!.WatchFramesAsync(frameLifetime.Token), frameLifetime.Token);
         }
         else
@@ -222,19 +223,24 @@ else
         }
     }
 
-    private async Task StartAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StartAsync(Guid.NewGuid(), revision, token));
-    private async Task PauseAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.PauseAsync(Guid.NewGuid(), revision, token));
-    private async Task ResumeAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.ResumeAsync(Guid.NewGuid(), revision, token));
-    private async Task StepAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StepAsync(Guid.NewGuid(), revision, token));
-    private async Task StopAsync() => await ExecuteCommandAsync(static (session, revision, token) => session.StopAsync(Guid.NewGuid(), revision, token));
+    private async Task StartAsync() => await ExecuteCommandAsync(SimulationCommandKind.Start);
+    private async Task PauseAsync() => await ExecuteCommandAsync(SimulationCommandKind.Pause);
+    private async Task ResumeAsync() => await ExecuteCommandAsync(SimulationCommandKind.Resume);
+    private async Task StepAsync() => await ExecuteCommandAsync(SimulationCommandKind.Step);
+    private async Task StopAsync() => await ExecuteCommandAsync(SimulationCommandKind.Stop);
 
-    private async Task ExecuteCommandAsync(Func<SimulationSession, long, CancellationToken, ValueTask<SimulationCommandResult>> command)
+    private async Task ExecuteCommandAsync(SimulationCommandKind commandKind)
     {
         if (_session is null || _snapshot is null)
             return;
         try
         {
-            SimulationCommandResult result = await command(_session, _snapshot.Revision, _lifetime.Token);
+            SimulationCommandResult result = await Registry.ExecuteCommandAsync(
+                Id,
+                commandKind,
+                Guid.NewGuid(),
+                _snapshot.Revision,
+                _lifetime.Token);
             _snapshot = _session.GetSnapshot();
             _sessionDto = await Registry.GetSessionAsync(Id);
             _commandError = result.Disposition == SimulationCommandDisposition.Applied
@@ -359,6 +365,8 @@ else
         _inspection = cellId == 0 || _session is null
             ? null
             : await _session.InspectCellAsync(cellId, _lifetime.Token);
+        if (_inspection is not null)
+            Registry.MarkActivity(Id);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -436,21 +444,27 @@ else
         _frameWatcher = WatchFramesAsync(source.WatchFramesAsync(_frameLifetime.Token), _frameLifetime.Token);
     }
 
-    private async Task PlayRecordingAsync() { if (_recordedSource is not null) await _recordedSource.PlayAsync(_lifetime.Token); }
-    private async Task PauseRecordingAsync() { if (_recordedSource is not null) await _recordedSource.PauseAsync(_lifetime.Token); }
-    private async Task StepForwardAsync() { if (_recordedSource is not null) await _recordedSource.StepForwardAsync(_lifetime.Token); }
-    private async Task StepBackwardAsync() { if (_recordedSource is not null) await _recordedSource.StepBackwardAsync(_lifetime.Token); }
+    private async Task PlayRecordingAsync() { if (_recordedSource is not null) { Registry.MarkActivity(Id); await _recordedSource.PlayAsync(_lifetime.Token); } }
+    private async Task PauseRecordingAsync() { if (_recordedSource is not null) { Registry.MarkActivity(Id); await _recordedSource.PauseAsync(_lifetime.Token); } }
+    private async Task StepForwardAsync() { if (_recordedSource is not null) { Registry.MarkActivity(Id); await _recordedSource.StepForwardAsync(_lifetime.Token); } }
+    private async Task StepBackwardAsync() { if (_recordedSource is not null) { Registry.MarkActivity(Id); await _recordedSource.StepBackwardAsync(_lifetime.Token); } }
 
     private async Task SeekRecordingAsync(ChangeEventArgs args)
     {
         if (_recordedSource is not null && long.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long mcs))
+        {
+            Registry.MarkActivity(Id);
             await _recordedSource.SeekAsync(mcs, _lifetime.Token);
+        }
     }
 
     private void SetPlaybackRateAsync(ChangeEventArgs args)
     {
         if (_recordedSource is not null && double.TryParse(args.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double rate))
+        {
+            Registry.MarkActivity(Id);
             _recordedSource.SetPlaybackRate(rate);
+        }
     }
 
     private static bool IsTerminal(SimulationSessionStatus status) => status is

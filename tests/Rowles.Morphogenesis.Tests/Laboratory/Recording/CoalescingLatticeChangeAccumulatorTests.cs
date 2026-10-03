@@ -8,15 +8,20 @@ public sealed class CoalescingLatticeChangeAccumulatorTests
     public void OneAcceptedCopyIsExposedAndReset()
     {
         CoalescingLatticeChangeAccumulator accumulator = new(siteCount: 8);
+        int[] cellIds = new int[8];
+        cellIds[5] = 2;
 
         accumulator.AcceptedCopy(targetIndex: 5, oldCellId: 0, newCellId: 2);
+        accumulator.SortChanges(cellIds);
 
         Assert.Equal(1, accumulator.Count);
         Assert.Equal([5], accumulator.SortedIndices.ToArray());
         Assert.Equal([2], accumulator.SortedCellIds.ToArray());
         accumulator.Reset();
         Assert.Equal(0, accumulator.Count);
+        cellIds[5] = 0;
         accumulator.AcceptedCopy(targetIndex: 5, oldCellId: 2, newCellId: 0);
+        accumulator.SortChanges(cellIds);
         Assert.Equal([0], accumulator.SortedCellIds.ToArray());
     }
 
@@ -28,6 +33,9 @@ public sealed class CoalescingLatticeChangeAccumulatorTests
         accumulator.AcceptedCopy(targetIndex: 7, oldCellId: 0, newCellId: 1);
         accumulator.AcceptedCopy(targetIndex: 7, oldCellId: 1, newCellId: 3);
         accumulator.AcceptedCopy(targetIndex: 7, oldCellId: 3, newCellId: 2);
+        int[] cellIds = new int[16];
+        cellIds[7] = 2;
+        accumulator.SortChanges(cellIds);
 
         Assert.Equal(1, accumulator.Count);
         Assert.Equal([7], accumulator.SortedIndices.ToArray());
@@ -38,11 +46,14 @@ public sealed class CoalescingLatticeChangeAccumulatorTests
     public void ManyUniqueChangesAreSortedAlongsideTheirCellIds()
     {
         CoalescingLatticeChangeAccumulator accumulator = new(siteCount: 64);
+        int[] cellIds = new int[64];
         for (int index = 63; index >= 0; index--)
         {
-            accumulator.AcceptedCopy(index, oldCellId: 0, newCellId: index % 5);
+            cellIds[index] = index % 5;
+            accumulator.AcceptedCopy(index, oldCellId: 0, newCellId: cellIds[index]);
         }
 
+        accumulator.SortChanges(cellIds);
         Assert.Equal(64, accumulator.Count);
         Assert.Equal(Enumerable.Range(0, 64), accumulator.SortedIndices.ToArray());
         Assert.Equal(Enumerable.Range(0, 64).Select(index => index % 5), accumulator.SortedCellIds.ToArray());

@@ -1,0 +1,27 @@
+namespace Rowles.Morphogenesis.Server.Diagnostics;
+
+public sealed record LaboratoryDiagnosticsSnapshot(
+    int ActiveSessions,
+    int RunningSessions,
+    int PausedSessions,
+    int LiveSubscribers,
+    double McsPerSecond,
+    double AttemptsPerSecond,
+    double AcceptedPerSecond,
+    double RejectedPerSecond,
+    double NoOpsPerSecond,
+    long ConnectivityFallbacks,
+    long LiveFramesCaptured,
+    long LiveFramesPublished,
+    long LiveFramesCoalescedOrDropped,
+    double FrameCaptureMilliseconds,
+    double RecordingBytesPerSecond,
+    long RecordingFailures,
+    long RecordingQueueSaturations,
+    double SqliteWriteMilliseconds,
+    long SqliteWriterQueueDepth,
+    long CommandConflicts,
+    long CommandFailures,
+    long ProcessWorkingSetBytes,
+    long ManagedHeapBytes,
+    DateTimeOffset CapturedAtUtc);
