@@ -71,6 +71,22 @@ public sealed class LaboratoryApiClient : ILaboratoryApiClient
             return new CommandResponse(authoritative, Conflict: true, NotFound: false);
         }
 
+        if (response.StatusCode == HttpStatusCode.InternalServerError)
+        {
+            CommandFailureDto? failure = await response.Content
+                .ReadFromJsonAsync<CommandFailureDto>(_jsonOptions, cancellationToken)
+                .ConfigureAwait(false);
+            if (failure?.Session is not null)
+            {
+                return new CommandResponse(
+                    failure.Session,
+                    Conflict: false,
+                    NotFound: false,
+                    Failed: true,
+                    Error: failure.Failure ?? failure.Error);
+            }
+        }
+
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
         SessionDto session = await DeserializeRequiredAsync<SessionDto>(response, cancellationToken).ConfigureAwait(false);
         return new CommandResponse(session, Conflict: false, NotFound: false);

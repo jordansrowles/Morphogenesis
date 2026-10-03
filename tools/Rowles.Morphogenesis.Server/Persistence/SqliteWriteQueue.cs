@@ -6,7 +6,7 @@ using Rowles.Morphogenesis.Server.Diagnostics;
 
 namespace Rowles.Morphogenesis.Server.Persistence;
 
-public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
+public sealed class SqliteWriteQueue : IAsyncDisposable
 {
     private readonly string _connectionString;
     private readonly Channel<IWriteOperation> _operations;
@@ -74,7 +74,9 @@ public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
             throw;
         }
 
-        return await queued.Completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        // Cancellation governs admission only. Once accepted, the database write is
+        // authoritative and callers must observe its outcome before running cleanup.
+        return await queued.Completion.Task.ConfigureAwait(false);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -152,4 +154,19 @@ public sealed class SqliteWriteQueue : IHostedService, IAsyncDisposable
             }
         }
     }
+}
+
+public sealed class SqliteWriteQueueLifecycleService(SqliteWriteQueue queue) : IHostedLifecycleService
+{
+    public Task StartingAsync(CancellationToken cancellationToken) => queue.StartAsync(cancellationToken);
+
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task StartedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task StoppedAsync(CancellationToken cancellationToken) => queue.StopAsync(cancellationToken);
 }

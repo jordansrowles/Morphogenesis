@@ -19,17 +19,17 @@ public sealed record SimulationSessionOptions
 
         if (CommandQueueCapacity != 64)
         {
-            throw new ArgumentException("M4 session command queues have a fixed capacity of 64.", nameof(CommandQueueCapacity));
+            throw new ArgumentException("The session command queue capacity is fixed at 64.", nameof(CommandQueueCapacity));
         }
 
         if (MaxLiveSubscribers != 8)
         {
-            throw new ArgumentException("M4 sessions support exactly eight live subscribers.", nameof(MaxLiveSubscribers));
+            throw new ArgumentException("The session service supports exactly eight live subscribers.", nameof(MaxLiveSubscribers));
         }
 
         if (FrameBufferCount != 10)
         {
-            throw new ArgumentException("M4 sessions use exactly ten reusable frame buffers.", nameof(FrameBufferCount));
+            throw new ArgumentException("The session service uses exactly ten reusable frame buffers.", nameof(FrameBufferCount));
         }
     }
 }

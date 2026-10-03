@@ -195,6 +195,15 @@ public sealed class LaboratoryApiTests
         await Assert.ThrowsAsync<SqliteException>(async () =>
             await store.AppendFrameAsync(session.SessionId, frame, timeout.Token));
 
+        using HttpResponseMessage frameResponse = await client.GetAsync(
+            $"/api/sessions/{session.SessionId:D}/recording/frame?mcs=0",
+            timeout.Token);
+        Assert.Equal(HttpStatusCode.OK, frameResponse.StatusCode);
+        Assert.Equal("application/octet-stream", frameResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("0", frameResponse.Headers.GetValues("X-Morphogenesis-Frame-Mcs").Single());
+        Assert.Equal("0", frameResponse.Headers.GetValues("X-Morphogenesis-Frame-Sequence").Single());
+        Assert.NotEmpty(await frameResponse.Content.ReadAsByteArrayAsync(timeout.Token));
+
         using HttpResponseMessage recordingResponse = await client.GetAsync($"/api/sessions/{session.SessionId:D}/recording");
         Assert.Equal(HttpStatusCode.OK, recordingResponse.StatusCode);
         string recordingJson = await recordingResponse.Content.ReadAsStringAsync();
@@ -203,34 +212,87 @@ public sealed class LaboratoryApiTests
     }
 
     [Fact]
-    public async Task RunningSessionBecomesInterruptedOnNextProcessStart()
+    public async Task EveryOrphanedLiveStateBecomesInterruptedAndActiveRecordingFailsOnRestart()
     {
         using TemporaryLaboratoryRoot root = new();
-        Guid sessionId;
+        Guid createdId;
+        Guid runningId;
+        Guid pausedId;
+        Guid recordingId;
+        Guid terminalRecordingId;
         LaboratoryFactory firstFactory = new(root.Path);
         using (HttpClient client = firstFactory.CreateClient())
         {
             SessionDto created = await CreateSessionAsync(client, recording: false);
-            sessionId = created.SessionId;
+            createdId = created.SessionId;
+            SessionDto running = await CreateSessionAsync(client, recording: false);
             using HttpResponseMessage start = await client.PostAsJsonAsync(
-                $"/api/sessions/{sessionId:D}/start",
-                new SessionCommandRequest(Guid.NewGuid(), created.Revision));
+                $"/api/sessions/{running.SessionId:D}/start",
+                new SessionCommandRequest(Guid.NewGuid(), running.Revision));
             Assert.Equal(HttpStatusCode.OK, start.StatusCode);
-            await WaitForRunStatusAsync(firstFactory, sessionId, SimulationSessionStatus.Running);
+            runningId = running.SessionId;
+            await WaitForRunStatusAsync(firstFactory, runningId, SimulationSessionStatus.Running);
+
+            SessionDto paused = await CreateSessionAsync(client, recording: false);
+            using HttpResponseMessage pausedStart = await client.PostAsJsonAsync(
+                $"/api/sessions/{paused.SessionId:D}/start",
+                new SessionCommandRequest(Guid.NewGuid(), paused.Revision));
+            Assert.Equal(HttpStatusCode.OK, pausedStart.StatusCode);
+            SessionDto pausedRunning = (await pausedStart.Content.ReadFromJsonAsync<SessionDto>())!;
+            using HttpResponseMessage pause = await client.PostAsJsonAsync(
+                $"/api/sessions/{paused.SessionId:D}/pause",
+                new SessionCommandRequest(Guid.NewGuid(), pausedRunning.Revision));
+            Assert.Equal(HttpStatusCode.OK, pause.StatusCode);
+            pausedId = paused.SessionId;
+            await WaitForRunStatusAsync(firstFactory, pausedId, SimulationSessionStatus.Paused);
+
+            SessionDto recording = await CreateSessionAsync(client, recording: true);
+            recordingId = recording.SessionId;
+
+            SessionDto terminalRecording = await CreateSessionAsync(client, recording: true);
+            terminalRecordingId = terminalRecording.SessionId;
         }
 
         firstFactory.Dispose();
+        long frameCountBeforeRecovery = await SetRecordingActiveAndReadFrameCountAsync(firstFactory.DatabasePath, recordingId);
+        long terminalFrameCountBeforeRecovery = await SetRecordingActiveAndReadFrameCountAsync(
+            firstFactory.DatabasePath,
+            terminalRecordingId,
+            SimulationSessionStatus.Cancelled);
+        Assert.True(frameCountBeforeRecovery > 0);
+        Assert.True(terminalFrameCountBeforeRecovery > 0);
         using LaboratoryFactory restartedFactory = new(root.Path);
         using HttpClient restartedClient = restartedFactory.CreateClient();
-        SessionDto recovered = (await restartedClient.GetFromJsonAsync<SessionDto>($"/api/sessions/{sessionId:D}"))!;
-        Assert.Equal(SimulationSessionStatus.Interrupted, recovered.Status);
-        Assert.False(restartedFactory.Services.GetRequiredService<SimulationSessionRegistry>().TryGetSession(sessionId, out _));
-        using HttpResponseMessage result = await restartedClient.GetAsync($"/api/sessions/{sessionId:D}/result");
+        foreach (Guid sessionId in new[] { createdId, runningId, pausedId, recordingId })
+        {
+            SessionDto recovered = (await restartedClient.GetFromJsonAsync<SessionDto>($"/api/sessions/{sessionId:D}"))!;
+            Assert.Equal(SimulationSessionStatus.Interrupted, recovered.Status);
+            Assert.NotNull(recovered.CompletedAtUtc);
+            Assert.False(restartedFactory.Services.GetRequiredService<SimulationSessionRegistry>().TryGetSession(sessionId, out _));
+        }
+
+        PersistedRun recoveredRecording = (await restartedFactory.Services.GetRequiredService<LaboratoryDatabase>().GetRunAsync(recordingId))!;
+        Assert.Equal(RecordingState.Failed, recoveredRecording.RecordingState);
+        Assert.Equal(
+            "ServerRestartRecovery: The active recording writer was lost and recording cannot resume.",
+            recoveredRecording.RecordingFailure);
+        IReadOnlyList<RecordingFrameIndexEntry> recoveredFrames =
+            await restartedFactory.Services.GetRequiredService<LaboratoryDatabase>().GetFrameIndexAsync(recordingId);
+        Assert.Equal(frameCountBeforeRecovery, recoveredFrames.Count);
+
+        PersistedRun recoveredTerminalRecording = (await restartedFactory.Services.GetRequiredService<LaboratoryDatabase>().GetRunAsync(terminalRecordingId))!;
+        Assert.Equal(SimulationSessionStatus.Cancelled, recoveredTerminalRecording.Status);
+        Assert.Equal(RecordingState.Failed, recoveredTerminalRecording.RecordingState);
+        IReadOnlyList<RecordingFrameIndexEntry> recoveredTerminalFrames =
+            await restartedFactory.Services.GetRequiredService<LaboratoryDatabase>().GetFrameIndexAsync(terminalRecordingId);
+        Assert.Equal(terminalFrameCountBeforeRecovery, recoveredTerminalFrames.Count);
+
+        using HttpResponseMessage result = await restartedClient.GetAsync($"/api/sessions/{runningId:D}/result");
         Assert.Equal(HttpStatusCode.OK, result.StatusCode);
         string resultJson = await result.Content.ReadAsStringAsync();
         Assert.Contains("finalMeasurement", resultJson, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("heterotypic-interface-count", resultJson, StringComparison.Ordinal);
-        using HttpResponseMessage cells = await restartedClient.GetAsync($"/api/sessions/{sessionId:D}/cells/1");
+        using HttpResponseMessage cells = await restartedClient.GetAsync($"/api/sessions/{runningId:D}/cells/1");
         Assert.Equal(HttpStatusCode.NotFound, cells.StatusCode);
     }
 
@@ -301,6 +363,35 @@ public sealed class LaboratoryApiTests
             return Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
         }).AsTask();
 
+    private static async Task<long> SetRecordingActiveAndReadFrameCountAsync(
+        string databasePath,
+        Guid sessionId,
+        SimulationSessionStatus? status = null)
+    {
+        await using SqliteConnection connection = new($"Data Source={databasePath};Mode=ReadWrite");
+        await connection.OpenAsync();
+        await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync();
+        await using SqliteCommand count = connection.CreateCommand();
+        count.Transaction = transaction;
+        count.CommandText = "SELECT COUNT(*) FROM Frames WHERE RunId = $id;";
+        count.Parameters.AddWithValue("$id", sessionId.ToString("D"));
+        long frameCount = Convert.ToInt64(await count.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+
+        await using SqliteCommand update = connection.CreateCommand();
+        update.Transaction = transaction;
+        update.CommandText = """
+            UPDATE Runs
+            SET Status = COALESCE($status, Status), RecordingState = $active, RecordingFailure = NULL
+            WHERE Id = $id;
+            """;
+        update.Parameters.AddWithValue("$status", status is null ? DBNull.Value : (int)status.Value);
+        update.Parameters.AddWithValue("$active", (int)RecordingState.Active);
+        update.Parameters.AddWithValue("$id", sessionId.ToString("D"));
+        Assert.Equal(1, await update.ExecuteNonQueryAsync());
+        await transaction.CommitAsync();
+        return frameCount;
+    }
+
     private static async Task WaitForRunStatusAsync(
         LaboratoryFactory factory,
         Guid sessionId,
@@ -316,4 +407,5 @@ public sealed class LaboratoryApiTests
             await Task.Delay(25, timeout.Token);
         }
     }
+
 }

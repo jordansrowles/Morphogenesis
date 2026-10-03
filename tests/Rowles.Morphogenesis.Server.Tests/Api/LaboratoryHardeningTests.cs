@@ -69,6 +69,106 @@ public sealed class LaboratoryHardeningTests
     }
 
     [Fact]
+    public async Task ResidentCapacityRejectsCreationAndTerminalSessionsReleaseTheirReservation()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        LaboratoryResourceLimits limits = new() { MaxResidentSessions = 2 };
+        using LaboratoryFactory factory = new(root.Path, resourceLimits: limits);
+        using HttpClient client = factory.CreateClient();
+        SessionDto first = await CreateSessionAsync(client, recording: false);
+        _ = await CreateSessionAsync(client, recording: false);
+
+        using HttpResponseMessage rejected = await client.PostAsJsonAsync(
+            "/api/sessions",
+            new CreateSessionRequest(SortingExperimentId, 0, false, 10));
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+
+        using HttpResponseMessage stopped = await SendCommandResponseAsync(client, first, "stop");
+        Assert.Equal(HttpStatusCode.OK, stopped.StatusCode);
+        SimulationSessionRegistry registry = factory.Services.GetRequiredService<SimulationSessionRegistry>();
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+        while (registry.TryGetSession(first.SessionId, out _))
+            await Task.Delay(10, timeout.Token);
+
+        SessionDto? replacement = null;
+        while (!timeout.IsCancellationRequested)
+        {
+            using HttpResponseMessage response = await client.PostAsJsonAsync(
+                "/api/sessions",
+                new CreateSessionRequest(SortingExperimentId, 0, false, 10),
+                timeout.Token);
+            if (response.StatusCode == HttpStatusCode.Created)
+            {
+                replacement = (await response.Content.ReadFromJsonAsync<SessionDto>(timeout.Token))!;
+                break;
+            }
+
+            Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
+            await Task.Delay(10, timeout.Token);
+        }
+
+        Assert.NotNull(replacement);
+        Assert.NotEqual(first.SessionId, replacement.SessionId);
+        Assert.Equal(2, registry.GetLiveSessions().Count);
+    }
+
+    [Fact]
+    public async Task HostShutdownPersistsTerminalRecordingBeforeStoppingTheSqliteWriter()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        LaboratoryFactory factory = new(root.Path);
+        TaskCompletionSource writeEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource releaseWrite = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool factoryDisposed = false;
+        try
+        {
+            using HttpClient client = factory.CreateClient();
+            SessionDto created = await CreateSessionAsync(client, recording: true);
+            SqliteWriteQueue queue = factory.Services.GetRequiredService<SqliteWriteQueue>();
+            Task<bool> blockedWrite = queue.ExecuteAsync(async (_, cancellationToken) =>
+            {
+                writeEntered.TrySetResult();
+                await releaseWrite.Task.WaitAsync(cancellationToken);
+                return true;
+            }).AsTask();
+            await writeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            SimulationSessionRegistry registry = factory.Services.GetRequiredService<SimulationSessionRegistry>();
+            Assert.True(registry.TryGetSession(created.SessionId, out SimulationSession session));
+            SimulationCommandResult stopped = await session.StopAsync(Guid.NewGuid(), created.Revision);
+            Assert.Equal(SimulationCommandDisposition.Applied, stopped.Disposition);
+            Assert.Equal(SimulationSessionStatus.Cancelled, session.GetSnapshot().Status);
+
+            Task shutdown = factory.DisposeAsync().AsTask();
+            await Task.Delay(100);
+            releaseWrite.TrySetResult();
+            Assert.True(await blockedWrite.WaitAsync(TimeSpan.FromSeconds(5)));
+            await shutdown.WaitAsync(TimeSpan.FromSeconds(10));
+            factoryDisposed = true;
+
+            await using SqliteConnection connection = new(new SqliteConnectionStringBuilder
+            {
+                DataSource = factory.DatabasePath,
+                Mode = SqliteOpenMode.ReadOnly
+            }.ToString());
+            await connection.OpenAsync();
+            await using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT Status, RecordingState FROM Runs WHERE Id = $id;";
+            command.Parameters.AddWithValue("$id", created.SessionId.ToString("D"));
+            await using SqliteDataReader reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal((int)SimulationSessionStatus.Cancelled, reader.GetInt32(0));
+            Assert.Equal((int)RecordingState.Completed, reader.GetInt32(1));
+        }
+        finally
+        {
+            releaseWrite.TrySetResult();
+            if (!factoryDisposed)
+                await factory.DisposeAsync();
+        }
+    }
+
+    [Fact]
     public async Task PausingBeyondCapacityCancelsTheOldestPausedSessionWithPolicyReason()
     {
         using TemporaryLaboratoryRoot root = new();

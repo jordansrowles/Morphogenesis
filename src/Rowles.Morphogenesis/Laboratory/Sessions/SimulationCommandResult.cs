@@ -5,7 +5,8 @@ public enum SimulationCommandDisposition
     Applied,
     Conflict,
     InvalidState,
-    Terminal
+    Terminal,
+    Failed
 }
 
 public sealed record SimulationCommandResult(
@@ -14,4 +15,5 @@ public sealed record SimulationCommandResult(
     SimulationSessionStatus Status,
     long CurrentMcs,
     SimulationCommandDisposition Disposition,
-    long? ExpectedRevision = null);
+    long? ExpectedRevision = null,
+    string? Failure = null);

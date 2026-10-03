@@ -16,6 +16,8 @@ public sealed class LaboratoryResourceLimitsTests
         Assert.Equal(262_144, limits.MaxSites);
         Assert.Equal(4, limits.MaxRunningSessions);
         Assert.Equal(8, limits.MaxPausedSessions);
+        Assert.Equal(16, limits.MaxResidentSessions);
+        Assert.Equal(2, limits.MaxConcurrentRecordingReconstructions);
         Assert.Equal(8, limits.MaxLiveSubscribersPerSession);
         Assert.Equal(10, limits.DefaultLivePublishFps);
         Assert.Equal(20, limits.MaxLivePublishFps);
@@ -56,5 +58,8 @@ public sealed class LaboratoryResourceLimitsTests
     {
         LaboratoryResourceLimits limits = new() { MaxRunningSessions = 5 };
         Assert.Throws<InvalidOperationException>(limits.Validate);
+
+        LaboratoryResourceLimits residentLimits = new() { MaxResidentSessions = 17 };
+        Assert.Throws<InvalidOperationException>(residentLimits.Validate);
     }
 }

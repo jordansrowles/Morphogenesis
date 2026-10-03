@@ -16,12 +16,12 @@ public sealed class DatabaseStartupService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await _database.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        int interruptedRuns = await _database.MarkRunningInterruptedAsync(DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
-        if (interruptedRuns > 0)
+        int recoveredRuns = await _database.RecoverOrphanedSessionsAsync(DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
+        if (recoveredRuns > 0)
         {
             _logger.LogWarning(
-                "Marked {InterruptedRunCount} persisted running sessions as Interrupted during startup recovery",
-                interruptedRuns);
+                "Normalised {RecoveredRunCount} persisted session or recording states whose in-memory owner was lost during startup; live sessions were marked Interrupted and active recordings were marked Failed",
+                recoveredRuns);
         }
     }
 

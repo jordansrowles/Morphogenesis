@@ -56,6 +56,29 @@ public sealed class LaboratoryApiClientTests
     }
 
     [Fact]
+    public async Task FailedCommandReturnsTheAuthoritativeTerminalSession()
+    {
+        SessionDto failed = CreateSession() with { Status = SessionStatusDto.Failed, Revision = 3 };
+        using LaboratoryApiClient client = CreateClient((_, _) => Task.FromResult(Json(HttpStatusCode.InternalServerError, new
+        {
+            error = "The simulation command failed while applying at its boundary.",
+            failure = "InvalidOperationException: Injected failure.",
+            session = failed
+        })));
+
+        CommandResponse response = await client.SendCommandAsync(
+            failed.SessionId,
+            "step",
+            new SessionCommandRequestDto(Guid.NewGuid(), 2));
+
+        Assert.True(response.Failed);
+        Assert.Equal("InvalidOperationException: Injected failure.", response.Error);
+        Assert.Equal(failed.SessionId, response.Session!.SessionId);
+        Assert.Equal(SessionStatusDto.Failed, response.Session.Status);
+        Assert.Equal(3, response.Session.Revision);
+    }
+
+    [Fact]
     public async Task NotFoundAndMetricsInspectionAndRecordedFrameResponsesAreDecoded()
     {
         Guid sessionId = Guid.NewGuid();

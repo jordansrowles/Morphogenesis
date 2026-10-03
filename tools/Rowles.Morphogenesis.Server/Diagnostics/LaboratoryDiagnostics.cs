@@ -11,6 +11,7 @@ public sealed class LaboratoryDiagnostics
     private long _recordingQueueSaturations;
     private long _commandConflicts;
     private long _commandFailures;
+    private long _persistenceFailures;
     private long _sqliteWriteTicks;
     private long _retiredMcs;
     private long _retiredAttempts;
@@ -39,6 +40,8 @@ public sealed class LaboratoryDiagnostics
     public void RecordCommandConflict() => Interlocked.Increment(ref _commandConflicts);
 
     public void RecordCommandFailure() => Interlocked.Increment(ref _commandFailures);
+
+    public void RecordPersistenceFailure() => Interlocked.Increment(ref _persistenceFailures);
 
     public void RecordSqliteWrite(TimeSpan elapsed)
     {
@@ -157,6 +160,7 @@ public sealed class LaboratoryDiagnostics
             sqliteWriterQueueDepth,
             Interlocked.Read(ref _commandConflicts),
             Interlocked.Read(ref _commandFailures),
+            Interlocked.Read(ref _persistenceFailures),
             process.WorkingSet64,
             GC.GetTotalMemory(forceFullCollection: false),
             DateTimeOffset.UtcNow);

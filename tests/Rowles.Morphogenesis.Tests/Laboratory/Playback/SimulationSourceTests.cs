@@ -62,6 +62,36 @@ public sealed class SimulationSourceTests
     }
 
     [Fact]
+    public async Task OneShotReconstructorReturnsTheLatestFrameAndBoundsWorkspaceConcurrency()
+    {
+        (ExperimentManifest manifest, SimulationMetadata metadata) = await CreateMetadataAsync();
+        int[] atMcs0 = CreateLattice(256, 1);
+        int[] atMcs5 = atMcs0.ToArray();
+        atMcs5[1] = 2;
+        int[] atMcs10 = atMcs5.ToArray();
+        atMcs10[7] = 2;
+        InMemoryRecordingStore store = new();
+        store.Seed(
+            RecordingTestFixture.CreateHeader(metadata.SessionId, manifest, metadata),
+            RecordingTestFixture.EncodeFrame(16, 16, 0, 0, RecordingFrameKind.Keyframe, atMcs0),
+            RecordingTestFixture.EncodeFrame(16, 16, 1, 5, RecordingFrameKind.Delta, atMcs5, [1], [2]),
+            RecordingTestFixture.EncodeFrame(16, 16, 2, 10, RecordingFrameKind.Delta, atMcs10, [7], [2]));
+
+        RecordingFrameReconstructor reconstructor = new(maximumConcurrentReconstructions: 1, maximumSiteCount: 256);
+        ReconstructedRecordingFrame first = await reconstructor.ReconstructAsync(store, metadata.SessionId, mcs: 14);
+        Assert.Equal(2, first.Sequence);
+        Assert.Equal(10, first.Mcs);
+        Assert.Equal(atMcs10, first.CellIds.ToArray());
+
+        Task<ReconstructedRecordingFrame> secondTask = reconstructor.ReconstructAsync(store, metadata.SessionId, mcs: 10).AsTask();
+        Assert.False(secondTask.IsCompleted);
+        first.Dispose();
+
+        using ReconstructedRecordingFrame second = await secondTask.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(atMcs10, second.CellIds.ToArray());
+    }
+
+    [Fact]
     public async Task RecordedPlaybackRateValidationAndPlayPauseWork()
     {
         (ExperimentManifest manifest, SimulationMetadata metadata) = await CreateMetadataAsync();

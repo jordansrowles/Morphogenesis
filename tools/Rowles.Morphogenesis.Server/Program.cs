@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Rowles.Morphogenesis.Laboratory.Playback;
 using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Server;
 using Rowles.Morphogenesis.Server.Api;
@@ -14,6 +15,8 @@ using Serilog;
 using Serilog.Context;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// The session registry must finish terminal writes before the SQLite writer queue stops.
+builder.Host.ConfigureHostOptions(options => options.ServicesStopConcurrently = false);
 LaboratoryServerOptions serverOptions = LaboratoryServerOptions.Load(builder.Configuration);
 builder.WebHost.UseUrls(serverOptions.BindUrl);
 builder.WebHost.ConfigureKestrel(options =>
@@ -22,6 +25,9 @@ builder.Services.AddSingleton(serverOptions);
 builder.Services.AddSingleton(sp => sp.GetRequiredService<LaboratoryServerOptions>().ResourceLimits);
 builder.Services.AddSingleton<LaboratoryDiagnostics>();
 builder.Services.AddSingleton<SessionCapacityService>();
+builder.Services.AddSingleton(sp => new RecordingFrameReconstructor(
+    serverOptions.ResourceLimits.MaxConcurrentRecordingReconstructions,
+    serverOptions.ResourceLimits.MaxSites));
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -37,7 +43,8 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 builder.Services.AddSingleton<ExperimentCatalog>();
 builder.Services.AddSingleton<SqliteWriteQueue>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<SqliteWriteQueue>());
+// Start SQLite before startup services and drain it after every hosted session owner stops.
+builder.Services.AddHostedService<SqliteWriteQueueLifecycleService>();
 builder.Services.AddSingleton<LaboratoryDatabase>();
 builder.Services.AddSingleton<SqliteRecordingStore>();
 builder.Services.AddSingleton<IRecordingStore>(sp => sp.GetRequiredService<SqliteRecordingStore>());

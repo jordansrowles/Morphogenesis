@@ -14,6 +14,59 @@ namespace Rowles.Morphogenesis.Server.Tests.Persistence;
 public sealed class SqliteWriterLoadTests(ITestOutputHelper output)
 {
     [Fact]
+    public async Task CancellationAfterQueueAcceptanceStillAwaitsAndCommitsTheWrite()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        using LaboratoryFactory factory = new(root.Path);
+        using HttpClient client = factory.CreateClient();
+        SqliteWriteQueue queue = factory.Services.GetRequiredService<SqliteWriteQueue>();
+        TaskCompletionSource blockerStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource releaseBlocker = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task<int> blocker = queue.ExecuteAsync(async (connection, cancellationToken) =>
+        {
+            await using SqliteCommand create = connection.CreateCommand();
+            create.CommandText = "CREATE TABLE CancellationQueueProbe (Value INTEGER NOT NULL);";
+            await create.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            blockerStarted.TrySetResult();
+            await releaseBlocker.Task.ConfigureAwait(false);
+            return 1;
+        }).AsTask();
+        await blockerStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        using CancellationTokenSource cancellation = new();
+        Task<int> acceptedWrite = queue.ExecuteAsync(async (connection, cancellationToken) =>
+        {
+            await using SqliteCommand insert = connection.CreateCommand();
+            insert.CommandText = "INSERT INTO CancellationQueueProbe (Value) VALUES (42);";
+            return await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }, cancellation.Token).AsTask();
+
+        try
+        {
+            Assert.Equal(2, queue.QueueDepth);
+            Assert.False(acceptedWrite.IsCompleted);
+            cancellation.Cancel();
+            Assert.False(acceptedWrite.IsCanceled);
+        }
+        finally
+        {
+            releaseBlocker.TrySetResult();
+        }
+
+        Assert.Equal(1, await blocker);
+        Assert.Equal(1, await acceptedWrite);
+        int persistedValue = await queue.ExecuteAsync(async (connection, cancellationToken) =>
+        {
+            await using SqliteCommand select = connection.CreateCommand();
+            select.CommandText = "SELECT Value FROM CancellationQueueProbe;";
+            object? value = await select.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            return Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
+        });
+        Assert.Equal(42, persistedValue);
+    }
+
+    [Fact]
     public async Task SequentialFrameWritesStayWithinTheLatencyGates()
     {
         using TemporaryLaboratoryRoot root = new();

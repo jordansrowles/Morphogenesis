@@ -9,6 +9,34 @@ namespace Rowles.Morphogenesis.Tests.Laboratory.Sessions;
 public sealed class SimulationSessionTests
 {
     [Fact]
+    public async Task BoundaryCommandReportsFailedWhenSimulationExecutionThrows()
+    {
+        ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: 100);
+        ExperimentSimulationInstance instance = ExperimentSimulationFactory.Create(
+            manifest,
+            replicateIndex: 0,
+            new ThrowingMutationSink());
+        await using SimulationSession session = new(
+            Guid.NewGuid(),
+            manifest,
+            instance,
+            new SimulationSessionOptions());
+
+        SimulationCommandResult result = default!;
+        for (int step = 0; step < manifest.McsCount; step++)
+        {
+            SimulationSessionSnapshot snapshot = session.GetSnapshot();
+            result = await session.StepAsync(Guid.NewGuid(), snapshot.Revision);
+            if (result.Disposition == SimulationCommandDisposition.Failed)
+                break;
+        }
+
+        Assert.Equal(SimulationCommandDisposition.Failed, result.Disposition);
+        Assert.Equal(SimulationSessionStatus.Failed, result.Status);
+        Assert.Contains("Injected mutation observer failure", result.Failure, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ConstructionPublishesInitialStateMeasurementAndDetachedMetadata()
     {
         ExperimentManifest manifest = SessionTestFixture.CreateManifest();
@@ -278,5 +306,11 @@ public sealed class SimulationSessionTests
         Assert.Equal(revision, result.Revision);
         Assert.Equal(status, result.Status);
         Assert.Equal(mcs, result.CurrentMcs);
+    }
+
+    private sealed class ThrowingMutationSink : ILatticeMutationSink
+    {
+        public void AcceptedCopy(int targetIndex, int oldCellId, int newCellId) =>
+            throw new InvalidOperationException("Injected mutation observer failure.");
     }
 }

@@ -52,6 +52,12 @@ public sealed class SqliteRecordingReader : IRecordingReader
         CancellationToken cancellationToken = default) =>
         new(_database.ReadFrameAsync(sessionId, sequence, cancellationToken));
 
+    public ValueTask<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(
+        Guid sessionId,
+        long mcs,
+        CancellationToken cancellationToken = default) =>
+        new(_database.FindFrameAtOrBeforeAsync(sessionId, mcs, cancellationToken));
+
     public ValueTask<RecordingFrameIndexEntry?> FindNearestKeyframeAtOrBeforeAsync(
         Guid sessionId,
         long mcs,

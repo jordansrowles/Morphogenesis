@@ -350,54 +350,7 @@ public sealed class RecordedSimulationSource : ISimulationSource
     {
         RecordingFrameIndexEntry expected = _frameIndex[position];
         EncodedRecordingFrame frame = await _reader.ReadFrameAsync(_sessionId, expected.Sequence, cancellationToken).ConfigureAwait(false);
-        if (frame.Sequence != expected.Sequence || frame.Mcs != expected.Mcs || frame.Kind != expected.Kind ||
-            frame.EnvelopeVersion != RecordingFormat.EnvelopeVersion ||
-            frame.Compression != RecordingFormat.Compression)
-        {
-            throw new FormatException("The stored frame differs from its recording index or uses an unsupported envelope version.");
-        }
-
-        RecordedFrameEnvelope envelope = RecordingMessagePackCodec.Deserialize(frame.EnvelopeBytes);
-        int expectedCodecVersion = expected.Kind == RecordingFrameKind.Keyframe
-            ? RecordingFormat.KeyframeCodecVersion
-            : RecordingFormat.DeltaCodecVersion;
-        if (envelope.EnvelopeVersion != RecordingFormat.EnvelopeVersion ||
-            envelope.Sequence != expected.Sequence ||
-            envelope.Mcs != expected.Mcs ||
-            envelope.Kind != expected.Kind ||
-            envelope.PayloadCodecVersion != expectedCodecVersion ||
-            envelope.Compression != RecordingFormat.Compression ||
-            envelope.Width != _header.Width ||
-            envelope.Height != _header.Height ||
-            envelope.UncompressedPayloadSize != envelope.Payload.Length ||
-            envelope.UncompressedPayloadSize != frame.UncompressedPayloadSize)
-        {
-            throw new FormatException("The recording envelope fields are inconsistent with the header or frame index.");
-        }
-
-        if (expected.Kind == RecordingFrameKind.Keyframe)
-        {
-            KeyframePayloadCodec.Decode(envelope.Payload, _lattice);
-            for (int index = 0; index < _lattice.Length; index++)
-            {
-                if (_lattice[index] < 0)
-                {
-                    throw new FormatException("A recorded keyframe contains a negative cell ID.");
-                }
-            }
-
-            return;
-        }
-
-        int changeCount = DeltaPayloadCodec.Decode(
-            envelope.Payload,
-            _lattice.Length,
-            _deltaIndices,
-            _deltaCellIds);
-        for (int change = 0; change < changeCount; change++)
-        {
-            _lattice[_deltaIndices[change]] = _deltaCellIds[change];
-        }
+        RecordingFrameReconstructor.DecodeFrame(frame, _header, expected, _lattice, _deltaIndices, _deltaCellIds, _lattice.Length);
     }
 
     private void PublishCurrentFrame()
@@ -459,7 +412,7 @@ public sealed class RecordedSimulationSource : ISimulationSource
         throw new FormatException("The recorded frame sequence has no keyframe before the target.");
     }
 
-    private static void ValidateHeader(RecordingHeader header, Guid sessionId)
+    internal static void ValidateHeader(RecordingHeader header, Guid sessionId)
     {
         ArgumentNullException.ThrowIfNull(header);
         if (header.RecordingSchemaVersion != RecordingFormat.SchemaVersion ||
@@ -482,7 +435,7 @@ public sealed class RecordedSimulationSource : ISimulationSource
         }
     }
 
-    private static void ValidateFrameIndex(RecordingFrameIndexEntry[] frameIndex)
+    internal static void ValidateFrameIndex(RecordingFrameIndexEntry[] frameIndex)
     {
         if (frameIndex.Length == 0 || frameIndex[0].Sequence != 0 || frameIndex[0].Mcs != 0 ||
             frameIndex[0].Kind != RecordingFrameKind.Keyframe)

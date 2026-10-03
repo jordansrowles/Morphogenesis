@@ -8,5 +8,7 @@ public interface IRecordingReader
 
     ValueTask<EncodedRecordingFrame> ReadFrameAsync(Guid sessionId, long sequence, CancellationToken cancellationToken = default);
 
+    ValueTask<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(Guid sessionId, long mcs, CancellationToken cancellationToken = default);
+
     ValueTask<RecordingFrameIndexEntry?> FindNearestKeyframeAtOrBeforeAsync(Guid sessionId, long mcs, CancellationToken cancellationToken = default);
 }

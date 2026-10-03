@@ -7,6 +7,8 @@ public sealed record LaboratoryResourceLimits
     public const int HardMaxSites = 262_144;
     public const int HardMaxRunningSessions = 4;
     public const int HardMaxPausedSessions = 8;
+    public const int HardMaxResidentSessions = 16;
+    public const int HardMaxConcurrentRecordingReconstructions = 2;
     public const int HardMaxLiveSubscribersPerSession = 8;
     public const int HardMaxLivePublishFps = 20;
     public const int HardCommandQueueCapacity = 64;
@@ -24,6 +26,8 @@ public sealed record LaboratoryResourceLimits
     public int MaxSites { get; init; } = HardMaxSites;
     public int MaxRunningSessions { get; init; } = HardMaxRunningSessions;
     public int MaxPausedSessions { get; init; } = HardMaxPausedSessions;
+    public int MaxResidentSessions { get; init; } = HardMaxResidentSessions;
+    public int MaxConcurrentRecordingReconstructions { get; init; } = HardMaxConcurrentRecordingReconstructions;
     public int MaxLiveSubscribersPerSession { get; init; } = HardMaxLiveSubscribersPerSession;
     public int DefaultLivePublishFps { get; init; } = 10;
     public int MaxLivePublishFps { get; init; } = HardMaxLivePublishFps;
@@ -69,6 +73,8 @@ public sealed record LaboratoryResourceLimits
         ValidateBounded(MaxSites, HardMaxSites, nameof(MaxSites));
         ValidateBounded(MaxRunningSessions, HardMaxRunningSessions, nameof(MaxRunningSessions));
         ValidateBounded(MaxPausedSessions, HardMaxPausedSessions, nameof(MaxPausedSessions));
+        ValidateBounded(MaxResidentSessions, HardMaxResidentSessions, nameof(MaxResidentSessions));
+        ValidateBounded(MaxConcurrentRecordingReconstructions, HardMaxConcurrentRecordingReconstructions, nameof(MaxConcurrentRecordingReconstructions));
         ValidateFixed(MaxLiveSubscribersPerSession, HardMaxLiveSubscribersPerSession, nameof(MaxLiveSubscribersPerSession));
         ValidateBounded(MaxLivePublishFps, HardMaxLivePublishFps, nameof(MaxLivePublishFps));
         ValidateFixed(CommandQueueCapacity, HardCommandQueueCapacity, nameof(CommandQueueCapacity));
@@ -98,7 +104,7 @@ public sealed record LaboratoryResourceLimits
     private static void ValidateFixed(long value, long expected, string name)
     {
         if (value != expected)
-            throw new InvalidOperationException($"{name} is fixed at {expected} for M4.");
+            throw new InvalidOperationException($"{name} is fixed at {expected}.");
     }
 }
 

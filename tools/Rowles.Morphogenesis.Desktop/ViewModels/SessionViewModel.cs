@@ -267,7 +267,9 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
             }
             if (response.Session is not null)
                 Session = response.Session;
-            if (response.Conflict)
+            if (response.Failed)
+                CommandStatus = response.Error ?? $"{command} failed; the session is {Session.Status}.";
+            else if (response.Conflict)
                 CommandStatus = "Conflict: server state was refreshed. Review it before sending another command.";
             else
                 CommandStatus = $"{command} applied.";

@@ -236,6 +236,20 @@ public class RecordingSeekBenchmarks
         public ValueTask<EncodedRecordingFrame> ReadFrameAsync(Guid sessionId, long sequence, CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(_frames[checked((int)sequence)]);
 
+        public ValueTask<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(
+            Guid sessionId,
+            long mcs,
+            CancellationToken cancellationToken = default)
+        {
+            for (int index = _index.Length - 1; index >= 0; index--)
+            {
+                if (_index[index].Mcs <= mcs)
+                    return ValueTask.FromResult<RecordingFrameIndexEntry?>(_index[index]);
+            }
+
+            return ValueTask.FromResult<RecordingFrameIndexEntry?>(null);
+        }
+
         public ValueTask<RecordingFrameIndexEntry?> FindNearestKeyframeAtOrBeforeAsync(
             Guid sessionId,
             long mcs,

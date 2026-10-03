@@ -22,6 +22,7 @@ public sealed record LaboratoryDiagnosticsSnapshot(
     long SqliteWriterQueueDepth,
     long CommandConflicts,
     long CommandFailures,
+    long PersistenceFailures,
     long ProcessWorkingSetBytes,
     long ManagedHeapBytes,
     DateTimeOffset CapturedAtUtc);

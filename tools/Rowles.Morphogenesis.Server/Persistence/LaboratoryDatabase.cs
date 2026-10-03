@@ -72,21 +72,76 @@ public sealed class LaboratoryDatabase
             return true;
         }, cancellationToken).AsTask();
 
-    public Task<int> MarkRunningInterruptedAsync(DateTimeOffset startupUtc, CancellationToken cancellationToken = default) =>
+    public Task<int> RecoverOrphanedSessionsAsync(DateTimeOffset startupUtc, CancellationToken cancellationToken = default) =>
         _writeQueue.ExecuteAsync(async (connection, token) =>
         {
-            await using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = """
-                UPDATE Runs
-                SET Status = $interrupted,
-                    Revision = Revision + 1,
-                    CompletedAtUtc = $completed
-                WHERE Status = $running;
-                """;
-            command.Parameters.AddWithValue("$interrupted", (int)SimulationSessionStatus.Interrupted);
-            command.Parameters.AddWithValue("$running", (int)SimulationSessionStatus.Running);
-            command.Parameters.AddWithValue("$completed", FormatUtc(startupUtc));
-            return await command.ExecuteNonQueryAsync(token).ConfigureAwait(false);
+            await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync(token).ConfigureAwait(false);
+            List<Guid> orphanedSessionIds = [];
+            await using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT Id FROM Runs WHERE Status IN ($created, $running, $paused) OR RecordingState = $active;";
+                select.Parameters.AddWithValue("$created", (int)SimulationSessionStatus.Created);
+                select.Parameters.AddWithValue("$running", (int)SimulationSessionStatus.Running);
+                select.Parameters.AddWithValue("$paused", (int)SimulationSessionStatus.Paused);
+                select.Parameters.AddWithValue("$active", (int)RecordingState.Active);
+                await using SqliteDataReader reader = await select.ExecuteReaderAsync(token).ConfigureAwait(false);
+                while (await reader.ReadAsync(token).ConfigureAwait(false))
+                    orphanedSessionIds.Add(Guid.Parse(reader.GetString(0)));
+            }
+
+            foreach (Guid sessionId in orphanedSessionIds)
+            {
+                PersistedRun run = await ReadRunAsync(connection, transaction, sessionId, token).ConfigureAwait(false)
+                    ?? throw new InvalidDataException($"Persisted run '{sessionId:D}' disappeared during startup recovery.");
+                bool sessionWasLive = run.Status is SimulationSessionStatus.Created or SimulationSessionStatus.Running or SimulationSessionStatus.Paused;
+                SimulationSessionStatus recoveredStatus = sessionWasLive ? SimulationSessionStatus.Interrupted : run.Status;
+                string? failure = sessionWasLive
+                    ? "ServerRestartRecovery: The in-memory session owner was lost and the run cannot be resumed."
+                    : run.Failure;
+                bool recordingWasActive = run.RecordingState == RecordingState.Active;
+                RecordingState recordingState = recordingWasActive ? RecordingState.Failed : run.RecordingState;
+                string? recordingFailure = recordingWasActive
+                    ? "ServerRestartRecovery: The active recording writer was lost and recording cannot resume."
+                    : run.RecordingFailure;
+                StoredRunPayload payload = run.Payload with
+                {
+                    Result = new TerminalRunSummary(
+                        recoveredStatus,
+                        run.CurrentMcs,
+                        run.Payload.Metadata.RunIdentity,
+                        run.Payload.Result?.FinalMeasurement,
+                        failure ?? run.Payload.Result?.Failure,
+                        recordingState,
+                        recordingFailure)
+                };
+
+                await using SqliteCommand update = connection.CreateCommand();
+                update.Transaction = transaction;
+                update.CommandText = """
+                    UPDATE Runs
+                    SET Status = $status,
+                        Revision = Revision + 1,
+                        CompletedAtUtc = COALESCE(CompletedAtUtc, $completed),
+                        Failure = $failure,
+                        RecordingState = $recordingState,
+                        RecordingFailure = $recordingFailure,
+                        ResultJson = $resultJson
+                    WHERE Id = $id;
+                    """;
+                update.Parameters.AddWithValue("$status", (int)recoveredStatus);
+                update.Parameters.AddWithValue("$completed", FormatUtc(startupUtc));
+                update.Parameters.AddWithValue("$failure", (object?)failure ?? DBNull.Value);
+                update.Parameters.AddWithValue("$recordingState", (int)recordingState);
+                update.Parameters.AddWithValue("$recordingFailure", (object?)recordingFailure ?? DBNull.Value);
+                update.Parameters.AddWithValue("$resultJson", JsonSerializer.Serialize(payload, JsonOptions));
+                update.Parameters.AddWithValue("$id", sessionId.ToString("D"));
+                if (await update.ExecuteNonQueryAsync(token).ConfigureAwait(false) != 1)
+                    throw new InvalidDataException($"Persisted run '{sessionId:D}' could not be normalised during startup recovery.");
+            }
+
+            await transaction.CommitAsync(token).ConfigureAwait(false);
+            return orphanedSessionIds.Count;
         }, cancellationToken).AsTask();
 
     public Task<int> HealthCheckAsync(CancellationToken cancellationToken = default) =>
@@ -558,6 +613,32 @@ public sealed class LaboratoryDatabase
             return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
                 ? new RecordingFrameIndexEntry(reader.GetInt64(0), reader.GetInt64(1), RecordingFrameKind.Keyframe)
                 : null;
+        }, cancellationToken);
+
+    public Task<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(
+        Guid sessionId,
+        long mcs,
+        CancellationToken cancellationToken = default) =>
+        ReadAsync(async connection =>
+        {
+            await using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT Sequence, Mcs, Kind FROM Frames
+                WHERE RunId = $id AND Mcs <= $mcs
+                ORDER BY Mcs DESC, Sequence DESC LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("$id", sessionId.ToString("D"));
+            command.Parameters.AddWithValue("$mcs", mcs);
+            await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                return null;
+
+            long sequence = reader.GetInt64(0);
+            long frameMcs = reader.GetInt64(1);
+            int kindValue = reader.GetInt32(2);
+            if (kindValue is < byte.MinValue or > byte.MaxValue || !Enum.IsDefined((RecordingFrameKind)kindValue))
+                throw new InvalidDataException($"Recording frame {sequence} has unsupported kind {kindValue}.");
+            return new RecordingFrameIndexEntry(sequence, frameMcs, (RecordingFrameKind)kindValue);
         }, cancellationToken);
 
     internal async ValueTask<SqliteConnection> OpenReadConnectionAsync(CancellationToken cancellationToken)

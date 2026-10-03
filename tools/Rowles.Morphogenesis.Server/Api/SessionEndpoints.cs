@@ -57,6 +57,11 @@ public static class SessionEndpoints
             logger.LogWarning(exception, "Rejected session creation for experiment {ExperimentId}", request.ExperimentId);
             return Results.BadRequest(new { error = exception.Message });
         }
+        catch (SessionCapacityException exception)
+        {
+            logger.LogWarning(exception, "Rejected session creation because resident capacity is exhausted for experiment {ExperimentId}", request.ExperimentId);
+            return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+        }
         catch (Exception exception) when (exception is ArgumentOutOfRangeException or ArgumentException)
         {
             return Results.BadRequest(new { error = exception.Message });
@@ -153,9 +158,19 @@ public static class SessionEndpoints
             using IDisposable revisionContext = LogContext.PushProperty("Revision", authoritative.Revision);
             logger.LogInformation("Processed {CommandName} session command as {CommandDisposition}", commandName, result.Disposition);
         }
-        return result.Disposition == SimulationCommandDisposition.Applied
-            ? Results.Ok(authoritative)
-            : Results.Conflict(authoritative);
+        return result.Disposition switch
+        {
+            SimulationCommandDisposition.Applied => Results.Ok(authoritative),
+            SimulationCommandDisposition.Failed => Results.Json(
+                new
+                {
+                    error = "The simulation command failed while applying at its boundary.",
+                    failure = result.Failure,
+                    session = authoritative
+                },
+                statusCode: StatusCodes.Status500InternalServerError),
+            _ => Results.Conflict(authoritative)
+        };
     }
 
     private static async Task<IResult> GetMetricsAsync(
@@ -203,6 +218,7 @@ public static class SessionEndpoints
         SimulationSessionRegistry registry,
         LaboratoryDatabase database,
         IRecordingReader reader,
+        RecordingFrameReconstructor reconstructor,
         CancellationToken cancellationToken)
     {
         if (mcs is null or < 0)
@@ -216,17 +232,15 @@ public static class SessionEndpoints
 
         try
         {
-            await using RecordedSimulationSource source = await RecordedSimulationSource.OpenAsync(
+            using ReconstructedRecordingFrame frame = await reconstructor.ReconstructAsync(
                 reader,
                 id,
+                mcs.Value,
                 cancellationToken).ConfigureAwait(false);
-            await source.SeekAsync(mcs.Value, cancellationToken).ConfigureAwait(false);
-            using SimulationFrameLease frame = await source.GetCurrentFrameAsync(cancellationToken).ConfigureAwait(false);
             byte[] payload = new byte[FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height)];
-            long recordedSequence = source.CurrentRecordedSequence;
-            FullFrameMessageWriter.Write(payload, recordedSequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
+            FullFrameMessageWriter.Write(payload, frame.Sequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
             registry.MarkActivity(id);
-            return new FullFrameHttpResult(payload, frame.Mcs, recordedSequence);
+            return new FullFrameHttpResult(payload, frame.Mcs, frame.Sequence);
         }
         catch (ArgumentOutOfRangeException exception)
         {
@@ -290,6 +304,7 @@ public static class SessionEndpoints
             }
 
             using WebSocket socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            registry.MarkActivity(id);
             byte[] message = new byte[FullFrameMessageWriter.GetMessageLength(session.Metadata.GridWidth, session.Metadata.GridHeight)];
             try
             {

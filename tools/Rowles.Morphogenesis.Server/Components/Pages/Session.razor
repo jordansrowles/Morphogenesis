@@ -29,7 +29,7 @@ else
         <span class="toolbar-status" data-testid="session-status">@_sessionDto.Status</span>
         <span data-testid="session-progress">MCS @_sessionDto.CurrentMcs / @_sessionDto.TargetMcs</span>
         <span data-testid="session-revision">Revision @_sessionDto.Revision</span>
-        <span>Recording @_sessionDto.RecordingState</span>
+        <span data-testid="recording-status">Recording @DisplayedRecordingState</span>
     </section>
     @if (_commandError is not null)
     {
@@ -158,6 +158,12 @@ else
     private bool CanResume => _sessionDto?.Status == SimulationSessionStatus.Paused;
     private bool CanStep => _sessionDto?.Status is SimulationSessionStatus.Created or SimulationSessionStatus.Paused;
     private bool CanStop => _sessionDto is not null && _sessionDto.Status is not (SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled);
+    private string DisplayedRecordingState => _sessionDto is not null &&
+        _sessionDto.RecordingState == RecordingState.Active &&
+        _sessionDto.Status is (SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or
+            SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled)
+        ? "Finalising"
+        : _sessionDto?.RecordingState.ToString() ?? "Unknown";
 
     protected override async Task OnInitializedAsync()
     {

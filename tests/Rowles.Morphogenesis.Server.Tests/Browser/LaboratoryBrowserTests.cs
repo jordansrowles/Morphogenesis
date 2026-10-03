@@ -130,8 +130,26 @@ public sealed class LaboratoryBrowserTests
             await firstPage.GetByTestId("view-type").ClickAsync();
             await firstPage.GetByTestId("view-boundary").ClickAsync();
             await firstPage.GetByTestId("view-identity").ClickAsync();
+            await firstPage.EvaluateAsync("""
+                () => {
+                    window.__morphogenesisFinalisingObserved = false;
+                    const observer = new MutationObserver(() => {
+                        const status = document.querySelector('[data-testid="recording-status"]');
+                        if (status?.textContent?.trim() === 'Recording Finalising') {
+                            window.__morphogenesisFinalisingObserved = true;
+                            observer.disconnect();
+                        }
+                    });
+                    observer.observe(document.body, { childList: true, characterData: true, subtree: true });
+                }
+                """);
             await firstPage.GetByTestId("stop-session").ClickAsync();
             await WaitForTextAsync(firstPage.GetByTestId("session-status"), "Cancelled");
+            await firstPage.WaitForFunctionAsync(
+                "() => window.__morphogenesisFinalisingObserved === true",
+                null,
+                new PageWaitForFunctionOptions { Timeout = 20_000 });
+            await WaitForTextAsync(firstPage.GetByTestId("recording-status"), "Recording Completed");
             await firstPage.GetByTestId("play-recording").WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
             await firstPage.GetByTestId("play-recording").ClickAsync();
             await firstPage.GetByTestId("pause-recording").ClickAsync();
@@ -164,6 +182,7 @@ public sealed class LaboratoryBrowserTests
             (server, serverUri) = StartServer(dataDirectory, logDirectory, canonicalDirectory);
             await WaitForServerAsync(server, serverUri);
             await firstPage.GotoAsync(new Uri(serverUri, $"/sessions/{recordedSessionId:D}").ToString());
+            await WaitForTextAsync(firstPage.GetByTestId("recording-status"), "Recording Completed");
             await firstPage.GetByTestId("play-recording").WaitForAsync(new LocatorWaitForOptions { Timeout = 20_000 });
             await WaitForAttributeAsync(firstPage.GetByTestId("lattice-canvas"), "data-display-mcs");
         }
@@ -342,12 +361,12 @@ public sealed class LaboratoryBrowserTests
 
     private static async Task WaitForTextAsync(ILocator locator, string expected)
     {
-        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(15));
-        while (!timeout.IsCancellationRequested)
+        Stopwatch timeout = Stopwatch.StartNew();
+        while (timeout.Elapsed < TimeSpan.FromSeconds(15))
         {
             if (StringComparer.Ordinal.Equals((await locator.TextContentAsync().ConfigureAwait(false))?.Trim(), expected))
                 return;
-            await Task.Delay(50, timeout.Token).ConfigureAwait(false);
+            await Task.Delay(50).ConfigureAwait(false);
         }
         throw new TimeoutException($"Expected browser text '{expected}'.");
     }

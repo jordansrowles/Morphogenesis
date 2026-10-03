@@ -105,6 +105,23 @@ internal sealed class InMemoryRecordingStore : IRecordingStore, IRecordingReader
         }
     }
 
+    public ValueTask<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(
+        Guid sessionId,
+        long mcs,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_gate)
+        {
+            EnsureSession(sessionId);
+            RecordingFrameIndexEntry? frame = _frames
+                .Where(candidate => candidate.Mcs <= mcs)
+                .Select(candidate => new RecordingFrameIndexEntry(candidate.Sequence, candidate.Mcs, candidate.Kind))
+                .LastOrDefault();
+            return ValueTask.FromResult(frame);
+        }
+    }
+
     public ValueTask<RecordingFrameIndexEntry?> FindNearestKeyframeAtOrBeforeAsync(
         Guid sessionId,
         long mcs,

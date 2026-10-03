@@ -9,10 +9,27 @@ public sealed class SessionCapacityService
     private readonly HashSet<Guid> _runningReservations = [];
     private readonly HashSet<Guid> _stepReservations = [];
     private readonly Dictionary<Guid, SimulationSessionStatus> _observedStatuses = [];
+    private int _residentReservations;
 
     public SessionCapacityService(LaboratoryResourceLimits limits)
     {
         _limits = limits;
+    }
+
+    public bool TryReserveResident(out IDisposable? reservation)
+    {
+        lock (_gate)
+        {
+            if (_residentReservations >= _limits.MaxResidentSessions)
+            {
+                reservation = null;
+                return false;
+            }
+
+            _residentReservations++;
+            reservation = new ResidentReservation(this);
+            return true;
+        }
     }
 
     public bool TryReserveRunning(Guid sessionId)
@@ -72,5 +89,22 @@ public sealed class SessionCapacityService
             _stepReservations.Remove(sessionId);
             _observedStatuses.Remove(sessionId);
         }
+    }
+
+    private void ReleaseResident()
+    {
+        lock (_gate)
+        {
+            if (_residentReservations <= 0)
+                throw new InvalidOperationException("The resident-session reservation count is already zero.");
+            _residentReservations--;
+        }
+    }
+
+    private sealed class ResidentReservation(SessionCapacityService owner) : IDisposable
+    {
+        private SessionCapacityService? _owner = owner;
+
+        public void Dispose() => Interlocked.Exchange(ref _owner, null)?.ReleaseResident();
     }
 }

@@ -19,6 +19,24 @@ The repository also contains a reusable quality-diversity layer:
 
 The experiment framework resolves versioned manifests, initialises packed cell aggregates, runs independent replicates sequentially through the canonical serial kernel, and records measurements, snapshots and provenance. The headless runner and canonical experiment pack are documented in [`experiments/README.md`](experiments/README.md). Archived results and their scientific interpretation are documented in [`experiments/results/README.md`](experiments/results/README.md).
 
+## Visual laboratory
+
+The `Rowles.Morphogenesis.Laboratory` namespace ships inside the main `Rowles.Morphogenesis` package. A server-hosted web laboratory runs canonical experiments, while an Avalonia desktop client connects to that server as a remote client. Both use the same server-owned sessions and HTTP/WebSocket contracts. See [`docs/laboratory.md`](docs/laboratory.md) for usage, configuration, recording formats, limits and deployment details.
+
+Run the server from the repository root:
+
+```sh
+dotnet run --project tools/Rowles.Morphogenesis.Server --configuration Release
+```
+
+It listens on `http://127.0.0.1:5080` by default. In another terminal, start the desktop client:
+
+```sh
+dotnet run --project tools/Rowles.Morphogenesis.Desktop --configuration Release
+```
+
+The desktop client uses the same loopback address by default; its connection preferences let you select another server.
+
 ## Build and test
 
 The repository uses one solution, `Rowles.Morphogenesis.slnx`, and pins the .NET 10 SDK in `global.json`.

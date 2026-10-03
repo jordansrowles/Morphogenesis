@@ -21,17 +21,17 @@ public sealed record RecordingOptions
 
         if (KeyframeEveryRecordedFrames != 20)
         {
-            throw new ArgumentException("M4 recordings use a fixed keyframe cadence of 20 recorded frames.", nameof(KeyframeEveryRecordedFrames));
+            throw new ArgumentException("The keyframe cadence is fixed at 20 recorded frames.", nameof(KeyframeEveryRecordedFrames));
         }
 
         if (DeltaPromotionRatio != 0.75)
         {
-            throw new ArgumentException("M4 recordings use a fixed delta promotion ratio of 0.75.", nameof(DeltaPromotionRatio));
+            throw new ArgumentException("The delta promotion ratio is fixed at 0.75.", nameof(DeltaPromotionRatio));
         }
 
         if (WriterQueueCapacity != 8)
         {
-            throw new ArgumentException("M4 recordings use a fixed writer queue capacity of 8.", nameof(WriterQueueCapacity));
+            throw new ArgumentException("The recording writer queue capacity is fixed at 8.", nameof(WriterQueueCapacity));
         }
     }
 }

@@ -89,7 +89,14 @@ public sealed record CellInspectionDto(
     double TargetPerimeter,
     double PerimeterStiffness);
 
-public sealed record CommandResponse(SessionDto? Session, bool Conflict, bool NotFound);
+public sealed record CommandResponse(
+    SessionDto? Session,
+    bool Conflict,
+    bool NotFound,
+    bool Failed = false,
+    string? Error = null);
+
+public sealed record CommandFailureDto(string? Error, string? Failure, SessionDto? Session);
 
 public sealed record RecordingFrameResponse(byte[] Payload, string Protocol, long Mcs, long Sequence);
 

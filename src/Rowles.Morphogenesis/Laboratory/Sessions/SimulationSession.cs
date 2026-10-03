@@ -134,6 +134,17 @@ public sealed class SimulationSession : IAsyncDisposable
         }
     }
 
+    public ValueTask WaitForRecordingCompletionAsync()
+    {
+        if (!IsTerminal(GetStatus()))
+            throw new InvalidOperationException("Recording can only be awaited after the session reaches a terminal state.");
+
+        SimulationRecorder? recorder = _recorder;
+        return recorder is null
+            ? ValueTask.CompletedTask
+            : new ValueTask(recorder.CompleteAsync(GetCurrentMcs()));
+    }
+
     public IAsyncEnumerable<SimulationSessionSnapshot> WatchStateAsync(
         CancellationToken cancellationToken = default) => _statePublisher.Watch(cancellationToken);
 
@@ -372,7 +383,7 @@ public sealed class SimulationSession : IAsyncDisposable
                 {
                     FailSession(exception);
                     commandRequest.Completion.SetResult(CreateCommandResult(
-                        SimulationCommandDisposition.Applied,
+                        SimulationCommandDisposition.Failed,
                         null));
                 }
 
@@ -691,7 +702,8 @@ public sealed class SimulationSession : IAsyncDisposable
                 _status,
                 _currentMcs,
                 disposition,
-                expectedRevision);
+                expectedRevision,
+                _failure);
         }
     }
 
