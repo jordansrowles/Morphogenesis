@@ -9,6 +9,7 @@ namespace Rowles.Morphogenesis.Desktop.ViewModels;
 public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyncDisposable
 {
     private const int MaximumCachedFrames = 3;
+    private const int MaximumPrefetchRequests = 2;
     private readonly Guid _sessionId;
     private readonly RecordingDto _recording;
     private readonly RecordedFrameClient _frameClient;
@@ -109,12 +110,12 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
         SelectedFrameMcs = target.Mcs;
         try
         {
-            FullFrameBuffer frame = await GetCachedFrameAsync(target.Mcs, cancellationToken);
-            _showFrame(frame);
-            Status = $"Showing recorded frame at MCS {frame.Header.Mcs}.";
+            using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+            FullFrameHeader header = await GetAndShowCachedFrameAsync(target.Mcs, linked.Token);
+            Status = $"Showing recorded frame at MCS {header.Mcs}.";
             PrefetchNeighbours(index, _lifetime.Token);
         }
-        catch (Exception exception) when (exception is LaboratoryApiException or HttpRequestException or OperationCanceledException or InvalidDataException)
+        catch (Exception exception) when (exception is LaboratoryApiException or HttpRequestException or OperationCanceledException or InvalidDataException or ObjectDisposedException)
         {
             Status = exception.Message;
         }
@@ -225,6 +226,24 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
         return frame;
     }
 
+    private async Task<FullFrameHeader> GetAndShowCachedFrameAsync(long mcs, CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            FullFrameBuffer frame = await GetCachedFrameAsync(mcs, cancellationToken);
+            lock (_cacheGate)
+            {
+                if (_disposed)
+                    throw new ObjectDisposedException(nameof(RecordingPlaybackViewModel));
+                if (!_cache.TryGetValue(frame.Header.Mcs, out CacheEntry? entry) || !ReferenceEquals(entry.Frame, frame))
+                    continue;
+
+                _showFrame(frame);
+                return frame.Header;
+            }
+        }
+    }
+
     private void PrefetchNeighbours(int index, CancellationToken cancellationToken)
     {
         if (index > 0)
@@ -238,7 +257,7 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
         Task task;
         lock (_cacheGate)
         {
-            if (_disposed)
+            if (_disposed || _prefetchTasks.Count >= MaximumPrefetchRequests)
                 return;
             task = PrefetchAsync(mcs, cancellationToken);
             _prefetchTasks.Add(task);
