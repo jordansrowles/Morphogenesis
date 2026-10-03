@@ -19,6 +19,7 @@ public sealed class SimulationSession : IAsyncDisposable
     private readonly object _disposeGate = new();
     private readonly ExperimentManifest _manifest;
     private readonly ExperimentSimulationInstance _instance;
+    private readonly Action<MorphogenesisState> _validateInvariants;
     private readonly Channel<SessionRequest> _requests;
     private readonly CancellationTokenSource _workerCancellation = new();
     private readonly LatestValuePublisher<SimulationSessionSnapshot> _statePublisher = new(CloneSnapshot);
@@ -59,10 +60,12 @@ public sealed class SimulationSession : IAsyncDisposable
         Task? workerStartGate = null,
         RecordingOptions? recordingOptions = null,
         CoalescingLatticeChangeAccumulator? recordingAccumulator = null,
-        IRecordingStore? recordingStore = null)
+        IRecordingStore? recordingStore = null,
+        Action<MorphogenesisState>? invariantValidator = null)
     {
         _manifest = manifest;
         _instance = instance;
+        _validateInvariants = invariantValidator ?? (static state => state.ValidateInvariants());
         _workerStartGate = workerStartGate;
         RecordingOptions resolvedRecordingOptions = recordingOptions ?? new RecordingOptions();
         if (resolvedRecordingOptions.Enabled)
@@ -307,6 +310,7 @@ public sealed class SimulationSession : IAsyncDisposable
                 {
                     if (GetCurrentMcs() >= _manifest.McsCount)
                     {
+                        _validateInvariants(_instance.Simulation.State);
                         CaptureFinalFrameIfNeeded();
                         TransitionToTerminal(SimulationSessionStatus.Completed, null);
                         ProcessQueuedRequests();
@@ -326,6 +330,7 @@ public sealed class SimulationSession : IAsyncDisposable
 
                     if (GetCurrentMcs() >= _manifest.McsCount)
                     {
+                        _validateInvariants(_instance.Simulation.State);
                         CaptureFinalFrameIfNeeded();
                         TransitionToTerminal(SimulationSessionStatus.Completed, null);
                         ProcessQueuedRequests();
@@ -456,7 +461,10 @@ public sealed class SimulationSession : IAsyncDisposable
         }
 
         CaptureFinalFrameIfNeeded();
-        SimulationSessionStatus status = GetCurrentMcs() >= _manifest.McsCount
+        bool completed = GetCurrentMcs() >= _manifest.McsCount;
+        if (completed)
+            _validateInvariants(_instance.Simulation.State);
+        SimulationSessionStatus status = completed
             ? SimulationSessionStatus.Completed
             : SimulationSessionStatus.Paused;
         Transition(status, incrementRevision: true);
@@ -475,6 +483,10 @@ public sealed class SimulationSession : IAsyncDisposable
             _noOps += summary.NoOps;
             _connectivityFallbacks += summary.ConnectivityFallbacks;
         }
+
+        int validationCadence = _manifest.Measurements.ValidateInvariantsEveryMcs;
+        if (validationCadence > 0 && (mcs % validationCadence == 0 || mcs == _manifest.McsCount))
+            _validateInvariants(_instance.Simulation.State);
 
         if (mcs % _manifest.Measurements.EveryMcs == 0 || mcs == _manifest.McsCount)
         {

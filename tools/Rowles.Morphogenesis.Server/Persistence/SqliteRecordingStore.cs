@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Rowles.Morphogenesis.Laboratory.Recording;
 
 namespace Rowles.Morphogenesis.Server.Persistence;
@@ -12,6 +13,8 @@ public sealed class SqliteRecordingStore : IRecordingStore
     {
         _database = database;
     }
+
+    internal int PendingRunCreationCount => _created.Count;
 
     public async ValueTask CreateAsync(RecordingHeader header, CancellationToken cancellationToken)
     {
@@ -42,11 +45,19 @@ public sealed class SqliteRecordingStore : IRecordingStore
         CancellationToken cancellationToken) =>
         new(_database.CompleteRecordingAsync(sessionId, completion, cancellationToken));
 
-    internal Task WaitForRunCreationAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    internal async Task WaitForRunCreationAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         TaskCompletionSource completion = _created.GetOrAdd(
             sessionId,
             static _ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
-        return completion.Task.WaitAsync(cancellationToken);
+        try
+        {
+            await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ((ICollection<KeyValuePair<Guid, TaskCompletionSource>>)_created)
+                .Remove(new KeyValuePair<Guid, TaskCompletionSource>(sessionId, completion));
+        }
     }
 }

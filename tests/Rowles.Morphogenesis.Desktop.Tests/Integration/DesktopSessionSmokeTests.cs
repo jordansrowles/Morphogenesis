@@ -87,8 +87,8 @@ public sealed class DesktopSessionSmokeTests
 
             RecordingDto recording = await WaitForRecordingAsync(api, session.SessionId);
             Assert.True(recording.FrameCount > 0);
-            FullFrameBuffer recorded = await new RecordedFrameClient(api).GetFrameAsync(
-                session.SessionId, recording.Frames[0].Mcs);
+            using RecordedFrameClient recordedFrameClient = new(api, session.Width, session.Height);
+            using FullFrameBuffer recorded = await recordedFrameClient.GetFrameAsync(session.SessionId, recording.Frames[0].Mcs);
             Assert.Equal(session.Width, recorded.Header.Width);
             Assert.Equal(session.Height, recorded.Header.Height);
         }

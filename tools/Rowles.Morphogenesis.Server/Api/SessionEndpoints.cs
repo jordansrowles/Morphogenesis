@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Net.WebSockets;
 using Rowles.Morphogenesis.Laboratory.Playback;
@@ -230,17 +231,23 @@ public static class SessionEndpoints
         if (!run.Payload.Recording.Enabled)
             return Results.Conflict(new { error = "Recording is disabled for this session." });
 
+        ReconstructedRecordingFrame? frame = null;
+        byte[]? payload = null;
         try
         {
-            using ReconstructedRecordingFrame frame = await reconstructor.ReconstructAsync(
+            frame = await reconstructor.ReconstructAsync(
                 reader,
                 id,
                 mcs.Value,
                 cancellationToken).ConfigureAwait(false);
-            byte[] payload = new byte[FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height)];
-            FullFrameMessageWriter.Write(payload, frame.Sequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
+            int payloadLength = FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height);
+            payload = ArrayPool<byte>.Shared.Rent(payloadLength);
+            FullFrameMessageWriter.Write(payload.AsSpan(0, payloadLength), frame.Sequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
             registry.MarkActivity(id);
-            return new FullFrameHttpResult(payload, frame.Mcs, frame.Sequence);
+            FullFrameHttpResult result = new(payload, payloadLength, frame.Mcs, frame.Sequence, frame);
+            payload = null;
+            frame = null;
+            return result;
         }
         catch (ArgumentOutOfRangeException exception)
         {
@@ -254,12 +261,18 @@ public static class SessionEndpoints
         {
             return Results.Conflict(new { error = exception.Message });
         }
-        catch (InvalidDataException exception)
+        catch (Exception exception) when (exception is InvalidDataException or FormatException)
         {
             return Results.Problem(
                 title: "The stored recording is invalid.",
                 detail: exception.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
+        }
+        finally
+        {
+            if (payload is not null)
+                ArrayPool<byte>.Shared.Return(payload);
+            frame?.Dispose();
         }
     }
 
@@ -429,17 +442,30 @@ public static class SessionEndpoints
         SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or
         SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled;
 
-    private sealed class FullFrameHttpResult(byte[] payload, long mcs, long sequence) : IResult
+    private sealed class FullFrameHttpResult(
+        byte[] payload,
+        int payloadLength,
+        long mcs,
+        long sequence,
+        ReconstructedRecordingFrame frame) : IResult
     {
         public async Task ExecuteAsync(HttpContext httpContext)
         {
-            httpContext.Response.StatusCode = StatusCodes.Status200OK;
-            httpContext.Response.ContentType = "application/octet-stream";
-            httpContext.Response.ContentLength = payload.Length;
-            httpContext.Response.Headers["X-Morphogenesis-Frame-Protocol"] = FullFrameMessageWriter.ProtocolVersion.ToString(CultureInfo.InvariantCulture);
-            httpContext.Response.Headers["X-Morphogenesis-Frame-Mcs"] = mcs.ToString(CultureInfo.InvariantCulture);
-            httpContext.Response.Headers["X-Morphogenesis-Frame-Sequence"] = sequence.ToString(CultureInfo.InvariantCulture);
-            await httpContext.Response.Body.WriteAsync(payload, httpContext.RequestAborted).ConfigureAwait(false);
+            try
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status200OK;
+                httpContext.Response.ContentType = "application/octet-stream";
+                httpContext.Response.ContentLength = payloadLength;
+                httpContext.Response.Headers["X-Morphogenesis-Frame-Protocol"] = FullFrameMessageWriter.ProtocolVersion.ToString(CultureInfo.InvariantCulture);
+                httpContext.Response.Headers["X-Morphogenesis-Frame-Mcs"] = mcs.ToString(CultureInfo.InvariantCulture);
+                httpContext.Response.Headers["X-Morphogenesis-Frame-Sequence"] = sequence.ToString(CultureInfo.InvariantCulture);
+                await httpContext.Response.Body.WriteAsync(payload.AsMemory(0, payloadLength), httpContext.RequestAborted).ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(payload);
+                frame.Dispose();
+            }
         }
     }
 }

@@ -21,7 +21,8 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
     private CancellationTokenSource? _streamCancellation;
     private Task? _streamTask;
     private Task? _refreshTask;
-    private FullFrameBuffer? _displayedFrame;
+    private readonly FullFrameBuffer _displayedFrame;
+    private bool _hasDisplayedFrame;
     private bool _disposed;
     private bool _dragging;
     private bool _dragMoved;
@@ -34,7 +35,8 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
         Session = session;
         _apiClient = apiClient;
         _streamClient = streamClient;
-        _recordedFrameClient = new RecordedFrameClient(apiClient);
+        _recordedFrameClient = new RecordedFrameClient(apiClient, session.Width, session.Height);
+        _displayedFrame = new FullFrameBuffer(checked(session.Width * session.Height));
         Inspector = new CellInspectorViewModel(apiClient, session.SessionId);
         PlaybackRateOptions = [0.25, 0.5, 1, 2, 4];
         RefreshCommandAvailability();
@@ -220,7 +222,7 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
 
     public void ZoomAt(Point point, double wheelDelta, double viewportWidth, double viewportHeight)
     {
-        if (_displayedFrame is null)
+        if (!_hasDisplayedFrame)
             return;
         double oldZoom = Zoom;
         double newZoom = Math.Clamp(oldZoom * (wheelDelta > 0 ? 1.15 : 1 / 1.15), 1, 32);
@@ -246,6 +248,7 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
         await DisconnectStreamAsync();
         if (Playback is not null)
             await Playback.DisposeAsync();
+        _recordedFrameClient.Dispose();
         _streamCancellation?.Dispose();
         _lifetime.Dispose();
         _renderer.Dispose();
@@ -296,8 +299,7 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
                 {
                     Action applyFrame = () =>
                     {
-                        _displayedFrame = frame;
-                        Bitmap = _renderer.Render(frame, Session.Metadata, ViewMode);
+                        DisplayFrame(frame);
                         StreamStatus = "Connected";
                         Inspector.UpdateDisplayedFrameMcs(frame.Header.Mcs);
                         OnPropertyChanged(nameof(McsText));
@@ -334,8 +336,7 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
                 await Playback.DisposeAsync();
             Playback = new RecordingPlaybackViewModel(Session.SessionId, recording, _recordedFrameClient, frame =>
             {
-                _displayedFrame = frame;
-                Bitmap = _renderer.Render(frame, Session.Metadata, ViewMode);
+                DisplayFrame(frame);
                 Inspector.UpdateDisplayedFrameMcs(frame.Header.Mcs);
                 OnPropertyChanged(nameof(McsText));
             });
@@ -423,7 +424,7 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
 
     private async Task SelectAtAsync(double x, double y, double viewportWidth, double viewportHeight, CancellationToken cancellationToken)
     {
-        if (_displayedFrame is null || viewportWidth <= 0 || viewportHeight <= 0)
+        if (!_hasDisplayedFrame || viewportWidth <= 0 || viewportHeight <= 0)
             return;
         FullFrameHeader header = _displayedFrame.Header;
         if (!LatticeCoordinates.TryMapViewToCell(x, y, viewportWidth, viewportHeight,
@@ -435,8 +436,16 @@ public sealed partial class SessionViewModel : ObservableObject, IAsyncDisposabl
 
     private void RenderDisplayedFrame()
     {
-        if (_displayedFrame is not null)
+        if (_hasDisplayedFrame)
             Bitmap = _renderer.Render(_displayedFrame, Session.Metadata, ViewMode);
+    }
+
+    private void DisplayFrame(FullFrameBuffer frame)
+    {
+        frame.CellIds.CopyTo(_displayedFrame.CellIds, 0);
+        _displayedFrame.SetHeader(frame.Header);
+        _hasDisplayedFrame = true;
+        Bitmap = _renderer.Render(_displayedFrame, Session.Metadata, ViewMode);
     }
 
     private void RefreshCommandAvailability()

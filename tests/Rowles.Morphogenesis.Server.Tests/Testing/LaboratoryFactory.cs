@@ -29,12 +29,16 @@ internal sealed class TemporaryLaboratoryRoot : IDisposable
 
 internal sealed class LaboratoryFactory : WebApplicationFactory<Program>
 {
+    private readonly Action<IServiceCollection>? _configureTestServices;
+
     internal LaboratoryFactory(
         string root,
         bool longRunning = true,
         Action<string>? mutateCatalogue = null,
-        LaboratoryResourceLimits? resourceLimits = null)
+        LaboratoryResourceLimits? resourceLimits = null,
+        Action<IServiceCollection>? configureTestServices = null)
     {
+        _configureTestServices = configureTestServices;
         Root = root;
         ResourceLimits = resourceLimits ?? new LaboratoryResourceLimits();
         DataDirectory = System.IO.Path.Combine(root, "data");
@@ -85,6 +89,7 @@ internal sealed class LaboratoryFactory : WebApplicationFactory<Program>
                 DatabaseFileName = "laboratory.db",
                 ResourceLimits = ResourceLimits
             });
+            _configureTestServices?.Invoke(services);
         });
     }
 }

@@ -258,6 +258,63 @@ public sealed class SimulationSessionTests
     }
 
     [Fact]
+    public async Task InteractiveRunHonoursInvariantCadenceAndValidatesTheFinalState()
+    {
+        ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: 5) with
+        {
+            Measurements = SessionTestFixture.CreateManifest().Measurements with { ValidateInvariantsEveryMcs = 2 }
+        };
+        int validationCount = 0;
+        ExperimentSimulationInstance instance = ExperimentSimulationFactory.Create(manifest, replicateIndex: 0);
+        await using SimulationSession session = new(
+            Guid.NewGuid(),
+            manifest,
+            instance,
+            new SimulationSessionOptions(),
+            invariantValidator: _ => validationCount++);
+
+        await session.StartAsync(Guid.NewGuid(), expectedRevision: 0);
+        SimulationSessionSnapshot completed = await SessionTestFixture.WaitForStatusAsync(session, SimulationSessionStatus.Completed);
+
+        Assert.Equal(5, completed.CurrentMcs);
+        Assert.Equal(4, validationCount); // MCS 2, 4, final MCS 5, and the headless final-state check.
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ZeroMcsCompletionValidatesTheInitialState(bool start)
+    {
+        ExperimentManifest template = SessionTestFixture.CreateManifest();
+        ExperimentManifest manifest = template with
+        {
+            McsCount = 0,
+            Measurements = template.Measurements with { ValidateInvariantsEveryMcs = 2 }
+        };
+        int validationCount = 0;
+        ExperimentSimulationInstance instance = ExperimentSimulationFactory.Create(manifest, replicateIndex: 0);
+        await using SimulationSession session = new(
+            Guid.NewGuid(),
+            manifest,
+            instance,
+            new SimulationSessionOptions(),
+            invariantValidator: _ => validationCount++);
+
+        if (start)
+        {
+            await session.StartAsync(Guid.NewGuid(), expectedRevision: 0);
+            await SessionTestFixture.WaitForStatusAsync(session, SimulationSessionStatus.Completed);
+        }
+        else
+        {
+            SimulationCommandResult stepped = await session.StepAsync(Guid.NewGuid(), expectedRevision: 0);
+            Assert.Equal(SimulationSessionStatus.Completed, stepped.Status);
+        }
+
+        Assert.Equal(1, validationCount);
+    }
+
+    [Fact]
     public async Task InspectionReturnsDetachedLiveCellDataWithoutChangingRevision()
     {
         ExperimentManifest manifest = SessionTestFixture.CreateManifest(mcsCount: 10);

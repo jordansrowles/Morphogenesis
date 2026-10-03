@@ -68,6 +68,8 @@ Live frames use binary protocol version 1, with message type 1 for a full frame.
 
 Metrics are labelled by MCS and include heterotypic interface fraction, mean cell area, mean cell perimeter, and type A/B counts. Display rate controls frame publication only; they do not change simulation or measurement cadence.
 
+Interactive sessions honour `ValidateInvariantsEveryMcs` and validate the final lattice before reporting completion. `SnapshotEveryMcs` applies to headless `ExperimentRunner` results only; visual sessions publish display frames and optional recording frames, not scientific `ExperimentSnapshot` objects.
+
 ## Recording and playback
 
 Recording is optional and is off by default. It stores visual playback data, not a deterministic replay log or restart checkpoint. Deterministic reruns use the experiment manifest, replicate index and canonical serial kernel; a visual recording cannot resume a simulation after a server restart.

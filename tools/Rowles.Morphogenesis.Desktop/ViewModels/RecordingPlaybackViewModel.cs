@@ -16,9 +16,11 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
     private readonly object _cacheGate = new();
     private readonly Dictionary<long, CacheEntry> _cache = [];
     private readonly LinkedList<long> _cacheOrder = [];
+    private readonly HashSet<Task> _prefetchTasks = [];
     private readonly CancellationTokenSource _lifetime = new();
     private CancellationTokenSource? _playbackCancellation;
     private Task? _playbackTask;
+    private bool _disposed;
 
     public RecordingPlaybackViewModel(
         Guid sessionId,
@@ -120,10 +122,24 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
 
     public async ValueTask DisposeAsync()
     {
+        Task[] prefetchTasks;
+        lock (_cacheGate)
+        {
+            _disposed = true;
+            prefetchTasks = _prefetchTasks.ToArray();
+        }
         _lifetime.Cancel();
         Pause();
         if (_playbackTask is not null)
             await _playbackTask;
+        await Task.WhenAll(prefetchTasks);
+        lock (_cacheGate)
+        {
+            foreach (CacheEntry entry in _cache.Values)
+                entry.Frame.Dispose();
+            _cache.Clear();
+            _cacheOrder.Clear();
+        }
         if (_playbackCancellation is not null)
         {
             _playbackCancellation.Dispose();
@@ -181,8 +197,15 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
         FullFrameBuffer frame = await _frameClient.GetFrameAsync(_sessionId, mcs, cancellationToken);
         lock (_cacheGate)
         {
+            if (_disposed)
+            {
+                frame.Dispose();
+                throw new ObjectDisposedException(nameof(RecordingPlaybackViewModel));
+            }
+
             if (_cache.TryGetValue(frame.Header.Mcs, out CacheEntry? existing))
             {
+                frame.Dispose();
                 _cacheOrder.Remove(existing.Node);
                 _cacheOrder.AddFirst(existing.Node);
                 return existing.Frame;
@@ -194,7 +217,8 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
             {
                 LinkedListNode<long> oldest = _cacheOrder.Last!;
                 _cacheOrder.RemoveLast();
-                _cache.Remove(oldest.Value);
+                if (_cache.Remove(oldest.Value, out CacheEntry? removed))
+                    removed.Frame.Dispose();
             }
         }
         Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(CachedFrameCount)));
@@ -204,9 +228,31 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
     private void PrefetchNeighbours(int index, CancellationToken cancellationToken)
     {
         if (index > 0)
-            _ = PrefetchAsync(Frames[index - 1].Mcs, cancellationToken);
+            SchedulePrefetch(Frames[index - 1].Mcs, cancellationToken);
         if (index + 1 < Frames.Count)
-            _ = PrefetchAsync(Frames[index + 1].Mcs, cancellationToken);
+            SchedulePrefetch(Frames[index + 1].Mcs, cancellationToken);
+    }
+
+    private void SchedulePrefetch(long mcs, CancellationToken cancellationToken)
+    {
+        Task task;
+        lock (_cacheGate)
+        {
+            if (_disposed)
+                return;
+            task = PrefetchAsync(mcs, cancellationToken);
+            _prefetchTasks.Add(task);
+        }
+
+        _ = task.ContinueWith(
+            completed =>
+            {
+                lock (_cacheGate)
+                    _prefetchTasks.Remove(completed);
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
     }
 
     private async Task PrefetchAsync(long mcs, CancellationToken cancellationToken)
@@ -215,7 +261,7 @@ public sealed partial class RecordingPlaybackViewModel : ObservableObject, IAsyn
         {
             await GetCachedFrameAsync(mcs, cancellationToken);
         }
-        catch (Exception exception) when (exception is LaboratoryApiException or HttpRequestException or OperationCanceledException or InvalidDataException)
+        catch (Exception exception) when (exception is LaboratoryApiException or HttpRequestException or OperationCanceledException or InvalidDataException or ObjectDisposedException)
         {
         }
     }

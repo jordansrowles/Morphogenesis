@@ -98,7 +98,7 @@ public sealed record CommandResponse(
 
 public sealed record CommandFailureDto(string? Error, string? Failure, SessionDto? Session);
 
-public sealed record RecordingFrameResponse(byte[] Payload, string Protocol, long Mcs, long Sequence);
+public sealed record RecordingFrameResponse(string Protocol, long Mcs, long Sequence, int PayloadLength);
 
 public sealed class LaboratoryApiException(HttpStatusCode statusCode, string message) : Exception(message)
 {
@@ -118,6 +118,10 @@ public interface ILaboratoryApiClient : IDisposable
     Task<IReadOnlyList<PersistedMetricSampleDto>> GetMetricsAsync(Guid sessionId, CancellationToken cancellationToken = default);
     Task<CellInspectionDto> InspectCellAsync(Guid sessionId, int cellId, CancellationToken cancellationToken = default);
     Task<RecordingDto> GetRecordingAsync(Guid sessionId, CancellationToken cancellationToken = default);
-    Task<RecordingFrameResponse> GetRecordingFrameAsync(Guid sessionId, long mcs, CancellationToken cancellationToken = default);
+    Task<RecordingFrameResponse> GetRecordingFrameAsync(
+        Guid sessionId,
+        long mcs,
+        Memory<byte> destination,
+        CancellationToken cancellationToken = default);
     Uri GetStreamUri(Guid sessionId);
 }

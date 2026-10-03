@@ -1,14 +1,17 @@
 using Rowles.Morphogenesis.Desktop.Networking;
+using System.Runtime.InteropServices;
 
 namespace Rowles.Morphogenesis.Desktop.Tests.Testing;
 
 internal sealed class FakeLaboratoryApiClient(SessionDto session) : ILaboratoryApiClient
 {
     private Uri _baseAddress = new("http://127.0.0.1:5080/");
+    private int[]? _recordingCellIds;
 
     internal SessionDto Session { get; set; } = session;
     internal List<(string Command, SessionCommandRequestDto Request)> Commands { get; } = [];
     internal List<long> RecordingFrameRequests { get; } = [];
+    internal List<byte[]> RecordingFrameReceiveBuffers { get; } = [];
     internal int GetSessionCalls { get; private set; }
     internal Func<string, SessionCommandRequestDto, CommandResponse>? CommandHandler { get; set; }
 
@@ -61,11 +64,30 @@ internal sealed class FakeLaboratoryApiClient(SessionDto session) : ILaboratoryA
     public Task<RecordingDto> GetRecordingAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
         Task.FromResult(new RecordingDto(sessionId, Session.RecordingState, null, 1, 1, 20, "lz4", 0, null, 0, []));
 
-    public Task<RecordingFrameResponse> GetRecordingFrameAsync(Guid sessionId, long mcs, CancellationToken cancellationToken = default)
+    public Task<RecordingFrameResponse> GetRecordingFrameAsync(
+        Guid sessionId,
+        long mcs,
+        Memory<byte> destination,
+        CancellationToken cancellationToken = default)
     {
         RecordingFrameRequests.Add(mcs);
-        byte[] payload = FullFrameProtocol.Encode(mcs / 10, mcs, 1, 1, [1]);
-        return Task.FromResult(new RecordingFrameResponse(payload, "1", mcs, mcs / 10));
+        int cellCount = checked(Session.Width * Session.Height);
+        if (_recordingCellIds is null || _recordingCellIds.Length != cellCount)
+        {
+            _recordingCellIds = new int[cellCount];
+            Array.Fill(_recordingCellIds, 1);
+        }
+        int payloadLength = FullFrameProtocol.GetMessageLength(Session.Width, Session.Height);
+        FullFrameProtocol.Write(
+            destination.Span[..payloadLength],
+            mcs / 10,
+            mcs,
+            Session.Width,
+            Session.Height,
+            _recordingCellIds);
+        if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)destination, out ArraySegment<byte> segment) && segment.Array is not null)
+            RecordingFrameReceiveBuffers.Add(segment.Array);
+        return Task.FromResult(new RecordingFrameResponse("1", mcs, mcs / 10, payloadLength));
     }
 
     public Uri GetStreamUri(Guid sessionId) => new(_baseAddress, $"api/sessions/{sessionId:D}/stream");

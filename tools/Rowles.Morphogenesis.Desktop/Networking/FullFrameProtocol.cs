@@ -12,12 +12,33 @@ public readonly record struct FullFrameHeader(
     int Height,
     int CellCount);
 
-public sealed class FullFrameBuffer(int siteCount)
+public sealed class FullFrameBuffer : IDisposable
 {
-    public int[] CellIds { get; } = new int[siteCount];
+    private readonly FullFrameBufferPool? _pool;
+    private int[]? _cellIds;
+
+    public FullFrameBuffer(int siteCount)
+    {
+        _cellIds = new int[siteCount];
+    }
+
+    internal FullFrameBuffer(int[] cellIds, FullFrameBufferPool pool)
+    {
+        _cellIds = cellIds;
+        _pool = pool;
+    }
+
+    public int[] CellIds => Volatile.Read(ref _cellIds) ?? throw new ObjectDisposedException(nameof(FullFrameBuffer));
     public FullFrameHeader Header { get; private set; }
 
     internal void SetHeader(FullFrameHeader header) => Header = header;
+
+    public void Dispose()
+    {
+        int[]? cellIds = Interlocked.Exchange(ref _cellIds, null);
+        if (cellIds is not null)
+            _pool?.Return(cellIds);
+    }
 }
 
 public static class FullFrameProtocol

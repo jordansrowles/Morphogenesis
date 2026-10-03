@@ -169,6 +169,39 @@ public sealed class LaboratoryHardeningTests
     }
 
     [Fact]
+    public async Task TerminalPersistenceRetriesWithoutHoldingTheRegistryGateAndEventuallyReleasesTheSession()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        using LaboratoryFactory factory = new(root.Path);
+        using HttpClient client = factory.CreateClient();
+        SessionDto first = await CreateSessionAsync(client, recording: false);
+        SessionDto second = await CreateSessionAsync(client, recording: false);
+        SimulationSessionRegistry registry = factory.Services.GetRequiredService<SimulationSessionRegistry>();
+        SqliteWriteQueue queue = factory.Services.GetRequiredService<SqliteWriteQueue>();
+        LaboratoryDiagnostics diagnostics = factory.Services.GetRequiredService<LaboratoryDiagnostics>();
+        Assert.True(registry.TryGetSession(first.SessionId, out SimulationSession firstSession));
+
+        await queue.StopAsync(CancellationToken.None);
+        SimulationCommandResult terminal = await firstSession.StopAsync(Guid.NewGuid(), first.Revision);
+        Assert.Equal(SimulationCommandDisposition.Applied, terminal.Disposition);
+
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+        while (diagnostics.Capture(registry.GetLiveSessions(), queue.QueueDepth).PersistenceFailures == 0)
+            await Task.Delay(10, timeout.Token);
+
+        SimulationCommandResult otherSessionCommand = await registry.ExecuteCommandAsync(
+            second.SessionId,
+            SimulationCommandKind.Stop,
+            Guid.NewGuid(),
+            second.Revision,
+            timeout.Token).AsTask().WaitAsync(TimeSpan.FromMilliseconds(750), timeout.Token);
+        Assert.Equal(SimulationCommandDisposition.Applied, otherSessionCommand.Disposition);
+
+        while (registry.TryGetSession(first.SessionId, out _) || registry.TryGetSession(second.SessionId, out _))
+            await Task.Delay(10, timeout.Token);
+    }
+
+    [Fact]
     public async Task PausingBeyondCapacityCancelsTheOldestPausedSessionWithPolicyReason()
     {
         using TemporaryLaboratoryRoot root = new();
@@ -208,6 +241,30 @@ public sealed class LaboratoryHardeningTests
         Assert.Equal(SimulationSessionStatus.Cancelled, persisted.Status);
         Assert.Contains("ResourcePolicy: CreatedSessionIdleTimeout", persisted.Failure, StringComparison.Ordinal);
         Assert.False(factory.Services.GetRequiredService<SimulationSessionRegistry>().TryGetSession(created.SessionId, out _));
+    }
+
+    [Fact]
+    public async Task RepeatedRecordingSessionCreationAndRetirementReleasesCreationCoordinationEntries()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        using LaboratoryFactory factory = new(root.Path);
+        using HttpClient client = factory.CreateClient();
+        SimulationSessionRegistry registry = factory.Services.GetRequiredService<SimulationSessionRegistry>();
+        SqliteRecordingStore store = factory.Services.GetRequiredService<SqliteRecordingStore>();
+
+        for (int index = 0; index < 6; index++)
+        {
+            SessionDto created = await CreateSessionAsync(client, recording: true);
+            Assert.Equal(0, store.PendingRunCreationCount);
+
+            SessionDto stopped = await SendCommandAsync(client, created, "stop");
+            Assert.Equal(SimulationSessionStatus.Cancelled, stopped.Status);
+            using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+            while (registry.TryGetSession(created.SessionId, out _))
+                await Task.Delay(10, timeout.Token);
+
+            Assert.Equal(0, store.PendingRunCreationCount);
+        }
     }
 
     [Fact]

@@ -106,6 +106,7 @@ public sealed class LaboratoryApiClient : ILaboratoryApiClient
     public async Task<RecordingFrameResponse> GetRecordingFrameAsync(
         Guid sessionId,
         long mcs,
+        Memory<byte> destination,
         CancellationToken cancellationToken = default)
     {
         using HttpResponseMessage response = await _httpClient.GetAsync(
@@ -121,11 +122,28 @@ public sealed class LaboratoryApiClient : ILaboratoryApiClient
             !long.TryParse(sequenceValues.SingleOrDefault(), System.Globalization.NumberStyles.Integer,
                 System.Globalization.CultureInfo.InvariantCulture, out long sequence))
             throw new InvalidDataException("The recording frame response contains an invalid MCS or sequence header.");
+        if (response.Content.Headers.ContentLength is not long contentLength ||
+            contentLength < 0 || contentLength > destination.Length || contentLength > int.MaxValue)
+        {
+            throw new InvalidDataException("The recording frame response has an invalid or unsupported payload length.");
+        }
+
+        int payloadLength = (int)contentLength;
+        await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        int offset = 0;
+        while (offset < payloadLength)
+        {
+            int read = await body.ReadAsync(destination[offset..payloadLength], cancellationToken).ConfigureAwait(false);
+            if (read == 0)
+                throw new EndOfStreamException("The recording frame response ended before its declared payload length.");
+            offset += read;
+        }
+
         return new RecordingFrameResponse(
-            await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false),
             protocolValues.SingleOrDefault() ?? string.Empty,
             actualMcs,
-            sequence);
+            sequence,
+            payloadLength);
     }
 
     public Uri GetStreamUri(Guid sessionId)

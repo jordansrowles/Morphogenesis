@@ -115,11 +115,13 @@ public sealed class LaboratoryApiClientTests
         Assert.Equal(6.5, metrics[0].Values["cell-area.mean"]);
         CellInspectionDto inspection = await client.InspectCellAsync(sessionId, 3);
         Assert.Equal("Type A", inspection.CellTypeName);
-        RecordingFrameResponse recordingFrame = await client.GetRecordingFrameAsync(sessionId, 20);
+        byte[] frameBuffer = new byte[frameBytes.Length];
+        RecordingFrameResponse recordingFrame = await client.GetRecordingFrameAsync(sessionId, 20, frameBuffer);
         Assert.Equal("1", recordingFrame.Protocol);
         Assert.Equal(20, recordingFrame.Mcs);
         Assert.Equal(5, recordingFrame.Sequence);
-        Assert.Equal(frameBytes, recordingFrame.Payload);
+        Assert.Equal(frameBytes.Length, recordingFrame.PayloadLength);
+        Assert.Equal(frameBytes, frameBuffer);
         Assert.Equal(new Uri("ws://127.0.0.1:5080/api/sessions/" + sessionId.ToString("D") + "/stream"),
             client.GetStreamUri(sessionId));
     }

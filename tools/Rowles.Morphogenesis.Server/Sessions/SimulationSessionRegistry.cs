@@ -208,9 +208,13 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         long expectedRevision,
         CancellationToken cancellationToken = default)
     {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        List<ActiveSession> terminalSessionsToRetire = [];
+        SimulationCommandResult commandResult;
         await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
             if (!_sessions.TryGetValue(sessionId, out ActiveSession? active))
                 throw new KeyNotFoundException($"Live session '{sessionId:D}' was not found.");
 
@@ -225,7 +229,7 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
 
             try
             {
-                SimulationCommandResult result = kind switch
+                commandResult = kind switch
                 {
                     SimulationCommandKind.Start => await active.Session.StartAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
                     SimulationCommandKind.Pause => await active.Session.PauseAsync(commandId, expectedRevision, cancellationToken).ConfigureAwait(false),
@@ -237,7 +241,7 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
 
                 SimulationSessionSnapshot after = active.Session.GetSnapshot();
                 _capacity.ObserveStatus(sessionId, after.Status);
-                if (result.Disposition == SimulationCommandDisposition.Applied)
+                if (commandResult.Disposition == SimulationCommandDisposition.Applied)
                 {
                     active.MarkActivity(DateTimeOffset.UtcNow);
                     _logger.LogInformation(
@@ -249,9 +253,12 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                     if (kind is SimulationCommandKind.Pause or SimulationCommandKind.Stop)
                         _capacity.ReleaseRunning(sessionId);
                     if (kind == SimulationCommandKind.Pause)
-                        await EnforcePausedSessionLimitAsync(sessionId, cancellationToken).ConfigureAwait(false);
+                    {
+                        terminalSessionsToRetire.AddRange(
+                            await EnforcePausedSessionLimitAsync(sessionId, cancellationToken).ConfigureAwait(false));
+                    }
                 }
-                else if (result.Disposition == SimulationCommandDisposition.Conflict)
+                else if (commandResult.Disposition == SimulationCommandDisposition.Conflict)
                 {
                     _diagnostics.RecordCommandConflict();
                     _logger.LogWarning(
@@ -259,18 +266,18 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                         kind,
                         sessionId,
                         expectedRevision,
-                        result.Revision);
+                        commandResult.Revision);
                 }
-                else if (result.Disposition == SimulationCommandDisposition.Failed)
+                else if (commandResult.Disposition == SimulationCommandDisposition.Failed)
                 {
                     _diagnostics.RecordCommandFailure();
                     _logger.LogError(
                         "{CommandKind} failed while applying to simulation session {SessionId} at MCS {Mcs}, revision {Revision}: {Failure}",
                         kind,
                         sessionId,
-                        result.CurrentMcs,
-                        result.Revision,
-                        result.Failure);
+                        commandResult.CurrentMcs,
+                        commandResult.Revision,
+                        commandResult.Failure);
                 }
                 else
                 {
@@ -279,10 +286,8 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                         "Rejected invalid {CommandKind} for simulation session {SessionId} in status {Status}",
                         kind,
                         sessionId,
-                        result.Status);
+                        commandResult.Status);
                 }
-
-                return result;
             }
             catch
             {
@@ -306,6 +311,11 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         {
             _policyGate.Release();
         }
+
+        foreach (ActiveSession terminalSession in terminalSessionsToRetire)
+            await RemoveTerminalSessionAsync(terminalSession).ConfigureAwait(false);
+
+        return commandResult;
     }
 
     public void MarkActivity(Guid sessionId)
@@ -316,14 +326,19 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
 
     public async Task<int> CancelIdleSessionsAsync(DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
     {
+        if (Volatile.Read(ref _disposed) != 0)
+            return 0;
+        List<ActiveSession> terminalSessionsToRetire = [];
+        int cancelled = 0;
         await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (Volatile.Read(ref _disposed) != 0)
+                return 0;
             ActiveSession[] idle = _sessions.Values
                 .Where(active => IsIdle(active, nowUtc))
                 .OrderBy(active => active.LastActivityUtc)
                 .ToArray();
-            int cancelled = 0;
             foreach (ActiveSession active in idle)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -335,7 +350,8 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                 if (result.Disposition != SimulationCommandDisposition.Applied)
                     continue;
 
-                await RemoveTerminalSessionAsync(active).ConfigureAwait(false);
+                _capacity.ObserveStatus(snapshot.SessionId, result.Status);
+                terminalSessionsToRetire.Add(active);
                 _logger.LogInformation(
                     "Cancelled idle simulation session {SessionId} under resource policy {Policy}",
                     snapshot.SessionId,
@@ -343,31 +359,50 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                 cancelled++;
             }
 
-            return cancelled;
         }
         finally
         {
             _policyGate.Release();
         }
+
+        foreach (ActiveSession active in terminalSessionsToRetire)
+            await RemoveTerminalSessionAsync(active).ConfigureAwait(false);
+
+        return cancelled;
     }
 
     public async Task RemovePersistedSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
+        if (Volatile.Read(ref _disposed) != 0)
+            return;
+        ActiveSession? active = null;
         await _policyGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_sessions.TryGetValue(sessionId, out ActiveSession? active))
+            if (_sessions.TryGetValue(sessionId, out active))
             {
-                await active.StopObserversAsync().ConfigureAwait(false);
-                _diagnostics.RecordRetiredSession(active.Session.GetSnapshot());
                 _sessions.TryRemove(sessionId, out _);
                 _capacity.RemoveSession(sessionId);
-                await active.DisposeAsync().ConfigureAwait(false);
             }
         }
         finally
         {
             _policyGate.Release();
+        }
+
+        if (active is null)
+            return;
+
+        await active.StopObserversAsync(waitForTerminalMonitor: true).ConfigureAwait(false);
+        await active.RetirementGate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            _diagnostics.RecordRetiredSession(active.Session.GetSnapshot());
+            await active.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            active.RetirementGate.Release();
         }
     }
 
@@ -420,8 +455,9 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         }
     }
 
-    private async Task EnforcePausedSessionLimitAsync(Guid justPausedSessionId, CancellationToken cancellationToken)
+    private async Task<ActiveSession[]> EnforcePausedSessionLimitAsync(Guid justPausedSessionId, CancellationToken cancellationToken)
     {
+        List<ActiveSession> terminalSessionsToRetire = [];
         ActiveSession[] paused = _sessions.Values
             .Where(active => active.Session.GetSnapshot().Status == SimulationSessionStatus.Paused)
             .OrderBy(active => active.LastActivityUtc)
@@ -431,7 +467,8 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         {
             ActiveSession? oldestIdle = paused.FirstOrDefault(active =>
                 active.Session.Metadata.SessionId != justPausedSessionId &&
-                _sessions.ContainsKey(active.Session.Metadata.SessionId));
+                _sessions.ContainsKey(active.Session.Metadata.SessionId) &&
+                active.Session.GetSnapshot().Status == SimulationSessionStatus.Paused);
             if (oldestIdle is null)
                 break;
 
@@ -442,40 +479,61 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             if (result.Disposition != SimulationCommandDisposition.Applied)
                 continue;
 
-            await RemoveTerminalSessionAsync(oldestIdle).ConfigureAwait(false);
+            _capacity.ObserveStatus(oldestIdle.Session.Metadata.SessionId, result.Status);
+            terminalSessionsToRetire.Add(oldestIdle);
             _logger.LogWarning(
                 "Cancelled paused simulation session {SessionId} because the paused-session capacity was exceeded; MCS {Mcs}, revision {Revision}",
                 snapshot.SessionId,
                 snapshot.CurrentMcs,
                 snapshot.Revision);
         }
+
+        return terminalSessionsToRetire.ToArray();
     }
 
     private async Task RemoveTerminalSessionAsync(ActiveSession active)
     {
         Guid sessionId = active.Session.Metadata.SessionId;
-        await active.Session.WaitForRecordingCompletionAsync().ConfigureAwait(false);
-        await active.StopObserversAsync().ConfigureAwait(false);
-        SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
-        await PersistTerminalStateAsync(active).ConfigureAwait(false);
+        await active.RetirementGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (!_sessions.TryGetValue(sessionId, out ActiveSession? registered) ||
+                !ReferenceEquals(active, registered) ||
+                !IsTerminal(active.Session.GetSnapshot().Status))
+            {
+                return;
+            }
 
-        _diagnostics.RecordRetiredSession(snapshot);
-        _capacity.ObserveStatus(sessionId, snapshot.Status);
-        _sessions.TryRemove(sessionId, out _);
-        _capacity.RemoveSession(sessionId);
-        await active.DisposeAsync().ConfigureAwait(false);
+            await active.Session.WaitForRecordingCompletionAsync().ConfigureAwait(false);
+            await active.StopObserversAsync().ConfigureAwait(false);
+            SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
+            bool persisted = await PersistTerminalStateAsync(active).ConfigureAwait(false);
+            if (!persisted)
+                LogTerminalPersistenceAbandonment(sessionId);
+
+            _diagnostics.RecordRetiredSession(snapshot);
+            _capacity.ObserveStatus(sessionId, snapshot.Status);
+            _sessions.TryRemove(sessionId, out _);
+            _capacity.RemoveSession(sessionId);
+            await active.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            active.RetirementGate.Release();
+        }
     }
 
-    private async Task PersistTerminalStateAsync(ActiveSession active)
+    private async Task<bool> PersistTerminalStateAsync(ActiveSession active)
     {
         Guid sessionId = active.Session.Metadata.SessionId;
-        while (true)
+        const int MaximumAttempts = 5;
+        for (int attempt = 1; attempt <= MaximumAttempts; attempt++)
         {
             try
             {
                 SimulationSessionSnapshot snapshot = active.Session.GetSnapshot();
                 await PersistSnapshotAsync(active, snapshot.LatestMeasurement, CancellationToken.None).ConfigureAwait(false);
-                return;
+                return true;
             }
             catch (KeyNotFoundException exception)
             {
@@ -483,22 +541,43 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                     exception,
                     "Persisted history for terminal simulation session {SessionId} was removed; releasing its live owner",
                     sessionId);
-                return;
+                return true;
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 _diagnostics.RecordPersistenceFailure();
-                _logger.LogError(
+                if (attempt == MaximumAttempts)
+                {
+                    _logger.LogCritical(
+                        exception,
+                        "Could not persist terminal state for simulation session {SessionId} after {AttemptCount} attempts",
+                        sessionId,
+                        MaximumAttempts);
+                    return false;
+                }
+
+                TimeSpan retryDelay = TimeSpan.FromMilliseconds(Math.Min(250 * Math.Pow(2, attempt - 1), 2_000));
+                _logger.LogWarning(
                     exception,
-                    "Could not persist terminal state for simulation session {SessionId}; retrying before releasing its resident resources",
-                    sessionId);
-                await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None).ConfigureAwait(false);
+                    "Could not persist terminal state for simulation session {SessionId}; retry {Attempt}/{MaximumAttempts} in {RetryDelay}",
+                    sessionId,
+                    attempt + 1,
+                    MaximumAttempts,
+                    retryDelay);
+                await Task.Delay(retryDelay, CancellationToken.None).ConfigureAwait(false);
             }
         }
+
+        return false;
     }
+
+    private void LogTerminalPersistenceAbandonment(Guid sessionId) => _logger.LogCritical(
+        "Terminal state for simulation session {SessionId} could not be persisted within the retry budget; releasing its live owner. Startup recovery will normalise the persisted history on the next server start.",
+        sessionId);
 
     private async Task RetireObservedTerminalSessionAsync(ActiveSession active)
     {
+        bool shouldRetire = false;
         await _policyGate.WaitAsync(_stopping.Token).ConfigureAwait(false);
         try
         {
@@ -507,13 +586,16 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
                 ReferenceEquals(active, registered) &&
                 IsTerminal(active.Session.GetSnapshot().Status))
             {
-                await RemoveTerminalSessionAsync(active).ConfigureAwait(false);
+                shouldRetire = true;
             }
         }
         finally
         {
             _policyGate.Release();
         }
+
+        if (shouldRetire)
+            await RemoveTerminalSessionAsync(active).ConfigureAwait(false);
     }
 
     private bool IsIdle(ActiveSession active, DateTimeOffset nowUtc)
@@ -548,28 +630,51 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
     private async Task DisposeSessionsCoreAsync()
     {
         await _creationGate.WaitAsync().ConfigureAwait(false);
-        await _policyGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            _stopping.Cancel();
-            ActiveSession[] sessions = _sessions.Values.ToArray();
+            ActiveSession[] sessions;
+            await _policyGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                _stopping.Cancel();
+                sessions = _sessions.Values.ToArray();
+            }
+            finally
+            {
+                _policyGate.Release();
+            }
+
             await Task.WhenAll(sessions.Select(active => active.StopObserversAsync(waitForTerminalMonitor: true))).ConfigureAwait(false);
             foreach (ActiveSession active in sessions)
             {
-                if (IsTerminal(active.Session.GetSnapshot().Status))
+                await active.RetirementGate.WaitAsync().ConfigureAwait(false);
+                try
                 {
-                    await active.Session.WaitForRecordingCompletionAsync().ConfigureAwait(false);
-                    await PersistTerminalStateAsync(active).ConfigureAwait(false);
-                }
+                    Guid sessionId = active.Session.Metadata.SessionId;
+                    if (!_sessions.TryGetValue(sessionId, out ActiveSession? registered) || !ReferenceEquals(active, registered))
+                        continue;
 
-                await active.DisposeAsync().ConfigureAwait(false);
-                _capacity.RemoveSession(active.Session.Metadata.SessionId);
+                    if (IsTerminal(active.Session.GetSnapshot().Status))
+                    {
+                        await active.Session.WaitForRecordingCompletionAsync().ConfigureAwait(false);
+                        if (!await PersistTerminalStateAsync(active).ConfigureAwait(false))
+                            LogTerminalPersistenceAbandonment(sessionId);
+                        _diagnostics.RecordRetiredSession(active.Session.GetSnapshot());
+                    }
+
+                    _sessions.TryRemove(sessionId, out _);
+                    _capacity.RemoveSession(sessionId);
+                    await active.DisposeAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    active.RetirementGate.Release();
+                }
             }
             _sessions.Clear();
         }
         finally
         {
-            _policyGate.Release();
             _creationGate.Release();
             _stopping.Dispose();
             _policyGate.Dispose();
@@ -583,6 +688,7 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         private readonly CancellationTokenSource _observerCancellation = new();
         private readonly IDisposable _residentReservation;
         private readonly object _timeGate = new();
+        private readonly object _disposeGate = new();
         private long _lastProgressMcs;
         private long _lastPersistedRevision = -1;
         private long _lastActivityUtcTicks;
@@ -593,6 +699,7 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         private string? _lastPersistedRecordingFailure;
         private Task[] _observers = [];
         private Task _terminalMonitor = Task.CompletedTask;
+        private Task? _disposeTask;
         private ILogger<SimulationSessionRegistry>? _logger;
 
         internal ActiveSession(
@@ -617,6 +724,7 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
         internal ExperimentManifest Manifest { get; }
         internal DateTimeOffset CreatedAtUtc { get; }
         internal SemaphoreSlim PersistenceGate { get; } = new(1, 1);
+        internal SemaphoreSlim RetirementGate { get; } = new(1, 1);
         internal DateTimeOffset? StartedAtUtc { get; private set; }
         internal DateTimeOffset? CompletedAtUtc { get; private set; }
         internal DateTimeOffset LastActivityUtc => new(Interlocked.Read(ref _lastActivityUtcTicks), TimeSpan.Zero);
@@ -689,7 +797,16 @@ public sealed class SimulationSessionRegistry : IHostedService, IAsyncDisposable
             }
         }
 
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
+        {
+            lock (_disposeGate)
+            {
+                _disposeTask ??= DisposeCoreAsync();
+                return new ValueTask(_disposeTask);
+            }
+        }
+
+        private async Task DisposeCoreAsync()
         {
             await StopObserversAsync().ConfigureAwait(false);
             try

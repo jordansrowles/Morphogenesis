@@ -4,9 +4,11 @@ using System.Net.Http.Json;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rowles.Morphogenesis.Laboratory.Publication;
 using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Server.Api;
+using Rowles.Morphogenesis.Server.Persistence;
 using Rowles.Morphogenesis.Server.Sessions;
 using Rowles.Morphogenesis.Server.Tests.Testing;
 using Xunit;
@@ -126,6 +128,34 @@ public sealed class FullFrameEndpointTests
         Assert.Equal(checked(FullFrameMessageWriter.HeaderLength + session.Width * session.Height * sizeof(int)), payload.Length);
     }
 
+    [Fact]
+    public async Task ReconstructionFormatFailureReturnsStoredRecordingProblem()
+    {
+        using TemporaryLaboratoryRoot root = new();
+        using LaboratoryFactory factory = new(
+            root.Path,
+            configureTestServices: services =>
+            {
+                services.RemoveAll<IRecordingReader>();
+                services.AddSingleton<IRecordingReader>(provider => new MissingKeyframeRecordingReader(
+                    provider.GetRequiredService<SqliteRecordingReader>()));
+            });
+        using HttpClient http = factory.CreateClient();
+        SessionDto session = await CreateSessionAsync(http, recordingEnabled: true);
+        SqliteRecordingReader reader = factory.Services.GetRequiredService<SqliteRecordingReader>();
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+        while ((await reader.GetFrameIndexAsync(session.SessionId, timeout.Token)).Count == 0)
+            await Task.Delay(25, timeout.Token);
+
+        using HttpResponseMessage response = await http.GetAsync(
+            $"/api/sessions/{session.SessionId:D}/recording/frame?mcs=0",
+            timeout.Token);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        string body = await response.Content.ReadAsStringAsync(timeout.Token);
+        Assert.Contains("The stored recording is invalid.", body, StringComparison.Ordinal);
+    }
+
     private static async Task<SessionDto> CreateSessionAsync(HttpClient http, bool recordingEnabled = false)
     {
         using HttpResponseMessage response = await http.PostAsJsonAsync(
@@ -177,5 +207,34 @@ public sealed class FullFrameEndpointTests
 
         Assert.Equal(expectedLength, offset);
         return buffer;
+    }
+
+    private sealed class MissingKeyframeRecordingReader(IRecordingReader inner) : IRecordingReader
+    {
+        public ValueTask<RecordingHeader> GetHeaderAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
+            inner.GetHeaderAsync(sessionId, cancellationToken);
+
+        public ValueTask<IReadOnlyList<RecordingFrameIndexEntry>> GetFrameIndexAsync(
+            Guid sessionId,
+            CancellationToken cancellationToken = default) =>
+            inner.GetFrameIndexAsync(sessionId, cancellationToken);
+
+        public ValueTask<EncodedRecordingFrame> ReadFrameAsync(
+            Guid sessionId,
+            long sequence,
+            CancellationToken cancellationToken = default) =>
+            inner.ReadFrameAsync(sessionId, sequence, cancellationToken);
+
+        public ValueTask<RecordingFrameIndexEntry?> FindFrameAtOrBeforeAsync(
+            Guid sessionId,
+            long mcs,
+            CancellationToken cancellationToken = default) =>
+            inner.FindFrameAtOrBeforeAsync(sessionId, mcs, cancellationToken);
+
+        public ValueTask<RecordingFrameIndexEntry?> FindNearestKeyframeAtOrBeforeAsync(
+            Guid sessionId,
+            long mcs,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<RecordingFrameIndexEntry?>(null);
     }
 }
