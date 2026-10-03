@@ -1,3 +1,4 @@
+using System.Buffers;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Microsoft.Data.Sqlite;
@@ -222,9 +223,23 @@ public class RecordingFrameReconstructionBenchmarks
     private async Task<long> ReconstructAndEncodeOneAsync()
     {
         using ReconstructedRecordingFrame frame = await _reconstructor.ReconstructAsync(_reader, _sessionId, 5).ConfigureAwait(false);
-        byte[] response = new byte[FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height)];
-        FullFrameMessageWriter.Write(response, frame.Sequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
-        return frame.CellIds.Span[^1] + response[^1];
+        int responseLength = FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height);
+        byte[] response = ArrayPool<byte>.Shared.Rent(responseLength);
+        try
+        {
+            FullFrameMessageWriter.Write(
+                response.AsSpan(0, responseLength),
+                frame.Sequence,
+                frame.Mcs,
+                frame.Width,
+                frame.Height,
+                frame.CellIds.Span);
+            return frame.CellIds.Span[^1] + response[responseLength - 1];
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(response);
+        }
     }
 
     private static EncodedRecordingFrame EncodeFrame(
