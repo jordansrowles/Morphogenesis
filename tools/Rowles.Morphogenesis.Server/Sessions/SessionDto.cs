@@ -22,6 +22,8 @@ public sealed record SessionDto(
     DateTimeOffset? StartedAtUtc,
     DateTimeOffset? CompletedAtUtc)
 {
+    public SessionStaticMetadataDto? Metadata { get; init; }
+
     internal static SessionDto From(PersistedRun run, SimulationSessionSnapshot? liveSnapshot = null) => new(
         run.Id,
         run.ExperimentId,
@@ -38,7 +40,10 @@ public sealed record SessionDto(
         liveSnapshot?.RecordingFailure ?? run.RecordingFailure,
         run.CreatedAtUtc,
         run.StartedAtUtc,
-        run.CompletedAtUtc);
+        run.CompletedAtUtc)
+    {
+        Metadata = CreateMetadata(run)
+    };
 
     internal static SessionDto From(
         PersistedRun run,
@@ -59,12 +64,23 @@ public sealed record SessionDto(
             snapshot.RecordingState,
             snapshot.RecordingFailure,
             run.CreatedAtUtc,
-            startedAtUtc ?? run.StartedAtUtc,
-            completedAtUtc ?? run.CompletedAtUtc);
+        startedAtUtc ?? run.StartedAtUtc,
+        completedAtUtc ?? run.CompletedAtUtc)
+    {
+        Metadata = CreateMetadata(run)
+    };
+
+    private static SessionStaticMetadataDto CreateMetadata(PersistedRun run) => new(
+        run.Payload.Metadata.BoundaryMode.ToString(),
+        (int[])run.Payload.Metadata.CellTypeByCellId.Clone());
 
     private static long ExperimentManifestMcs(string manifestJson) =>
         Rowles.Morphogenesis.Experiments.ExperimentManifest.FromJson(manifestJson).McsCount;
 }
+
+public sealed record SessionStaticMetadataDto(
+    string BoundaryMode,
+    int[] CellTypeByCellId);
 
 public sealed record RecordingFrameDto(long Sequence, long Mcs, RecordingFrameKind Kind);
 

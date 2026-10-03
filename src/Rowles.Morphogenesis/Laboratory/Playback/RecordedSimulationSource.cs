@@ -66,6 +66,9 @@ public sealed class RecordedSimulationSource : ISimulationSource
         }
     }
 
+    public long CurrentRecordedSequence =>
+        _currentFramePosition >= 0 ? _frameIndex[_currentFramePosition].Sequence : -1;
+
     public string? PlaybackFailure { get; private set; }
 
     public static async ValueTask<RecordedSimulationSource> OpenAsync(

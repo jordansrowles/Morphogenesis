@@ -10,7 +10,9 @@
   <Project Path="tests/Rowles.StrictMaths.Tests/Rowles.StrictMaths.Tests.csproj" />
   <Project Path="tools/Rowles.Morphogenesis.Experiments/Rowles.Morphogenesis.Experiments.csproj" />
   <Project Path="tools/Rowles.Morphogenesis.Server/Rowles.Morphogenesis.Server.csproj" />
+  <Project Path="tools/Rowles.Morphogenesis.Desktop/Rowles.Morphogenesis.Desktop.csproj" />
   <Project Path="tests/Rowles.Morphogenesis.Server.Tests/Rowles.Morphogenesis.Server.Tests.csproj" />
+  <Project Path="tests/Rowles.Morphogenesis.Desktop.Tests/Rowles.Morphogenesis.Desktop.Tests.csproj" />
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/Rowles.Morphogenesis.RuntimeProbe/Rowles.Morphogenesis.RuntimeProbe.csproj" />
   </Folder>

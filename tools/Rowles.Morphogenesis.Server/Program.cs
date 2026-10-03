@@ -57,6 +57,7 @@ if (app.Environment.IsDevelopment())
 else
     app.UseExceptionHandler();
 app.UseRouting();
+app.UseWebSockets();
 app.Use(async (context, next) =>
 {
     using IDisposable connection = LogContext.PushProperty("ConnectionId", context.Connection.Id);

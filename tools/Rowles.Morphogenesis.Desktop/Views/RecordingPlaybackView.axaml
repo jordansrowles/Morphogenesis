@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Rowles.Morphogenesis.Desktop.Views.RecordingPlaybackView">
+  <Border Padding="10" BorderBrush="#536272" BorderThickness="1" CornerRadius="4">
+    <StackPanel Spacing="8">
+      <TextBlock Text="Recording playback" FontSize="16" FontWeight="SemiBold" />
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Content="Play" Command="{Binding PlayCommand}" />
+        <Button Content="Pause" Command="{Binding PauseCommand}" />
+        <Button Content="◀" Command="{Binding StepBackwardCommand}" />
+        <Button Content="▶" Command="{Binding StepForwardCommand}" />
+        <ComboBox ItemsSource="{Binding PlaybackRateOptions}"
+                  SelectedItem="{Binding PlaybackRate}" Width="78" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <TextBlock Text="MCS" VerticalAlignment="Center" />
+        <NumericUpDown Value="{Binding SelectedFrameMcs}" Minimum="0" Increment="1" FormatString="0" Width="120" />
+        <Button Content="Seek" Command="{Binding SeekCommand}" />
+        <TextBlock Text="{Binding CachedFrameCount, StringFormat='Cached frames: {0}'}" VerticalAlignment="Center" />
+      </StackPanel>
+      <TextBlock Text="{Binding Status}" />
+    </StackPanel>
+  </Border>
+</UserControl>

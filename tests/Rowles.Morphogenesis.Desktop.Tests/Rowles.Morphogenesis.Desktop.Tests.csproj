@@ -2,25 +2,25 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Rowles.Morphogenesis.Server.Tests</RootNamespace>
+    <RootNamespace>Rowles.Morphogenesis.Desktop.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="Microsoft.Playwright" Version="1.63.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../../tools/Rowles.Morphogenesis.Desktop/Rowles.Morphogenesis.Desktop.csproj" />
     <ProjectReference Include="../../tools/Rowles.Morphogenesis.Server/Rowles.Morphogenesis.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../../experiments/canonical/*.json"
-             Link="experiments/canonical/%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../Fixtures/full-frame-v1.golden.hex"
              Link="Fixtures/full-frame-v1.golden.hex"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../experiments/canonical/*.json"
+             Link="experiments/canonical/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

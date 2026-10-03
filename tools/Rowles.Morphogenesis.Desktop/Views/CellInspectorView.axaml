@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Rowles.Morphogenesis.Desktop.Views.CellInspectorView">
+  <StackPanel Spacing="7">
+    <TextBlock Text="Cell inspector" FontSize="18" FontWeight="SemiBold" />
+    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+      <TextBlock Grid.Row="0" Text="Cell ID" /><TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Inspection.CellId}" />
+      <TextBlock Grid.Row="1" Text="Cell type" /><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Inspection.CellTypeName}" />
+      <TextBlock Grid.Row="2" Text="Area" /><TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Inspection.Area}" />
+      <TextBlock Grid.Row="3" Text="Perimeter" /><TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Inspection.Perimeter}" />
+      <TextBlock Grid.Row="4" Text="Target area" /><TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Inspection.TargetArea}" />
+      <TextBlock Grid.Row="5" Text="Area stiffness" /><TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Inspection.AreaStiffness}" />
+      <TextBlock Grid.Row="6" Text="Target perimeter" /><TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Inspection.TargetPerimeter}" />
+      <TextBlock Grid.Row="7" Text="Perimeter stiffness" /><TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Inspection.PerimeterStiffness}" />
+      <TextBlock Grid.Row="8" Text="Inspection MCS" /><TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Inspection.Mcs}" />
+    </Grid>
+  </StackPanel>
+</UserControl>

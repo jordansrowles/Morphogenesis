@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Net.WebSockets;
 using Rowles.Morphogenesis.Laboratory.Playback;
+using Rowles.Morphogenesis.Laboratory.Publication;
 using Rowles.Morphogenesis.Laboratory.Recording;
 using Rowles.Morphogenesis.Laboratory.Sessions;
 using Rowles.Morphogenesis.Server.Persistence;
@@ -22,6 +25,8 @@ public static class SessionEndpoints
         sessions.MapPost("/{id:guid}/stop", StopAsync).WithName("StopSession");
         sessions.MapGet("/{id:guid}/metrics", GetMetricsAsync).WithName("GetSessionMetrics");
         sessions.MapGet("/{id:guid}/recording", GetRecordingAsync).WithName("GetSessionRecording");
+        sessions.MapGet("/{id:guid}/recording/frame", GetRecordingFrameAsync).WithName("GetRecordingFrame");
+        sessions.MapGet("/{id:guid}/stream", StreamFramesAsync).WithName("StreamSessionFrames");
         sessions.MapGet("/{id:guid}/result", GetResultAsync).WithName("GetSessionResult");
         sessions.MapGet("/{id:guid}/cells/{cellId:int}", InspectCellAsync).WithName("InspectCell");
         return endpoints;
@@ -192,6 +197,141 @@ public static class SessionEndpoints
             index.Select(frame => new RecordingFrameDto(frame.Sequence, frame.Mcs, frame.Kind)).ToArray()));
     }
 
+    private static async Task<IResult> GetRecordingFrameAsync(
+        Guid id,
+        long? mcs,
+        SimulationSessionRegistry registry,
+        LaboratoryDatabase database,
+        IRecordingReader reader,
+        CancellationToken cancellationToken)
+    {
+        if (mcs is null or < 0)
+            return Results.BadRequest(new { error = "A non-negative mcs query value is required." });
+
+        PersistedRun? run = await database.GetRunAsync(id, cancellationToken).ConfigureAwait(false);
+        if (run is null)
+            return Results.NotFound();
+        if (!run.Payload.Recording.Enabled)
+            return Results.Conflict(new { error = "Recording is disabled for this session." });
+
+        try
+        {
+            await using RecordedSimulationSource source = await RecordedSimulationSource.OpenAsync(
+                reader,
+                id,
+                cancellationToken).ConfigureAwait(false);
+            await source.SeekAsync(mcs.Value, cancellationToken).ConfigureAwait(false);
+            using SimulationFrameLease frame = await source.GetCurrentFrameAsync(cancellationToken).ConfigureAwait(false);
+            byte[] payload = new byte[FullFrameMessageWriter.GetMessageLength(frame.Width, frame.Height)];
+            long recordedSequence = source.CurrentRecordedSequence;
+            FullFrameMessageWriter.Write(payload, recordedSequence, frame.Mcs, frame.Width, frame.Height, frame.CellIds.Span);
+            registry.MarkActivity(id);
+            return new FullFrameHttpResult(payload, frame.Mcs, recordedSequence);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return Results.BadRequest(new { error = exception.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Results.Conflict(new { error = exception.Message });
+        }
+        catch (InvalidDataException exception)
+        {
+            return Results.Problem(
+                title: "The stored recording is invalid.",
+                detail: exception.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task<IResult> StreamFramesAsync(
+        HttpContext context,
+        Guid id,
+        SimulationSessionRegistry registry,
+        Rowles.Morphogenesis.Server.Configuration.LaboratoryResourceLimits limits)
+    {
+        if (!registry.TryGetSession(id, out SimulationSession session))
+        {
+            SessionDto? persisted = await registry.GetSessionAsync(id, context.RequestAborted).ConfigureAwait(false);
+            return persisted is null ? Results.NotFound() : Results.Conflict(persisted);
+        }
+
+        if (session.LiveSubscriberCount >= limits.MaxLiveSubscribersPerSession)
+            return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+
+        if (!context.WebSockets.IsWebSocketRequest)
+            return Results.StatusCode(StatusCodes.Status426UpgradeRequired);
+
+        IAsyncEnumerator<SimulationFrameLease> frames;
+        try
+        {
+            frames = session.WatchFramesAsync(context.RequestAborted).GetAsyncEnumerator(context.RequestAborted);
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+        }
+
+        await using (frames.ConfigureAwait(false))
+        {
+            try
+            {
+                if (!await frames.MoveNextAsync().ConfigureAwait(false))
+                    return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+            }
+
+            using WebSocket socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            byte[] message = new byte[FullFrameMessageWriter.GetMessageLength(session.Metadata.GridWidth, session.Metadata.GridHeight)];
+            try
+            {
+                do
+                {
+                    SimulationFrameLease frame = frames.Current;
+                    try
+                    {
+                        FullFrameMessageWriter.Write(message, frame);
+                        await socket.SendAsync(
+                            message.AsMemory(),
+                            WebSocketMessageType.Binary,
+                            endOfMessage: true,
+                            context.RequestAborted).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        frame.Dispose();
+                    }
+                }
+                while (await frames.MoveNextAsync().ConfigureAwait(false));
+
+                if (socket.State == WebSocketState.Open)
+                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Session stream ended.", CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (WebSocketException) when (context.RequestAborted.IsCancellationRequested || socket.State is WebSocketState.Aborted or WebSocketState.Closed)
+            {
+                // A remote disconnect only closes this subscription; it does not change session state.
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                // The request ended; the simulation remains owned by the session registry.
+            }
+            catch (ObjectDisposedException)
+            {
+                // The session was retired while this stream was waiting for another frame.
+            }
+
+            return Results.Empty;
+        }
+    }
+
     private static async Task<IResult> GetResultAsync(
         Guid id,
         SimulationSessionRegistry registry,
@@ -273,4 +413,18 @@ public static class SessionEndpoints
     private static bool IsTerminal(SimulationSessionStatus status) => status is
         SimulationSessionStatus.Completed or SimulationSessionStatus.Failed or
         SimulationSessionStatus.Interrupted or SimulationSessionStatus.Cancelled;
+
+    private sealed class FullFrameHttpResult(byte[] payload, long mcs, long sequence) : IResult
+    {
+        public async Task ExecuteAsync(HttpContext httpContext)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status200OK;
+            httpContext.Response.ContentType = "application/octet-stream";
+            httpContext.Response.ContentLength = payload.Length;
+            httpContext.Response.Headers["X-Morphogenesis-Frame-Protocol"] = FullFrameMessageWriter.ProtocolVersion.ToString(CultureInfo.InvariantCulture);
+            httpContext.Response.Headers["X-Morphogenesis-Frame-Mcs"] = mcs.ToString(CultureInfo.InvariantCulture);
+            httpContext.Response.Headers["X-Morphogenesis-Frame-Sequence"] = sequence.ToString(CultureInfo.InvariantCulture);
+            await httpContext.Response.Body.WriteAsync(payload, httpContext.RequestAborted).ConfigureAwait(false);
+        }
+    }
 }

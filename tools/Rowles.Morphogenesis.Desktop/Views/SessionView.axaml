@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Rowles.Morphogenesis.Desktop.Views"
+             xmlns:vm="using:Rowles.Morphogenesis.Desktop.ViewModels"
+             x:Class="Rowles.Morphogenesis.Desktop.Views.SessionView">
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:RecordingPlaybackViewModel}">
+      <views:RecordingPlaybackView />
+    </DataTemplate>
+  </UserControl.DataTemplates>
+  <Grid RowDefinitions="Auto,Auto,*,190,Auto" RowSpacing="8">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+      <Button Content="Start" Command="{Binding StartCommand}" />
+      <Button Content="Pause" Command="{Binding PauseCommand}" />
+      <Button Content="Resume" Command="{Binding ResumeCommand}" />
+      <Button Content="Step" Command="{Binding StepCommand}" />
+      <Button Content="Stop" Command="{Binding StopCommand}" />
+      <Button Content="Reconnect" Command="{Binding ReconnectCommand}" />
+      <Button Content="Recording" Command="{Binding ShowPlaybackCommand}" IsVisible="{Binding HasPlayback}" />
+      <ComboBox ItemsSource="{Binding ViewModes}" SelectedItem="{Binding ViewMode}" Width="150" />
+      <TextBlock Text="{Binding SessionStatusText}" FontWeight="SemiBold" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding McsText}" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding RevisionText}" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding RecordingStatusText}" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding StreamStatus}" VerticalAlignment="Center" />
+    </StackPanel>
+    <TextBlock Grid.Row="1" Text="{Binding CommandStatus}" TextWrapping="Wrap" Foreground="#ffc66d" />
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,320" ColumnSpacing="12">
+      <Border x:Name="LatticeViewport" Grid.Column="0" Background="#0e141d" ClipToBounds="True"
+              PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved"
+              PointerReleased="OnPointerReleased" PointerWheelChanged="OnPointerWheelChanged">
+        <Image x:Name="LatticeImage" Source="{Binding Bitmap}" Stretch="Uniform"
+               RenderTransform="{Binding ImageTransform}" RenderTransformOrigin="0,0"
+               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+      </Border>
+      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+        <views:CellInspectorView DataContext="{Binding Inspector}" />
+      </ScrollViewer>
+    </Grid>
+
+    <Grid Grid.Row="3" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+      <StackPanel Grid.Column="0" Spacing="3"><TextBlock Text="Heterotypic interface fraction"/><views:MetricPlotControl Series="{Binding HeterotypicSeries}" Height="140" /><TextBlock Text="MCS" Opacity="0.65" /></StackPanel>
+      <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Mean cell area"/><views:MetricPlotControl Series="{Binding AreaSeries}" Height="140" /><TextBlock Text="MCS" Opacity="0.65" /></StackPanel>
+      <StackPanel Grid.Column="2" Spacing="3"><TextBlock Text="Mean cell perimeter"/><views:MetricPlotControl Series="{Binding PerimeterSeries}" Height="140" /><TextBlock Text="MCS" Opacity="0.65" /></StackPanel>
+      <StackPanel Grid.Column="3" Spacing="3"><TextBlock Text="Type A (blue) / Type B (orange) counts"/><views:MetricPlotControl Series="{Binding CellCountSeries}" Height="140" /><TextBlock Text="MCS" Opacity="0.65" /></StackPanel>
+    </Grid>
+    <ContentControl Grid.Row="4" Content="{Binding Playback}" IsVisible="{Binding PlaybackVisible}"
+                    VerticalAlignment="Bottom" Margin="0,0,0,2" />
+  </Grid>
+</UserControl>
