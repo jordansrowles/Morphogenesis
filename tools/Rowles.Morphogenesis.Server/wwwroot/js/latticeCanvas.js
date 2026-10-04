@@ -157,6 +157,11 @@ function hslToRgb(hue, saturation, lightness) {
 }
 
 function onWheel(event) {
+    // Keep ordinary wheel and trackpad gestures available to the page. Canvas zoom is
+    // deliberately modifier-gated so a large lattice cannot trap document scrolling.
+    if (!event.ctrlKey && !event.metaKey)
+        return;
+
     event.preventDefault();
     const point = canvasPoint(event);
     const oldScale = scale;
