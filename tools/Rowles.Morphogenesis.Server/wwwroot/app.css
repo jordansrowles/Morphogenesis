@@ -61,11 +61,27 @@
 }
 
 * { box-sizing: border-box; }
-html, body { background: var(--page-background); color: var(--foreground); }
-html { min-height: 100%; overflow-x: hidden; overflow-y: auto; }
-body { min-height: 100vh; margin: 0; overflow-x: hidden; overflow-y: visible; }
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden !important;
+    background: var(--page-background);
+    color: var(--foreground);
+}
 a { color: var(--link); }
-.shell { max-width: 1500px; margin: auto; padding: 0 1.5rem 3rem; }
+.shell {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+}
 .site-header { display: flex; align-items: center; justify-content: space-between; min-height: 4.5rem; border-bottom: 1px solid var(--border); }
 .brand { color: inherit; font-weight: 700; text-decoration: none; font-size: 1.15rem; }
 nav { display: flex; gap: 1.25rem; }
