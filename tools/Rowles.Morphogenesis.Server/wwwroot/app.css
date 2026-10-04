@@ -62,7 +62,8 @@
 
 * { box-sizing: border-box; }
 html, body { background: var(--page-background); color: var(--foreground); }
-body { margin: 0; }
+html { min-height: 100%; overflow-x: hidden; overflow-y: auto; }
+body { min-height: 100vh; margin: 0; overflow-x: hidden; overflow-y: visible; }
 a { color: var(--link); }
 .shell { max-width: 1500px; margin: auto; padding: 0 1.5rem 3rem; }
 .site-header { display: flex; align-items: center; justify-content: space-between; min-height: 4.5rem; border-bottom: 1px solid var(--border); }
