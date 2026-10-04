@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Rowles.Morphogenesis.Laboratory.Playback;
@@ -15,6 +16,9 @@ using Serilog;
 using Serilog.Context;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+if (!builder.Environment.IsDevelopment())
+    StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+
 // The session registry must finish terminal writes before the SQLite writer queue stops.
 builder.Host.ConfigureHostOptions(options => options.ServicesStopConcurrently = false);
 LaboratoryServerOptions serverOptions = LaboratoryServerOptions.Load(builder.Configuration);

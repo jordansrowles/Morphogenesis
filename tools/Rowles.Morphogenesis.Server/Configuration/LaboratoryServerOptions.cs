@@ -4,7 +4,7 @@ namespace Rowles.Morphogenesis.Server.Configuration;
 
 public sealed class LaboratoryServerOptions
 {
-    public string BindUrl { get; set; } = "http://127.0.0.1:5080";
+    public string BindUrl { get; set; } = "http://0.0.0.0:5080";
 
     public string DataDirectory { get; set; } = "./data";
 
@@ -42,7 +42,7 @@ public sealed class LaboratoryServerOptions
             bindUri.Scheme is not ("http" or "https") ||
             string.IsNullOrWhiteSpace(bindUri.Host))
         {
-            throw new InvalidOperationException("BindUrl must be an absolute HTTP or HTTPS URL. The default bind address is loopback.");
+            throw new InvalidOperationException("BindUrl must be an absolute HTTP or HTTPS URL.");
         }
 
         if (string.IsNullOrWhiteSpace(DatabaseFileName) ||
